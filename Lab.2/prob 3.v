@@ -1,4 +1,4 @@
-module 1bit_2to1_MUX (
+module MUX_1bit_2to1 (
     input i0, i1, sel,
     output out
 );
