@@ -70,193 +70,145 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
     <a name="clabelfont" val="SansSerif plain 12"/>
     <wire from="(310,340)" to="(370,340)"/>
     <wire from="(250,270)" to="(250,400)"/>
-    <wire from="(310,720)" to="(370,720)"/>
+    <wire from="(620,280)" to="(620,290)"/>
+    <wire from="(740,400)" to="(860,400)"/>
     <wire from="(180,270)" to="(180,340)"/>
-    <wire from="(190,660)" to="(190,730)"/>
-    <wire from="(120,780)" to="(240,780)"/>
     <wire from="(120,400)" to="(240,400)"/>
-    <wire from="(360,660)" to="(360,670)"/>
+    <wire from="(790,280)" to="(790,350)"/>
+    <wire from="(610,340)" to="(670,340)"/>
+    <wire from="(610,320)" to="(650,320)"/>
+    <wire from="(770,280)" to="(770,370)"/>
     <wire from="(60,330)" to="(170,330)"/>
-    <wire from="(60,710)" to="(170,710)"/>
     <wire from="(300,270)" to="(300,350)"/>
-    <wire from="(290,660)" to="(290,740)"/>
-    <wire from="(140,660)" to="(140,680)"/>
     <wire from="(130,270)" to="(130,290)"/>
-    <wire from="(320,710)" to="(430,710)"/>
     <wire from="(320,330)" to="(430,330)"/>
+    <wire from="(640,280)" to="(640,310)"/>
+    <wire from="(760,380)" to="(860,380)"/>
+    <wire from="(840,280)" to="(840,300)"/>
     <wire from="(200,270)" to="(200,360)"/>
-    <wire from="(210,660)" to="(210,750)"/>
+    <wire from="(690,280)" to="(690,360)"/>
     <wire from="(350,270)" to="(350,300)"/>
-    <wire from="(340,660)" to="(340,690)"/>
-    <wire from="(330,700)" to="(370,700)"/>
     <wire from="(330,320)" to="(370,320)"/>
-    <wire from="(120,760)" to="(220,760)"/>
+    <wire from="(750,390)" to="(920,390)"/>
     <wire from="(120,380)" to="(220,380)"/>
+    <wire from="(550,390)" to="(720,390)"/>
     <wire from="(280,270)" to="(280,370)"/>
-    <wire from="(270,660)" to="(270,760)"/>
+    <wire from="(770,370)" to="(920,370)"/>
+    <wire from="(550,370)" to="(700,370)"/>
     <wire from="(340,310)" to="(430,310)"/>
-    <wire from="(340,690)" to="(430,690)"/>
+    <wire from="(820,280)" to="(820,320)"/>
+    <wire from="(750,280)" to="(750,390)"/>
+    <wire from="(610,300)" to="(630,300)"/>
     <wire from="(60,310)" to="(150,310)"/>
-    <wire from="(60,690)" to="(150,690)"/>
     <wire from="(350,300)" to="(370,300)"/>
-    <wire from="(350,680)" to="(370,680)"/>
     <wire from="(150,270)" to="(150,310)"/>
-    <wire from="(160,660)" to="(160,700)"/>
-    <wire from="(230,660)" to="(230,770)"/>
     <wire from="(220,270)" to="(220,380)"/>
-    <wire from="(120,740)" to="(200,740)"/>
+    <wire from="(710,280)" to="(710,380)"/>
+    <wire from="(800,280)" to="(800,340)"/>
     <wire from="(120,360)" to="(200,360)"/>
+    <wire from="(790,350)" to="(920,350)"/>
+    <wire from="(730,280)" to="(730,400)"/>
+    <wire from="(550,350)" to="(680,350)"/>
     <wire from="(330,270)" to="(330,320)"/>
-    <wire from="(320,660)" to="(320,710)"/>
+    <wire from="(660,280)" to="(660,330)"/>
     <wire from="(60,290)" to="(130,290)"/>
-    <wire from="(60,670)" to="(130,670)"/>
     <wire from="(260,270)" to="(260,390)"/>
-    <wire from="(250,660)" to="(250,780)"/>
+    <wire from="(780,360)" to="(860,360)"/>
     <wire from="(170,270)" to="(170,330)"/>
-    <wire from="(360,670)" to="(430,670)"/>
-    <wire from="(180,660)" to="(180,720)"/>
     <wire from="(360,290)" to="(430,290)"/>
     <wire from="(240,270)" to="(240,400)"/>
+    <wire from="(610,400)" to="(730,400)"/>
     <wire from="(310,270)" to="(310,340)"/>
-    <wire from="(300,660)" to="(300,730)"/>
-    <wire from="(120,720)" to="(180,720)"/>
     <wire from="(120,340)" to="(180,340)"/>
-    <wire from="(130,660)" to="(130,670)"/>
+    <wire from="(850,280)" to="(850,290)"/>
+    <wire from="(800,340)" to="(860,340)"/>
     <wire from="(250,400)" to="(370,400)"/>
-    <wire from="(250,780)" to="(370,780)"/>
+    <wire from="(680,280)" to="(680,350)"/>
+    <wire from="(700,280)" to="(700,370)"/>
     <wire from="(360,270)" to="(360,290)"/>
-    <wire from="(350,660)" to="(350,680)"/>
-    <wire from="(260,770)" to="(430,770)"/>
     <wire from="(260,390)" to="(430,390)"/>
+    <wire from="(830,280)" to="(830,310)"/>
     <wire from="(190,270)" to="(190,350)"/>
-    <wire from="(200,660)" to="(200,740)"/>
-    <wire from="(60,770)" to="(230,770)"/>
+    <wire from="(820,320)" to="(860,320)"/>
+    <wire from="(610,380)" to="(710,380)"/>
     <wire from="(60,390)" to="(230,390)"/>
-    <wire from="(270,760)" to="(370,760)"/>
     <wire from="(270,380)" to="(370,380)"/>
     <wire from="(120,320)" to="(160,320)"/>
-    <wire from="(120,700)" to="(160,700)"/>
+    <wire from="(550,330)" to="(660,330)"/>
+    <wire from="(780,280)" to="(780,360)"/>
     <wire from="(140,270)" to="(140,300)"/>
-    <wire from="(150,660)" to="(150,690)"/>
+    <wire from="(630,280)" to="(630,300)"/>
     <wire from="(290,270)" to="(290,360)"/>
-    <wire from="(280,660)" to="(280,750)"/>
-    <wire from="(220,660)" to="(220,760)"/>
+    <wire from="(810,330)" to="(920,330)"/>
+    <wire from="(840,300)" to="(860,300)"/>
+    <wire from="(650,280)" to="(650,320)"/>
+    <wire from="(720,280)" to="(720,390)"/>
     <wire from="(210,270)" to="(210,370)"/>
     <wire from="(270,270)" to="(270,380)"/>
-    <wire from="(260,660)" to="(260,770)"/>
-    <wire from="(60,750)" to="(210,750)"/>
+    <wire from="(830,310)" to="(920,310)"/>
     <wire from="(60,370)" to="(210,370)"/>
     <wire from="(340,270)" to="(340,310)"/>
-    <wire from="(330,660)" to="(330,700)"/>
     <wire from="(120,300)" to="(140,300)"/>
-    <wire from="(120,680)" to="(140,680)"/>
     <wire from="(280,370)" to="(430,370)"/>
-    <wire from="(280,750)" to="(430,750)"/>
-    <wire from="(170,660)" to="(170,710)"/>
+    <wire from="(550,310)" to="(640,310)"/>
+    <wire from="(760,280)" to="(760,380)"/>
     <wire from="(160,270)" to="(160,320)"/>
+    <wire from="(550,290)" to="(620,290)"/>
+    <wire from="(740,280)" to="(740,400)"/>
     <wire from="(290,360)" to="(370,360)"/>
-    <wire from="(290,740)" to="(370,740)"/>
+    <wire from="(670,280)" to="(670,340)"/>
+    <wire from="(850,290)" to="(920,290)"/>
     <wire from="(320,270)" to="(320,330)"/>
-    <wire from="(310,660)" to="(310,720)"/>
-    <wire from="(300,730)" to="(430,730)"/>
+    <wire from="(610,360)" to="(690,360)"/>
     <wire from="(300,350)" to="(430,350)"/>
     <wire from="(230,270)" to="(230,390)"/>
-    <wire from="(240,660)" to="(240,780)"/>
-    <wire from="(60,730)" to="(190,730)"/>
+    <wire from="(810,280)" to="(810,330)"/>
     <wire from="(60,350)" to="(190,350)"/>
-    <comp lib="0" loc="(430,390)" name="Constant">
+    <comp lib="0" loc="(370,380)" name="Constant">
       <a name="facing" val="west"/>
       <a name="width" val="24"/>
-      <a name="value" val="0xa4880"/>
+      <a name="value" val="0x7ffea0"/>
     </comp>
-    <comp lib="0" loc="(60,690)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(120,700)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(120,340)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x1fffe"/>
-    </comp>
-    <comp lib="0" loc="(430,670)" name="Constant">
+    <comp lib="0" loc="(430,350)" name="Constant">
       <a name="facing" val="west"/>
       <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
+      <a name="value" val="0x2a49fe"/>
     </comp>
-    <comp lib="0" loc="(60,710)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(430,330)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x80080"/>
-    </comp>
-    <comp lib="0" loc="(370,400)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0xa4880"/>
-    </comp>
-    <comp lib="0" loc="(370,680)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(370,760)" name="Constant">
-      <a name="facing" val="west"/>
+    <comp lib="0" loc="(550,390)" name="Constant">
       <a name="width" val="24"/>
       <a name="value" val="0x22200"/>
     </comp>
-    <comp lib="0" loc="(430,770)" name="Constant">
+    <comp lib="0" loc="(550,290)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x0"/>
+    </comp>
+    <comp lib="0" loc="(120,400)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0xa4880"/>
+    </comp>
+    <comp lib="0" loc="(860,360)" name="Constant">
       <a name="facing" val="west"/>
       <a name="width" val="24"/>
-      <a name="value" val="0x22200"/>
+      <a name="value" val="0x0"/>
     </comp>
-    <comp lib="0" loc="(120,740)" name="Constant">
+    <comp lib="0" loc="(370,360)" name="Constant">
+      <a name="facing" val="west"/>
       <a name="width" val="24"/>
-      <a name="value" val="0x3fe00"/>
+      <a name="value" val="0xa4886"/>
+    </comp>
+    <comp lib="0" loc="(550,310)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x0"/>
     </comp>
     <comp lib="0" loc="(60,290)" name="Constant">
       <a name="width" val="24"/>
       <a name="value" val="0x0"/>
     </comp>
-    <comp lib="0" loc="(60,770)" name="Constant">
+    <comp lib="0" loc="(550,370)" name="Constant">
       <a name="width" val="24"/>
       <a name="value" val="0x22200"/>
     </comp>
-    <comp lib="0" loc="(60,750)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x22200"/>
-    </comp>
-    <comp lib="0" loc="(430,710)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="6" loc="(286,203)" name="Text"/>
-    <comp lib="0" loc="(430,310)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x80"/>
-    </comp>
-    <comp lib="0" loc="(120,780)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x3ffff8"/>
-    </comp>
-    <comp lib="0" loc="(370,300)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(370,740)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(60,730)" name="Constant">
+    <comp lib="0" loc="(610,320)" name="Constant">
       <a name="width" val="24"/>
       <a name="value" val="0x0"/>
     </comp>
@@ -264,53 +216,34 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
       <a name="width" val="24"/>
       <a name="value" val="0x1c0080"/>
     </comp>
-    <comp lib="0" loc="(120,680)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(430,730)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(120,720)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(60,350)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x70000"/>
-    </comp>
-    <comp lib="0" loc="(60,370)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0x80"/>
-    </comp>
-    <comp lib="0" loc="(370,780)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x22200"/>
-    </comp>
-    <comp lib="0" loc="(370,340)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0xbfe80"/>
-    </comp>
-    <comp lib="0" loc="(370,720)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="5" loc="(130,660)" name="DotMatrix">
+    <comp lib="5" loc="(130,270)" name="DotMatrix">
       <a name="matrixcols" val="24"/>
       <a name="matrixrows" val="24"/>
       <a name="offcolor" val="#ffffff"/>
     </comp>
-    <comp lib="0" loc="(430,370)" name="Constant">
+    <comp lib="0" loc="(920,290)" name="Constant">
       <a name="facing" val="west"/>
       <a name="width" val="24"/>
-      <a name="value" val="0xa4894"/>
+      <a name="value" val="0x0"/>
     </comp>
-    <comp lib="0" loc="(430,750)" name="Constant">
+    <comp lib="0" loc="(550,350)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x0"/>
+    </comp>
+    <comp lib="0" loc="(60,390)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0xbfe80"/>
+    </comp>
+    <comp lib="0" loc="(550,330)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x0"/>
+    </comp>
+    <comp lib="0" loc="(920,310)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0x0"/>
+    </comp>
+    <comp lib="0" loc="(920,370)" name="Constant">
       <a name="facing" val="west"/>
       <a name="width" val="24"/>
       <a name="value" val="0x3fe00"/>
@@ -320,34 +253,112 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
       <a name="width" val="24"/>
       <a name="value" val="0x0"/>
     </comp>
-    <comp lib="0" loc="(430,690)" name="Constant">
+    <comp lib="6" loc="(286,203)" name="Text"/>
+    <comp lib="0" loc="(370,400)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0xa4880"/>
+    </comp>
+    <comp lib="0" loc="(920,350)" name="Constant">
       <a name="facing" val="west"/>
       <a name="width" val="24"/>
       <a name="value" val="0x0"/>
     </comp>
-    <comp lib="0" loc="(120,760)" name="Constant">
+    <comp lib="0" loc="(920,390)" name="Constant">
+      <a name="facing" val="west"/>
       <a name="width" val="24"/>
       <a name="value" val="0x22200"/>
     </comp>
-    <comp lib="0" loc="(60,390)" name="Constant">
+    <comp lib="0" loc="(860,300)" name="Constant">
+      <a name="facing" val="west"/>
       <a name="width" val="24"/>
-      <a name="value" val="0xbfe80"/>
+      <a name="value" val="0x0"/>
+    </comp>
+    <comp lib="0" loc="(860,380)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0x22200"/>
+    </comp>
+    <comp lib="0" loc="(370,300)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0x0"/>
+    </comp>
+    <comp lib="0" loc="(860,400)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0x22200"/>
+    </comp>
+    <comp lib="0" loc="(60,350)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x70000"/>
+    </comp>
+    <comp lib="0" loc="(120,300)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x0"/>
     </comp>
     <comp lib="0" loc="(60,310)" name="Constant">
       <a name="width" val="24"/>
       <a name="value" val="0x4000"/>
     </comp>
-    <comp lib="0" loc="(370,700)" name="Constant">
+    <comp lib="0" loc="(430,310)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0x80"/>
+    </comp>
+    <comp lib="0" loc="(430,370)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0xa4894"/>
+    </comp>
+    <comp lib="0" loc="(430,390)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0xa4880"/>
+    </comp>
+    <comp lib="0" loc="(370,320)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0x80"/>
+    </comp>
+    <comp lib="0" loc="(610,360)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x3fe00"/>
+    </comp>
+    <comp lib="0" loc="(610,300)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x0"/>
+    </comp>
+    <comp lib="0" loc="(860,320)" name="Constant">
       <a name="facing" val="west"/>
       <a name="width" val="24"/>
       <a name="value" val="0x0"/>
     </comp>
-    <comp lib="0" loc="(370,380)" name="Constant">
+    <comp lib="0" loc="(610,340)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x0"/>
+    </comp>
+    <comp lib="0" loc="(370,340)" name="Constant">
       <a name="facing" val="west"/>
       <a name="width" val="24"/>
-      <a name="value" val="0x7ffea0"/>
+      <a name="value" val="0xbfe80"/>
     </comp>
-    <comp lib="0" loc="(60,670)" name="Constant">
+    <comp lib="0" loc="(430,330)" name="Constant">
+      <a name="facing" val="west"/>
+      <a name="width" val="24"/>
+      <a name="value" val="0x80080"/>
+    </comp>
+    <comp lib="0" loc="(120,380)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x80080"/>
+    </comp>
+    <comp lib="5" loc="(620,280)" name="DotMatrix">
+      <a name="matrixcols" val="24"/>
+      <a name="matrixrows" val="24"/>
+      <a name="offcolor" val="#ffffff"/>
+    </comp>
+    <comp lib="0" loc="(860,340)" name="Constant">
+      <a name="facing" val="west"/>
       <a name="width" val="24"/>
       <a name="value" val="0x0"/>
     </comp>
@@ -355,41 +366,30 @@ This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
       <a name="width" val="24"/>
       <a name="value" val="0x4000"/>
     </comp>
-    <comp lib="0" loc="(370,360)" name="Constant">
+    <comp lib="0" loc="(610,400)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x3ffff8"/>
+    </comp>
+    <comp lib="0" loc="(920,330)" name="Constant">
       <a name="facing" val="west"/>
       <a name="width" val="24"/>
-      <a name="value" val="0xa4886"/>
-    </comp>
-    <comp lib="0" loc="(430,350)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x2a49fe"/>
-    </comp>
-    <comp lib="5" loc="(130,270)" name="DotMatrix">
-      <a name="matrixcols" val="24"/>
-      <a name="matrixrows" val="24"/>
-      <a name="offcolor" val="#ffffff"/>
-    </comp>
-    <comp lib="0" loc="(370,320)" name="Constant">
-      <a name="facing" val="west"/>
-      <a name="width" val="24"/>
-      <a name="value" val="0x80"/>
-    </comp>
-    <comp lib="0" loc="(120,400)" name="Constant">
-      <a name="width" val="24"/>
-      <a name="value" val="0xa4880"/>
+      <a name="value" val="0x0"/>
     </comp>
     <comp lib="0" loc="(60,330)" name="Constant">
       <a name="width" val="24"/>
       <a name="value" val="0x8000"/>
     </comp>
-    <comp lib="0" loc="(120,380)" name="Constant">
+    <comp lib="0" loc="(60,370)" name="Constant">
       <a name="width" val="24"/>
-      <a name="value" val="0x80080"/>
+      <a name="value" val="0x80"/>
     </comp>
-    <comp lib="0" loc="(120,300)" name="Constant">
+    <comp lib="0" loc="(120,340)" name="Constant">
       <a name="width" val="24"/>
-      <a name="value" val="0x0"/>
+      <a name="value" val="0x1fffe"/>
+    </comp>
+    <comp lib="0" loc="(610,380)" name="Constant">
+      <a name="width" val="24"/>
+      <a name="value" val="0x22200"/>
     </comp>
   </circuit>
 </project>
