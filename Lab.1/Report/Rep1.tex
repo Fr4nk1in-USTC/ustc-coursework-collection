@@ -6,6 +6,8 @@
 \documentclass[UTF8,fontset=fandol]{ctexart}
 \usepackage[a4paper,hmargin=1.2in,vmargin=1in]{geometry}
 \usepackage{graphicx,tikz}
+\usepackage{float} %设置图片浮动位置的宏包
+\usepackage{subfigure} %插入多图时用子图显示的宏包
 \newcommand{\titleformat}[1]{【#1】}
 \ctexset
 {
@@ -132,7 +134,7 @@
     实验题目：\makebox[0pt][l]{Logisim入门}\rule[-0.3ex]{4.32cm}{0.4pt}\\[1ex]
     学生姓名：\makebox[0pt][l]{傅申}\rule[-0.3ex]{4.32cm}{0.4pt}\\[1ex]
     学生学号：\makebox[0pt][l]{PB20000051}\rule[-0.3ex]{4.32cm}{0.4pt}\\[1ex]
-    完成日期：\makebox[0pt][l]{\date{}}\rule[-0.3ex]{4.32cm}{0.4pt}\\
+    完成日期：\makebox[0pt][l]{\today}\rule[-0.3ex]{4.32cm}{0.4pt}\\
 
     \vspace{3.62cm}\zihao{4}
     计算机实验教学中心制 \\[1.3ex]
@@ -152,12 +154,12 @@ Logisim入门
 \section*{实验环境}
 %列举本实验所用到的各种软硬件环境，如EDA工具、实验平台、实验设备等。
 \begin{itemize}
-    \item Windows PC 一台: Intel i5-1035G1 CPU
+    \item Windows PC 一台: CPU 为 Intel i5-1035G1
     \item Logisim 仿真工具
 \end{itemize}
 \section*{实验过程}
 %按照实验手册的指导，将【实验步骤】部分自己完成一遍，并将过程以图文并茂的形式体现在本报告中。
-\begin{itemize}
+\begin{description}
     \item[Step 1:] 获取 Logisim 实验环境\\
     在电脑上安装 jre 后, 下载并运行 logisim. 
     \item[Step 2:] 熟悉 Logisim 界面\\
@@ -165,13 +167,72 @@ Logisim入门
     \item[Step 3:] 熟悉 Logisim 基本操作\\
     Logisim 可以在工具栏和管理窗选择各类组件, 将其放置在画布上构建组合电路.
     \item[Step 4:] 模块封装 \\
-    可以点击 Logisim 工具栏中的编辑电路封装图标, 进入电路封装编辑页面, 修改电路封装的样式并添加注释. 这样我们就可以在其他电路中使用该模块.
-\end{itemize}
+    可以点击 Logisim 工具栏中的编辑电路封装图标, 进入电路封装编辑页面, 修改电路封装的样式并添加注释. 这样我们在其他电路中使用该模块.
+\end{description}
 \section*{实验练习}
 %如无特殊说明，则应完成对应实验手册上的所有练习题目，将过程和结果以图文并茂的形式体现在本报告中，建议实验过程中随手保存各种截图。
-\begin{itemize}
-    \item[题目 1.]
-\end{itemize}
+\begin{description}
+    \item[题目 1.] 如下图\ref{Fig.1}, 我使用了两个$24\times24$的 LED 点阵通过十六进制常量赋值的方式显示了自己的姓名. 其中常量转化为二进制后第几位为 1 , 对应行/列的第几个 LED 亮起.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width = \linewidth]{images/1.Name.jpg}
+        \caption{显示姓名的 LED 点阵}
+        \label{Fig.1}
+    \end{figure} 
+    \item[题目 2.] 如下图\ref{Fig.2}, 我使用了 8 个七段数码管通过常量赋值的方式显示了自己的学号.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width = \linewidth]{images/2.Number.jpg}
+        \caption{显示学号的七段数码管}
+        \label{Fig.2}
+    \end{figure} 
+    \item[题目 3.] \label{Prob.3}按照指导书中图片搭建的逻辑门如下图\ref{Fig.3}.
+    \begin{enumerate}
+        \item 如图\ref{Fig.3.a}, 当两个输入都为高电平时, 上端两个串联的 NMOS 都导通, 而下端两个并联的 PMOS 都截止, 此时输出端为高电平. 在其他情况下, 上端两个串联的 NMOS 至少有一个截止, 整体表现为截止, 而下端两个并联的 PMOS 至少有一个导通, 整体表现为导通, 所以输出端接地 (低电平). 
+        \\所以该逻辑门为\textbf{与门}.
+        \item 如图\ref{Fig.3.b}, 当两个输入都为低电平时, 下端两个串联的 PMOS 都导通, 而上端两个并联的 NMOS 都截止, 此时输出端接地 (低电平). 在其他情况下, 下端两个串联的 PMOS 至少有一个截止, 整体表现为截止, 而上端两个并联的 NMOS 至少有一个导通, 整体表现为导通, 所以输出端为高电平.
+        \\所以该逻辑门为\textbf{或门}.
+        \item 如图\ref{Fig.3.c}, 当输入为高电平时, 上端 PMOS 截止, 下端 NMOS 导通, 输出端接地 (低电平); 当输出为低电平时, 上端 PMOS 导通, 下端 NMOS 截止, 输出端为高电平.
+        \\所以该逻辑门为\textbf{非门}.
+    \end{enumerate} 
+    \begin{figure}[H]
+        \centering
+        \subfigure[与门]{
+            \label{Fig.3.a}
+            \includegraphics[width = .3\linewidth]{images/3.a.jpg}
+        }
+        \subfigure[或门]{
+            \label{Fig.3.b}
+            \includegraphics[width = .325\linewidth]{images/3.b.jpg}
+        }
+        \subfigure[非门]{
+            \label{Fig.3.c}
+            \includegraphics[width = .287\linewidth]{images/3.c.jpg}
+        }
+        \caption{按照指导书搭建的逻辑门}
+        \label{Fig.3}
+    \end{figure}
+    注意到有下列恒等式:
+    $$
+    \overline{A\cdot B} = \overline{A}+\overline{B}\quad
+    \overline{A+ B} = \overline{A}\cdot\overline{B}
+    $$
+    而 NMOS 和 PMOS 的行为特性刚好相反, 因此, 只需要将或门和与门中的 NMOS 与 PMOS 互换, 即可得到与非门 (图\ref{Fig.4.a}) 和或非门 (图\ref{Fig.4.b}), 如图\ref{Fig.4}.
+    \begin{figure}[H]
+        \centering
+        \subfigure[与非门]{
+            \label{Fig.4.a}
+            \includegraphics[width = .3\linewidth]{images/4.a.jpg}
+        }
+        \subfigure[或非门]{
+            \label{Fig.4.b}
+            \includegraphics[width = .235\linewidth]{images/4.b.jpg}
+        }
+        \caption{与非门和或非门}
+        \label{Fig.4}
+    \end{figure}
+    \item[题目 4.] 在\ref{Prob.3}中设计的
+\end{description}
 \section*{总结与思考}
 %请填写对于本次实验的总结与思考，鼓励填写对于本实验或者本课程的各种建议和吐槽。
 \end{document}
