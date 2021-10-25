@@ -234,22 +234,67 @@ Logisim入门
     \item[题目 4.] 在题目 3.中设计的单 bit 门电路封装如下图\ref{Fig.5}.
     \begin{figure}[H]
         \centering
-        \caption{门电路封装}
-        \label{Fig.5}
+        
         \subfigure[与门]{
             \label{Fig.5.a}
-            \includegraphics[width = .1\linewidth]{images/5.a.jpg}
+            \includegraphics[width = .15\linewidth]{images/5.a.jpg}
         }
         \subfigure[或门]{
             \label{Fig.5.b}
-            \includegraphics[width = .1\linewidth]{images/5.b.jpg}
+            \includegraphics[width = .15\linewidth]{images/5.b.jpg}
         }
         \subfigure[非门]{
             \label{Fig.5.c}
-            \includegraphics[width = .1\linewidth]{images/5.c.jpg}
+            \includegraphics[width = .13\linewidth]{images/5.c.jpg}
         }
+        \caption{门电路封装}
+        \label{Fig.5}
     \end{figure}
+    利用 1bit 位宽的二选一选择器的逻辑表达式:
+    $$
+    out = \overline{sel}\cdot in_0 + sel\cdot in_1
+    $$
+    可以设计出如下图\ref{Fig.6} 的 1bit 位宽的二选一选择器, 其中使用了与门 2 个, 或门 1 个, 非门 1 个.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width = .6\linewidth]{images/6.jpg}
+        \caption{ 1bit 位宽的二选一选择器}
+        \label{Fig.6}
+    \end{figure}
+    对于 2bit 位宽的四选一选择器, 我们可以先设计 1bit 位宽的四选一选择器, 对其进行封装, 然后拼接成 2bit 位宽的四选一选择器.
+    其中, 可以利用设计二选一选择器的思想, 先对高位进行筛选.然后对低位进行筛选, 最后求或, 即可得 1bit 位宽的四选一选择器, 表达式如下
+    $$
+    out = \overline{sel[1]} \cdot in_{00} \cdot \overline{sel[0]}
+        + \overline{sel[1]} \cdot in_{01} \cdot sel[0]
+        + sel[1] \cdot in_{10} \cdot \overline{sel[0]}
+        + sel[1] \cdot in_{00} \cdot sel[0]
+    $$
+    构建出的 1bit 位宽的四选一选择器组合电路及封装如下图\ref{Fig.7}, 其中使用了与门 8 个, 或门 3 个, 非门 2 个.
+    \begin{figure}[H]
+        \centering
+        \subfigure[组合电路]{
+            \includegraphics[width = .6\linewidth]{images/7.a.jpg}
+        }
+        \subfigure[封装]{
+            \includegraphics[width = .2\linewidth]{images/7.b.jpg}
+        }
+        \caption{ 1bit 位宽的四选一选择器}
+        \label{Fig.7}
+    \end{figure}
+    对 2bit 位宽输入的两位分别进行四选一, 即可得到 2bit 位宽的四选一选择器, 如下图\ref{Fig.8}.
+    \begin{figure}[H]
+        \centering
+        \label{Fig.8}
+        \includegraphics[width = .5\linewidth]{images/8.jpg}
+        \caption{ 2bit 位宽的四选一选择器}
+    \end{figure}
+    其中使用了两个 1bit 位宽的四选一选择器, 使用总共使用了与门 16 个, 或门 6 个, 非门 4 个, 若在选择端进行优化, 还可省去 2 个非门.
 \end{description}
 \section*{总结与思考}
 %请填写对于本次实验的总结与思考，鼓励填写对于本实验或者本课程的各种建议和吐槽。
+\begin{description}
+    \item[收获] 学会了用 Logisim 设计组合电路的基本操作, 了解了如何封装电路.
+    \item[难易程度与任务量] 较为轻松.
+    \item[吐槽] 题目 1. 中使用 LED 阵列显示自己姓名的时候操作有些繁琐, 而且有些学生的姓名可能比较复杂, 以后可以尝试显示学生姓名的拼音或者缩写.  
+\end{description}
 \end{document}
