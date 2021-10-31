@@ -13,8 +13,8 @@ endmodule //模块名结束关键词
 // 例2: 半加器
 // 从行为级上描述
 module add(
-    input a,b,
-    output sum,cout);
+    input a, b,
+    output sum, cout);
 
     assign {cout,sum} = a + b; // 位拼接
 endmodule
