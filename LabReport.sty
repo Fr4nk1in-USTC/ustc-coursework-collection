@@ -206,3 +206,14 @@
 }
 \makeatother
 
+% Image Insert
+\newcommand{\img}[4]{
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=#1\linewidth]{#2}
+        \caption{#3}
+        \label{#4}
+    \end{figure}
+}
+
+
