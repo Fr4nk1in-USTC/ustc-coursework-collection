@@ -1,0 +1,303 @@
+% Rep3.tex
+% Author: 傅申
+% 本文件是 实验报告模板.docx 与 实验报告模板.tex 的衍生作品，其著作权属于中国科学技术大学计算机实验教学中心.
+
+% 本文件可使用TeXLive发行版（作者使用的是TeXLive 2021，但理论上2016及以后均可）的xelatex命令编译.
+\documentclass[UTF8,fontset=fandol]{ctexart}
+\usepackage{LabReport}
+\usepackage{multirow}
+\begin{document}
+\maketitle{简单时序逻辑电路}
+\section*{实验目的}
+%列举本实验的实验目的，除指导书上列出的之外，鼓励自行总结及扩展。
+\begin{itemize}
+  \item 掌握时序逻辑相关器件的原理及底层结构
+  \item 能够用基本逻辑门搭建各类时序逻辑器件
+  \item 能够使用 Verilog HDL 设计简单时序逻辑电路
+\end{itemize}
+\section*{实验环境}
+%列举本实验所用到的各种软硬件环境，如EDA工具、实验平台、实验设备等。
+\begin{itemize}
+  \item Windows PC 一台: CPU 为 Intel i5-1035G1
+  \item Logisim 仿真工具
+  \item Microsoft Visual Studio Code
+\end{itemize}
+\section*{实验过程}
+%按照实验手册的指导，将【实验步骤】部分自己完成一遍，并将过程以图文并茂的形式体现在本报告中。
+\begin{ExSteps}
+  \step 搭建双稳态电路\\
+  首先搭建如下图\ref{Fig.1.1} 的电路, 待输入信号将其状态初始到确定状态后再将右下的耦合线连上, 再断开输入引脚处的线, 如图\ref{Fig.1.2}.
+  \begin{figure}[htbp]
+    \centering
+    \subimg{第一步}{.7}{images/Fig.1.1.jpg}{Fig.1.1}\\
+    \subimg{第二步}{.7}{images/Fig.1.2.jpg}{Fig.1.2}
+    \caption{双稳态电路}
+    \label{Fig.1}
+  \end{figure}
+  \newpage
+  \step 搭建 SR 锁存器\\
+  首先搭建如下图\ref{Fig.2.1} 的电路, 这就是一个 SR 锁存器, 对于四种不同的输入状态, 它的输出状态也不同, 如图\ref{Fig.2.2} 和表\ref{Tab.1}.
+  \begin{figure}[h]
+    \centering
+    \subimg{SR 锁存器电路图}{.5}{images/Fig.2.1.jpg}{Fig.2.1}\\
+    \subimg{SR 锁存器不同输出状态}{.7}{images/Fig.2.2.jpg}{Fig.2.2}
+    \caption{SR 锁存器}
+    \label{Fig.2}
+  \end{figure}
+  \begin{table}[!ht]
+    \vspace*{-2em}
+    \centering
+    \caption{SR 锁存器真值表}
+    \label{Tab.1}
+    \begin{tabular}{cc|cc|c} 
+    \hline
+    \multicolumn{2}{c|}{输入} & \multicolumn{2}{c|}{输出} & \multirow{2}{*}{状态}  \\ 
+    \cline{1-4}
+    $S$ & $R$               & $Q$ & $\overline{Q}$    &                      \\ 
+    \hline
+    0   & 0                 & 不变  & 不变                & 锁存                   \\
+    0   & 1                 & 0   & 1                 & 置0                   \\
+    1   & 0                 & 1   & 0                 & 置1                   \\
+    1   & 1                 & 0   & 0                 & 未定义                  \\
+    \hline
+    \end{tabular}
+    \end{table}
+    \step 搭建 D 锁存器\\
+    SR 锁存器两个输入都为 1 是一种未定义状态, 我们不希望这种状态出现, 为此我们在 SR 锁存器前面添加两个与门和一个非门, 如下图所示, 便构成了 D 锁存器, 如图\ref{Fig.3.1}.
+    分析 D 锁存器电路可以发现,当 CLK 信号为高电平时, Q 信号将随着 D 端输入信号的变化而变化, 称之为“跟随”状态; 当 CLK 信号为低电平时, Q 信号将保持之前的值, 不会收到 D 信号变化的影响, 称之为“锁存”状态, 如图\ref{Fig.3.2}. D 锁存器是一种电平敏感的时序逻辑器件.
+    \begin{figure}[htbp]
+      \centering
+      \subimg{D 锁存器电路图}{.5}{images/Fig.3.1.jpg}{Fig.3.1}\\
+      \subimg{D 锁存器不同输出状态}{.7}{images/Fig.3.2.jpg}{Fig.3.2}
+      \caption{D 锁存器}
+      \label{Fig.3}
+    \end{figure}
+    \step 搭建 D 触发器\\
+    将两个 D 锁存器串起来, 其控制信号有效值始终相反, 就构成了 D 触发器, 如下图\ref{Fig.4.1} 所示, CLK 信号为低电平时, D 信号通过了 D1, 当 CLK 信号由低电平变为高电平时, D1 关闭, D2 打开, 信号到达 Q 端. 
+    \begin{figure}[h]
+      \centering
+      \subimg{电路图}{.5}{images/Fig.4.1.jpg}{Fig.4.1}
+      \subimg{封装}{.15}{images/Fig.4.2.jpg}{Fig.4.2}
+      \caption{D 触发器}
+      \label{Fig.4}
+    \end{figure}
+    把 CLK 端口换成一个可自动变化的时钟信号. 在 Logisim 菜单栏中点击 ``simulation'' 选项, 将 ``Tick Frequency'' 设置为 ``1Hz'' , 然后使能仿真和触发功能, 在 ``CLK'' 信号以 1Hz 频率跳变过程中, 改变 D 信号的输入值, 观察 Q 信号的输出. 如下图\ref{Fig.5}.
+    \img{.5}{images/Fig.5.jpg}{观察 D 触发器输出}{Fig.5}
+    \\其 Verilog 代码为:
+    \begin{lstlisting}[style=verilogstyle, caption={D 触发器}, label={Code.1}]
+// D Flip-Flop
+module d_ff (
+    input clk, d,
+    output reg q 
+);
+    always@(posedge clk)  q <= d;
+endmodule
+    \end{lstlisting}
+    我们还可以为触发器添加复位信号, 如下图\ref{Fig.6} 所示, 可以看出, 当复位信号有效 (低电平有效) 时, 输出信号 Q 始终为零.
+    复位信号只有在时钟信号的上升沿才起作用, 在非上升沿时刻, 复位信号不起作用. 这种复位方式称为同步复位. 其 Verilog 代码如下代码\ref{Code.2}.\\
+    \img{.5}{images/Fig.6.jpg}{同步复位 D 触发器}{Fig.6}
+    \begin{lstlisting}[style=verilogstyle, caption={同步复位 D 触发器}, label={Code.2}]
+// D Flip-Flop with a synchronous reset
+module d_ff_sr (
+    input  clk, rst_n, d,
+    output reg q 
+);
+    always @(posedge clk) begin
+        if (rst_n == 0) q <= 1'b0;
+        else q <= d;
+    end
+endmodule
+    \end{lstlisting}
+    同样地, 我们可以写出异步复位 D 触发器的 Verilog 代码\ref{Code.3}.
+    \begin{lstlisting}[style=verilogstyle, caption={异步复位 D 触发器}, label={Code.3}]
+// D Flip-Flop with a synchronous reset
+module d_ff_ar (
+    input  clk, rst_n, d,
+    output reg q
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (rst_n == 0) q <= 1'b0;
+        else q <= d;
+    end
+endmodule
+    \end{lstlisting}
+    \step 搭建寄存器\\
+    寄存器的本质就是 D 触发器, 如下图\ref{Fig.7}所示, 我们可以用 4 个 D 触发器构成一个能够存储 4bit 数据的寄存器, 同时带有低电平有效的复位信号. 在时钟上升沿, 如果复位信号无效, 寄存器的输入信号就会被存储在寄存器中. 它的 Verilog 代码如代码\ref{Code.4}.\\
+    \img{.5}{images/Fig.7.jpg}{4bit 寄存器}{Fig.7}
+    \begin{lstlisting}[style=verilogstyle, caption={4bit 寄存器}, label={Code.4}]
+// 4-bit register
+module reg_4bit (
+    input  clk, rst_n,
+    input  [3:0] D_in,
+    output reg [3:0] D_out 
+);
+    always @(posedge clk) begin
+        if (rst_n == 0) D_out <= 4'b0; // D_out <= 4'b0011;
+        else D_out <= D_in;
+    end
+endmodule
+    \end{lstlisting}
+    \step 搭建简单时序逻辑电路\\
+    利用 4bit 寄存器, 搭建一个 4bit 的计数器, 该计数器在 0 $\sim $ 15 之间循环计数, 复位时输出值为 0, 电路图如下图\ref{Fig.8} 所示.\\
+    \img{.5}{images/Fig.8.jpg}{4bit 计数器}{Fig.8}\\
+    其 Verilog 代码如下:
+    \begin{lstlisting}[style=verilogstyle, caption={4bit 计数器}, label={Code.5}]
+// 4-bit counter MOD16
+module counter_4bit (
+    input  clk, rst_n, 
+    output reg [3:0] cnt 
+);
+    always @(posedge clk ) begin
+        if (rst_n == 0) cnt <= 4'b0;
+        else cnt <= cnt + 4'b1;
+    end
+endmodule
+    \end{lstlisting}
+  \end{ExSteps}
+\section*{实验练习}
+%如无特殊说明，则应完成对应实验手册上的所有练习题目，将过程和结果以图文并茂的形式体现在本报告中，建议实验过程中随手保存各种截图。
+\begin{ExQuestions}
+  \question 用与非门搭建的 SR 锁存器如下图\ref{Fig.9} 所示, 电路在不同输入时的状态如下图\ref{Fig.10} 和表\ref{Tab.2} 所示.\\
+  \img{.5}{images/Fig.9.jpg}{SR 锁存器}{Fig.9}
+  \img{.7}{images/Fig.10.jpg}{SR 锁存器状态}{Fig.10}
+  \newpage
+  \begin{table}[!ht]
+    \centering
+    \caption{SR 锁存器真值表}
+    \label{Tab.2}
+    \begin{tabular}{cc|cc|c} 
+    \hline
+    \multicolumn{2}{c|}{输入} & \multicolumn{2}{c|}{输出} & \multirow{2}{*}{状态}  \\ 
+    \cline{1-4}
+    $S$ & $R$               & $Q$ & $\overline{Q}$    &                      \\ 
+    \hline
+    0   & 0                 & 1  & 1                & 未定义                   \\
+    0   & 1                 & 0   & 1                 & 置0                   \\
+    1   & 0                 & 1   & 0                 & 置1                   \\
+    1   & 1                 & 不变   & 不变                 & 锁存                 \\
+    \hline
+    \end{tabular}
+    \end{table}
+  \question 首先搭建 D 锁存器如下图\ref{Fig.11}.
+  \begin{figure}[h]
+    \centering
+    \subimg{电路图}{.5}{images/Fig.11.1.jpg}{Fig.11.1}
+    \subimg{封装}{.15}{images/Fig.11.2.jpg}{Fig.11.2}
+    \caption{D 锁存器}
+    \label{Fig.11}
+  \end{figure}
+  仿照同步复位 D 触发器的搭建方法, 将置位信号取反后与 D 信号求或作为 D 锁存器的输入, 这样, 当置位信号为低电平时, D 锁存器的输出为 D 信号, 当置位信号为高电平时, D 锁存器的输入就是 1, 在时钟上升沿, 触发器被置位 1. 如下图\ref{Fig.12} 所示.\\
+  \img{.5}{images/Fig.12.jpg}{同步置位 D 触发器}{Fig.12}\\
+  其 Verilog 代码如下:
+  \begin{lstlisting}[style=verilogstyle, caption={同步置位 D 触发器}, label={Code.6}]
+// D Flip-Flop with a synchronous set
+module d_ff_ss (
+    input  clk, st_n, d, 
+    output reg q 
+);
+    always @(posedge clk) begin
+        if (st_n == 0) q <= 1'b1;
+        else q <= d;
+    end
+endmodule
+  \end{lstlisting}
+  \question 首先如图\ref{Fig.2.1} 搭建 SR 锁存器. 然后搭建基本框架如下图\ref{Fig.13} 所示.
+  \img{.7}{images/Fig.13.jpg}{基本框架}{Fig.13}\\
+  要求异步复位, 则不论时钟信号与 D 信号的状态如何, SR 锁存器的输出都是 0. 因此, 复位信号为低电平时, 两个 SR 锁存器的 R 输入端应该输入 1, 为了防止 SR 锁存器的两个输入端均为 1, 此时 S 输入端应该输入 0. 所以, 在两个 SR 锁存器前, 复位信号取反后接一个或门接入 R 输入端, 复位信号同时接一个与门然后接入 S 输入端. 如下图\ref{Fig.14}所示.\\
+  \img{.7}{images/Fig.14.jpg}{处理复位信号}{Fig.14}\\
+  这时, 可以将四个门剩下的输入端当作对应 SR 锁存器的输入, 按照 D 触发器的搭建方法, 相应地连线, 可以得到异步复位 D 触发器如下图\ref{Fig.15} 所示.
+  \begin{figure}[h]
+    \centering
+    \subimg{电路图}{.9}{images/Fig.15.1.jpg}{Fig.15.1}
+    \subimg{封装}{.15}{images/Fig.15.2.jpg}{Fig.15.2}
+    \caption{异步复位 D 触发器}
+    \label{Fig.15}
+  \end{figure}
+
+  进一步调用该触发器, 使用 Logisim 中的加法器模块, 设计出一个从 0$\sim $15 循环计数的 4bit 计数器, 如下图\ref{Fig.16} 所示.
+  \img{.5}{images/Fig.16.jpg}{0$\sim $15 循环计数 4bit 计数器}{Fig.16}
+  其 Verilog 代码如下:
+  \begin{lstlisting}[style=verilogstyle, caption={0$\sim $15 循环计数 4bit 计数器}, label={Code.7}]
+// 4-bit up counter MOD 16
+module up_counter_mod16 (
+    input clk, rst_n,
+    output reg [3:0] cnt
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (rst_n == 0) cnt <= 4'b0;
+        else cnt <= cnt + 4'b1;
+    end
+endmodule
+  \end{lstlisting}
+  \question 仿照图\ref{Fig.15} 中的异步复位 D 触发器, 构造一个异步置位 D 触发器如下图\ref{Fig.17} 所示.
+  \begin{figure}[h]
+    \centering
+    \subimg{电路图}{.8}{images/Fig.17.1.jpg}{Fig.17.1}
+    \subimg{封装}{.15}{images/Fig.17.2.jpg}{Fig.17.2}
+    \caption{异步置位 D 触发器}
+    \label{Fig.17}
+  \end{figure}
+
+  构造一个 4bit 9$\sim$ 0 自减器如下图\ref{Fig.18.1}, 其真值表如表\ref{Tab.3} 所示.\\
+  \begin{figure}[h]
+    \centering
+    \subimg{电路图}{.5}{images/Fig.18.1.jpg}{Fig.18.1}
+    \subimg{封装}{.15}{images/Fig.18.2.jpg}{Fig.18.2}
+    \caption{4bit 9$\sim$ 0 自减器}
+    \label{Fig.18}
+  \end{figure}
+
+  \begin{table}[!ht]
+    \centering
+    \caption{自减器真值表}
+    \label{Tab.3}
+    \begin{tabular}{c|cccccccccc} 
+    \hline
+    输入                      & 0000                     & 0001                     & 0010                     & 0011                     & 0100                     & 0101                     & 0110                 & 0111                 & 1000                 & 1001                  \\
+    输出                      & 1001                     & 0000                     & 0001                     & 0010                     & 0011                     & 0100                     & 0101                 & 0110                 & 0111                 & 1000                  \\ 
+    \hline
+    \multicolumn{1}{l|}{输入} & \multicolumn{1}{l}{1010} & \multicolumn{1}{l}{1011} & \multicolumn{1}{l}{1100} & \multicolumn{1}{l}{1101} & \multicolumn{1}{l}{1110} & \multicolumn{1}{l}{1111} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{}  \\
+    \multicolumn{1}{l|}{输出} & \multicolumn{1}{l}{0111} & \multicolumn{1}{l}{1010} & \multicolumn{1}{l}{0111} & \multicolumn{1}{l}{1100} & \multicolumn{1}{l}{0111} & \multicolumn{1}{l}{1110} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{}  \\
+    \hline
+    \end{tabular}
+  \end{table}
+
+  最后设计出的 4bit 9$\sim$ 0 自减器电路图如下图\ref{Fig.19} 所示, 其 Verilog 代码如下代码\ref{Code.8} 所示.
+  \begin{lstlisting}[style=verilogstyle, caption={4bit 9$\sim$ 0 自减器}, label={Code.8}]
+module down_counter_mod10(
+    input clk, rst_n,
+    output reg [3:0] cnt
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (rst_n == 0) cnt <= 1'b0;
+        else begin
+            if (cnt == 4'b0) cnt <= 4'b1001;
+            else cnt <= cnt - 1;
+        end
+    end
+endmodule
+  \end{lstlisting}
+
+  \img{.4}{images/Fig.19.jpg}{4bit 9$\sim$ 0 自减器}{Fig.19}
+  \question 要使复位信号高电平有效, 最简单的方法是对各个示例电路的 /RST 输入取反, 或者在内部门电路进行调整.
+  对应的 Verilog 代码结构调整如下:
+  \begin{lstlisting}[style=verilogstyle, caption={对应的 Verilog 代码结构调整}, label={Code.9}]
+module example(
+    input clk, rst,
+    output reg out
+);
+    always @(posedge clk or posedge rst) begin
+        if (rst == 1) out <= 1'b0;
+        else out <= out; // 这里可以是任意的操作
+    end
+endmodule
+  \end{lstlisting}
+\end{ExQuestions}
+\section*{总结与思考}
+%请填写对于本次实验的总结与思考，鼓励填写对于本实验或者本课程的各种建议和吐槽。
+\begin{description}
+  \item[收获] 了解了如何在 Logisim 中搭建简单的时序逻辑电路, 并且编写相应的 Verilog 代码. 学习了在 Logisim 模拟中出现故障如何排查 Bug 并重启模拟. 
+  \item[难易程度与任务量] 中等.
+  \item[建议] 暂无. 
+\end{description}
+\end{document}
