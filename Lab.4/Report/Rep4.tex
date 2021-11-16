@@ -1,0 +1,118 @@
+% template.tex
+% Author: 傅申
+% 本文件是 实验报告模板.docx 与 实验报告模板.tex 的衍生作品，其著作权属于中国科学技术大学计算机实验教学中心.
+
+% 本文件可使用TeXLive发行版（作者使用的是TeXLive 2021，但理论上2016及以后均可）的xelatex命令编译.
+\documentclass[UTF8,fontset=fandol]{ctexart}
+\usepackage{LabReport}
+
+\begin{document}
+\maketitle{Verilog 硬件描述语言}
+\section*{实验目的}
+%列举本实验的实验目的，除指导书上列出的之外，鼓励自行总结及扩展。
+\begin{itemize}
+    \item 掌握 Verilog HDL 常用语法
+    \item 能够熟练阅读并理解 Verilog 代码
+    \item 能够设计较复杂的数字功能电路
+    \item 能够将 Verilog 代码与实际硬件相对应
+\end{itemize}
+\section*{实验环境}
+%列举本实验所用到的各种软硬件环境，如EDA工具、实验平台、实验设备等。
+\begin{itemize}
+    \item Windows PC
+    \item Microsoft Visual Studio Code
+    \item Xilinx Design Tools Vivado HL Design Edition 2019.1 
+\end{itemize}
+\section*{实验练习}
+%如无特殊说明，则应完成对应实验手册上的所有练习题目，将过程和结果以图文并茂的形式体现在本报告中，建议实验过程中随手保存各种截图。
+\begin{ExQuestions}
+  \question 条件语句需要出现在 \texttt{always} 语句的过程语句部分, 而不能在模块内部单独出现, 因此修改代码如下:
+\begin{lstlisting}[style = verilogstyle, caption = {修改后的题目 1.}, label = {Code.1}]
+module test(
+    input  a,
+    output reg b);
+    always @(*) begin
+        if (a) b = 1'b0;
+        else   b = 1'b1;
+    end
+endmodule
+\end{lstlisting}
+    \question 补充后的代码如下:
+\begin{lstlisting}[style = verilogstyle, caption = {补充完毕的题目 2.}, label = {Code.2}]
+module test(
+    input  [4:0] a,
+    output reg [4:0] b);
+    always@(*)
+        b = a;
+endmodule
+\end{lstlisting}
+\newpage
+    \question 当 \texttt{a=8'b0011\_0011}, \texttt{b=8'b1111\_0000} 时各个输出信号的值如下:
+    \begin{table}[!ht]
+        \vspace*{-1em}
+        \centering
+        \caption{各个输出信号的值}
+        \label{Tab.1}
+        \begin{tabular}{cccc}
+            \toprule
+            \textbf{输出信号} & \textbf{值} & \textbf{输出信号} & \textbf{值} \\
+            \midrule
+            \texttt{c} & \texttt{8'b0011\_0000} & \texttt{d} & \texttt{8'b1111\_0011} \\
+            \texttt{e} & \texttt{8'b1100\_0011} & \texttt{f} & \texttt{8'b1100\_1100} \\
+            \texttt{g} & \texttt{8'b0011\_0000} & \texttt{h} & \texttt{8'b0000\_0110} \\
+            \texttt{i} & \texttt{8'b0000\_0000} & \texttt{j} & \texttt{8'b1111\_0000} \\
+            \texttt{k} & \texttt{8'b0100\_0011} & &\\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+    \question 语法错误如下:
+    \begin{enumerate}
+        \item 在 \texttt{sub\_test} 模块中使用 \texttt{assign} 语句给寄存器类型的 \texttt{c} 赋值. 应该将 \texttt{c} 改成线网类型;
+        \item 在 \texttt{test} 模块中, 模块调用时输出端应该与线网类型的数据链接, 但是 \texttt{temp} 是寄存器类型. 应该将其改为线网类型;
+        \item 在 \texttt{test} 模块中, 两次模块调用都混用了两种关联方式. 应该将它们修改为使用一种关联方式, 下面的代码 \ref{Code.3} 使用通过名称关联的方式.
+    \end{enumerate}
+    修改后的代码如下:
+    \begin{lstlisting}[style = verilogstyle, caption = {修改后的题目 4.}, label = {Code.3}]
+module sub_test(
+    input  a, b,
+    output c);
+    assign c = (a < b)? a : b;
+endmodule
+
+module test (
+    input a, b, c,
+    output o);
+    wire temp;
+    sub_test sub_test1(.a(a),     .b(b), .c(temp));
+    sub_test sub_test2(.a(temp),  .b(c), .c(o));
+endmodule     
+    \end{lstlisting}
+    \question 语法错误如下:
+    \begin{enumerate}
+        \item 在 \texttt{sub\_test} 模块中, 输出信号的定义出现在了模块的主体部分. 应该将它放在模块名后面的括号内;
+        \item 在 \texttt{test} 模块中, 对其他模块的调用出现在了 \texttt{always} 语句的过程语句中. 应该将它放在模块内部单独出现.
+    \end{enumerate}
+    修改后的代码如下: \newpage
+    \begin{lstlisting}[style = verilogstyle, caption = {修改后的题目 5.}, label = {Code.4}]
+module sub_test(
+    input  a, b,
+    output o);
+    assign o = a + b;
+endmodule
+
+module test(
+    input  a, b,
+    output c);
+    sub_test sub_test(a, b, c);
+endmodule
+    \end{lstlisting}
+\end{ExQuestions}
+\section*{总结与思考}
+%请填写对于本次实验的总结与思考，鼓励填写对于本实验或者本课程的各种建议和吐槽。
+\begin{description}
+    \item[收获] 学习了 Verilog HDL 语言, 练习了如何找到 Verilog 代码中一些简单的错误.
+    \item[难易程度] 简单
+    \item[任务量] 轻松
+    \item[建议] 无   
+\end{description}
+\end{document}
