@@ -1,0 +1,28 @@
+$date
+	Thu Nov 11 21:08:17 2021
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module test_bench $end
+$var reg 2 ! a [1:0] $end
+$var reg 2 " b [1:0] $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b0 "
+b1 !
+$end
+#100
+b1 "
+#200
+b0 !
+#275
+b0 "
+#350
+b1 "
+#400

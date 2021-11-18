@@ -1,0 +1,49 @@
+$date
+	Thu Nov 11 21:32:33 2021
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module test_bench $end
+$var reg 1 ! clk $end
+$var reg 1 " d $end
+$var reg 1 # rst_n $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+0#
+0"
+0!
+$end
+#5
+1!
+#10
+0!
+#13
+1"
+#15
+1!
+#20
+0!
+#25
+1!
+#27
+1#
+#30
+0!
+#35
+1!
+#37
+0"
+#40
+0!
+#45
+1!
+#50
+0!
+#55
+1!
