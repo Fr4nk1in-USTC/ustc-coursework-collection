@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+# IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+# Start of session at: Thu Nov 18 10:05:50 2021
+# Process ID: 7804
+# Current directory: D:/Code/Digital-Logic-Lab/Lab.6/Prob.3/Prob.3.runs/impl_1
+# Command line: vivado.exe -log counter_30bit.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source counter_30bit.tcl -notrace
+# Log file: D:/Code/Digital-Logic-Lab/Lab.6/Prob.3/Prob.3.runs/impl_1/counter_30bit.vdi
+# Journal file: D:/Code/Digital-Logic-Lab/Lab.6/Prob.3/Prob.3.runs/impl_1\vivado.jou
+#-----------------------------------------------------------
+source counter_30bit.tcl -notrace
