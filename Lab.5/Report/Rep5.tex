@@ -1,0 +1,174 @@
+% tempalte.tex
+% Author: 傅申
+% 本文件是 实验报告模板.docx 与 实验报告模板.tex 的衍生作品，其著作权属于中国科学技术大学计算机实验教学中心.
+
+% 本文件可使用TeXLive发行版（作者使用的是TeXLive 2021，但理论上2016及以后均可）的xelatex命令编译.
+\documentclass[UTF8,fontset=fandol]{ctexart}
+\usepackage{LabReport}
+
+\begin{document}
+\maketitle{使用 Vivado 进行仿真}
+\section*{实验目的}
+%列举本实验的实验目的，除指导书上列出的之外，鼓励自行总结及扩展。
+\begin{itemize}
+    \item 熟悉 Vivado 软件的下载、安装及使用
+    \item 学习使用 Verilog 编写仿真文件
+    \item 学习使用 Verilog 进行仿真，查看并分析波形文件
+\end{itemize}
+\section*{实验环境}
+%列举本实验所用到的各种软硬件环境，如EDA工具、实验平台、实验设备等。
+\begin{itemize}
+    \item Windows PC
+    \item Microsoft Visual Studio Code
+    \item Xilinx Design Tools Vivado HL Design Edition 2019.1 
+\end{itemize}
+\section*{实验练习}
+%如无特殊说明，则应完成对应实验手册上的所有练习题目，将过程和结果以图文并茂的形式体现在本报告中，建议实验过程中随手保存各种截图。
+\begin{ExQuestions}
+  \question 编写的 Verilog 仿真文件如下
+  \begin{lstlisting}[style=verilogstyle, caption={题目 1 的仿真文件}, label={Code.1}]
+`timescale 1ns / 1ps
+module test_bench();
+reg  a, b;
+
+initial #400 $finish;
+
+initial 
+begin
+    a = 1'b1;
+    #200 a = 1'b0;
+end
+
+initial 
+begin
+    b = 1'b0;
+    #100 b = 1'b1;
+    #175 b = 1'b0;
+    #75  b = 1'b1;
+end
+endmodule
+  \end{lstlisting}
+  生成的仿真波形如下图 \ref{Fig.1}.
+  \img{1}{images/fig1}{题目 1 的仿真波形}{Fig.1}
+
+  \question 编写的 Verilog 仿真文件如下
+    \begin{lstlisting}[style=verilogstyle, caption={题目 2 的仿真文件}, label={Code.2}]
+`timescale 1ns / 1ps
+module test_bench();
+reg clk, rst_n, d;
+
+initial #55 $finish;
+
+initial clk = 1'b0;
+always #5 clk = ~clk;
+
+initial
+begin
+    rst_n = 1'b0;
+    #27 rst_n = 1'b1;
+end
+
+initial 
+begin
+    d = 1'b0;
+    #13 d = 1'b1;
+    #24 d = 1'b0;
+end
+endmodule
+    \end{lstlisting}
+    生成的仿真波形如下图 \ref{Fig.2}.
+    \img{1}{images/fig2}{题目 2 的仿真波形}{Fig.2}
+
+    \question 编写的 Verilog 仿真文件如下
+    \begin{lstlisting}[style=verilogstyle, caption={题目 3 的仿真文件}, label={Code.3}]
+`timescale 1ns / 1ps
+module test_bench();
+reg  clk, rst_n, d;
+wire q;
+
+d_ff_r d_ff_r(.clk(clk),.rst_n(rst_n),.d(d),.q(q));
+
+initial #55 $finish;
+
+initial clk = 0;
+always #5 clk = ~clk;
+
+initial
+begin
+    rst_n = 0;
+    #27 rst_n = 1;
+end
+
+initial 
+begin
+    d = 0;
+    #13 d = 1;
+    #24 d = 0;
+end
+
+endmodule
+    \end{lstlisting}
+    生成的仿真波形如下图 \ref{Fig.3}.
+    \img{1}{images/fig3}{题目 3 的仿真波形}{Fig.3}
+
+    \question 设计的 3-8 译码器模块的代码如下
+    \begin{lstlisting}[style=verilogstyle, caption={3-8 译码器模块}, label={Code.4}]
+// 模块文件: Design Sources/decoder_3to8.v
+module decoder_3to8(
+    input  [3:0] in,
+    output reg a, b, c, d, e, f, g, h
+);
+always @(*) 
+begin
+    a = 0;
+    b = 0;
+    c = 0;
+    d = 0;
+    e = 0;
+    f = 0;
+    g = 0;
+    h = 0;
+    case(in)
+        3'b000: a = 1;
+        3'b001: b = 1;
+        3'b010: c = 1;
+        3'b011: d = 1;
+        3'b100: e = 1;
+        3'b101: f = 1;
+        3'b110: g = 1;
+        3'b111: h = 1;
+        default:;
+    endcase
+end
+endmodule
+    \end{lstlisting}
+    仿真测试文件如下
+    \begin{lstlisting}[style=verilogstyle, caption={题目 4 仿真测试文件}, label={Code.5}]
+// 仿真文件: Simulation Sources/test_bench.v
+`timescale 1ns / 1ps
+module test_bench();
+reg  [3:0] in;
+wire a, b, c, d, e, f, g, h;
+decoder_3to8 decoder(.in(in), .a(a), .b(b), .c(c), .d(d),
+                     .e(e), .f(f), .g(g), .h(h));
+
+initial 
+begin
+    in = 3'b000;
+    repeat(7) #10 in = in + 1;
+    #10 $finish;
+end
+endmodule
+    \end{lstlisting}
+    生成的仿真波形如下图 \ref{Fig.4}.
+    \img{1}{images/fig4}{题目 4 的仿真波形}{Fig.4}
+\end{ExQuestions}
+\section*{总结与思考}
+%请填写对于本次实验的总结与思考，鼓励填写对于本实验或者本课程的各种建议和吐槽。
+\begin{description}
+    \item[收获] 学习了如何编写仿真文件并使用 Vivado 进行仿真
+    \item[难易程度] 简单
+    \item[任务量] 轻松
+    \item[建议] 第 2 题与第 3 题可以合并 
+\end{description}
+\end{document}
