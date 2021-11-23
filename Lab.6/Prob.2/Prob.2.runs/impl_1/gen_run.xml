@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="impl_1" LaunchPart="xc7a100tcsg324-1" LaunchTime="1637197514">
+<GenRun Id="impl_1" LaunchPart="xc7a100tcsg324-1" LaunchTime="1637222022">
   <File Type="BITSTR-BMM" Name="test_bd.bmm"/>
   <File Type="OPT-METHODOLOGY-DRC" Name="test_methodology_drc_opted.rpt"/>
   <File Type="INIT-TIMING" Name="test_timing_summary_init.rpt"/>
@@ -71,7 +71,7 @@
   <File Type="WBT-USG" Name="usage_statistics_webtalk.html"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
     <Filter Type="Srcs"/>
-    <File Path="$PPRDIR/../../../../Documents/Tencent Files/1145158903/FileRecv/lab06演示工程代码/test.v">
+    <File Path="$PSRCDIR/sources_1/new/test.v">
       <FileInfo>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -86,7 +86,7 @@
   </FileSet>
   <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
     <Filter Type="Constrs"/>
-    <File Path="$PPRDIR/../../../../Documents/Tencent Files/1145158903/FileRecv/lab06演示工程代码/test.xdc">
+    <File Path="$PSRCDIR/constrs_1/new/test.xdc">
       <FileInfo>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -103,9 +103,7 @@
     </Config>
   </FileSet>
   <Strategy Version="1" Minor="2">
-    <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2019">
-      <Desc>Default settings for Implementation.</Desc>
-    </StratHandle>
+    <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2019"/>
     <Step Id="init_design"/>
     <Step Id="opt_design"/>
     <Step Id="power_opt_design"/>

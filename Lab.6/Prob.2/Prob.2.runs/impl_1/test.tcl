@@ -74,7 +74,7 @@ set rc [catch {
   set_property ip_output_repo D:/Code/Digital-Logic-Lab/Lab.6/Prob.2/Prob.2.cache/ip [current_project]
   set_property ip_cache_permissions {read write} [current_project]
   add_files -quiet D:/Code/Digital-Logic-Lab/Lab.6/Prob.2/Prob.2.runs/synth_1/test.dcp
-  read_xdc {{D:/Documents/Tencent Files/1145158903/FileRecv/lab06演示工程代码/test.xdc}}
+  read_xdc D:/Code/Digital-Logic-Lab/Lab.6/Prob.2/Prob.2.srcs/constrs_1/new/test.xdc
   link_design -top test -part xc7a100tcsg324-1
   close_msg_db -file init_design.pb
 } RESULT]

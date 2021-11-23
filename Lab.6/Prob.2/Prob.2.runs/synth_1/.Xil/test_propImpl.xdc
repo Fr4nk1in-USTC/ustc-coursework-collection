@@ -1,4 +1,4 @@
-set_property SRC_FILE_INFO {cfile:{D:/Documents/Tencent Files/1145158903/FileRecv/lab06演示工程代码/test.xdc} rfile:{../../../../../../../Documents/Tencent Files/1145158903/FileRecv/lab06演示工程代码/test.xdc} id:1} [current_design]
+set_property SRC_FILE_INFO {cfile:D:/Code/Digital-Logic-Lab/Lab.6/Prob.2/Prob.2.srcs/constrs_1/new/test.xdc rfile:../../../Prob.2.srcs/constrs_1/new/test.xdc id:1} [current_design]
 set_property src_info {type:XDC file:1 line:7 export:INPUT save:INPUT read:READ} [current_design]
 set_property -dict { PACKAGE_PIN E3    IOSTANDARD LVCMOS33 } [get_ports { clk }]; #IO_L12P_T1_MRCC_35 Sch=clk100mhz
 set_property src_info {type:XDC file:1 line:10 export:INPUT save:INPUT read:READ} [current_design]

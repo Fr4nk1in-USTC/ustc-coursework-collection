@@ -21,22 +21,15 @@
 
 
 module counter_30bit(
-    input  CLK100MHZ,
-    output reg [3:0] hexplay_data,
-    output reg [2:0] hexplay_an
+    input  clk, rst,
+    output [7:0] led
     );
-    reg [29:0] cnt;
-    integer i;
-    always @(posedge CLK100MHZ) begin
-        if (cnt == 30'h3fffffff) cnt <= 0;
-        else cnt <= cnt + 1;
-
-        if (hexplay_an == 3'h7) hexplay_an <= 0;
-        else hexplay_an <= hexplay_an + 1;
-
-        if (i == 7) i <= 0;
-        else i <= i + 1;
-
-        hexplay_data <= {3'h0, cnt[i + 22]};
+    reg [29:0] count;
+    assign led = count[29:22];
+    always @(posedge clk or posedge rst) begin
+        if (rst || count == 30'h3fffffff)
+            count <= 30'h00000000;
+        else
+            count <= count + 1;
     end
 endmodule
