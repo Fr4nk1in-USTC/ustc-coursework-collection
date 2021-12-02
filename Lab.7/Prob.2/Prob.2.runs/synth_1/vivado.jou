@@ -1,12 +1,12 @@
 #-----------------------------------------------------------
 # Vivado v2019.1 (64-bit)
-# SW Build 2552052 on Fri May 24 14:47:09 MDT 2019
+# SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
 # IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
-# Start of session at: Thu Nov 25 11:17:08 2021
-# Process ID: 14029
-# Current directory: /home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.2/Prob.2.runs/synth_1
-# Command line: vivado -log display.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source display.tcl
-# Log file: /home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.2/Prob.2.runs/synth_1/display.vds
-# Journal file: /home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.2/Prob.2.runs/synth_1/vivado.jou
+# Start of session at: Thu Nov 25 14:38:23 2021
+# Process ID: 2560
+# Current directory: D:/Code/Digital-Logic-Lab/Lab.7/Prob.2/Prob.2.runs/synth_1
+# Command line: vivado.exe -log display.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source display.tcl
+# Log file: D:/Code/Digital-Logic-Lab/Lab.7/Prob.2/Prob.2.runs/synth_1/display.vds
+# Journal file: D:/Code/Digital-Logic-Lab/Lab.7/Prob.2/Prob.2.runs/synth_1\vivado.jou
 #-----------------------------------------------------------
 source display.tcl -notrace

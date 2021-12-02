@@ -65,16 +65,17 @@ start_step init_design
 set ACTIVE_STEP init_design
 set rc [catch {
   create_msg_db init_design.pb
+  set_param chipscope.maxJobs 2
   create_project -in_memory -part xc7a100tcsg324-1
   set_property design_mode GateLvl [current_fileset]
   set_param project.singleFileAddWarning.threshold 0
-  set_property webtalk.parent_dir /home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.1/Prob.1.cache/wt [current_project]
-  set_property parent.project_path /home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.1/Prob.1.xpr [current_project]
-  set_property ip_output_repo /home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.1/Prob.1.cache/ip [current_project]
+  set_property webtalk.parent_dir D:/Code/Digital-Logic-Lab/Lab.7/Prob.1/Prob.1.cache/wt [current_project]
+  set_property parent.project_path D:/Code/Digital-Logic-Lab/Lab.7/Prob.1/Prob.1.xpr [current_project]
+  set_property ip_output_repo D:/Code/Digital-Logic-Lab/Lab.7/Prob.1/Prob.1.cache/ip [current_project]
   set_property ip_cache_permissions {read write} [current_project]
-  add_files -quiet /home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.1/Prob.1.runs/synth_1/display.dcp
-  read_ip -quiet /home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.1/Prob.1.srcs/sources_1/ip/dist_mem_gen_0/dist_mem_gen_0.xci
-  read_xdc /home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.1/Prob.1.srcs/constrs_1/new/fpga.xdc
+  add_files -quiet D:/Code/Digital-Logic-Lab/Lab.7/Prob.1/Prob.1.runs/synth_1/display.dcp
+  read_ip -quiet D:/Code/Digital-Logic-Lab/Lab.7/Prob.1/Prob.1.srcs/sources_1/ip/dist_mem_gen_0/dist_mem_gen_0.xci
+  read_xdc D:/Code/Digital-Logic-Lab/Lab.7/Prob.1/Prob.1.srcs/constrs_1/new/fpga.xdc
   link_design -top display -part xc7a100tcsg324-1
   close_msg_db -file init_design.pb
 } RESULT]

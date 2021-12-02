@@ -6,10 +6,14 @@
 # Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 # 
 
+echo "This script was generated under a different operating system."
+echo "Please update the PATH and LD_LIBRARY_PATH variables below, before executing this script"
+exit
+
 if [ -z "$PATH" ]; then
-  PATH=/opt/vlab/vivado/Xilinx/Vivado/2019.1/ids_lite/ISE/bin/lin64:/opt/vlab/vivado/Xilinx/Vivado/2019.1/bin
+  PATH=D:/Xilinx/SDK/2019.1/bin;D:/Xilinx/Vivado/2019.1/ids_lite/ISE/bin/nt64;D:/Xilinx/Vivado/2019.1/ids_lite/ISE/lib/nt64:D:/Xilinx/Vivado/2019.1/bin
 else
-  PATH=/opt/vlab/vivado/Xilinx/Vivado/2019.1/ids_lite/ISE/bin/lin64:/opt/vlab/vivado/Xilinx/Vivado/2019.1/bin:$PATH
+  PATH=D:/Xilinx/SDK/2019.1/bin;D:/Xilinx/Vivado/2019.1/ids_lite/ISE/bin/nt64;D:/Xilinx/Vivado/2019.1/ids_lite/ISE/lib/nt64:D:/Xilinx/Vivado/2019.1/bin:$PATH
 fi
 export PATH
 
@@ -20,7 +24,7 @@ else
 fi
 export LD_LIBRARY_PATH
 
-HD_PWD='/home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.1/Prob.1.runs/impl_1'
+HD_PWD='D:/Code/Digital-Logic-Lab/Lab.7/Prob.1/Prob.1.runs/impl_1'
 cd "$HD_PWD"
 
 HD_LOG=runme.log

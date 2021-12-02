@@ -34,7 +34,7 @@ begin
     if (rst) cnt <= 0;
     else
     begin
-        if (cnt >= 1000000) cnt <= 0;
+        if (cnt >= 999999) cnt <= 0;
         else cnt <= cnt + 1;
     end
 end

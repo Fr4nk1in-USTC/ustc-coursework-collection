@@ -1,8 +1,8 @@
 Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------
-| Tool Version     : Vivado v.2019.1 (lin64) Build 2552052 Fri May 24 14:47:09 MDT 2019
-| Date             : Thu Nov 25 11:19:14 2021
-| Host             : VM3236-fushen running 64-bit Ubuntu 20.04 LTS
+| Tool Version     : Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
+| Date             : Thu Nov 25 14:40:00 2021
+| Host             : Fr4nk1in running 64-bit major release  (build 9200)
 | Command          : report_power -file display_power_routed.rpt -pb display_power_summary_routed.pb -rpx display_power_routed.rpx
 | Design           : display
 | Device           : xc7a100tcsg324-1
@@ -53,12 +53,12 @@ Table of Contents
 | On-Chip        | Power (W) | Used     | Available | Utilization (%) |
 +----------------+-----------+----------+-----------+-----------------+
 | Clocks         |    <0.001 |        3 |       --- |             --- |
-| Slice Logic    |    <0.001 |       47 |       --- |             --- |
-|   LUT as Logic |    <0.001 |       13 |     63400 |            0.02 |
+| Slice Logic    |    <0.001 |       50 |       --- |             --- |
+|   LUT as Logic |    <0.001 |       17 |     63400 |            0.03 |
 |   CARRY4       |    <0.001 |        5 |     15850 |            0.03 |
 |   Register     |    <0.001 |       25 |    126800 |            0.02 |
 |   Others       |     0.000 |        2 |       --- |             --- |
-| Signals        |    <0.001 |       47 |       --- |             --- |
+| Signals        |    <0.001 |       50 |       --- |             --- |
 | I/O            |     0.005 |       15 |       210 |            7.14 |
 | Static Power   |     0.097 |          |           |                 |
 | Total          |     0.103 |          |           |                 |

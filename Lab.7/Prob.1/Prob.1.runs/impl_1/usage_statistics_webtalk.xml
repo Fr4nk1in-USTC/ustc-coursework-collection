@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<webTalkData  fileName='usage_statistics_webtalk.xml'  majorVersion='1' minorVersion='0' timeStamp='Thu Nov 25 10:38:54 2021'>
+<webTalkData  fileName='usage_statistics_webtalk.xml'  majorVersion='1' minorVersion='0' timeStamp='Thu Nov 25 14:46:36 2021'>
 <section name="__ROOT__" level="0" order="1" description="">
  <section name="software_version_and_target_device" level="1" order="1" description="">
   <keyValuePair key="beta" value="FALSE" description="" />
   <keyValuePair key="build_version" value="2552052" description="" />
-  <keyValuePair key="date_generated" value="Thu Nov 25 10:38:54 2021" description="" />
-  <keyValuePair key="os_platform" value="LIN64" description="" />
+  <keyValuePair key="date_generated" value="Thu Nov 25 14:46:36 2021" description="" />
+  <keyValuePair key="os_platform" value="WIN64" description="" />
   <keyValuePair key="product_version" value="Vivado v2019.1 (64-bit)" description="" />
   <keyValuePair key="project_id" value="58d75bf527ab4de899bf0a26615292f2" description="" />
-  <keyValuePair key="project_iteration" value="5" description="" />
-  <keyValuePair key="random_id" value="2761d0e064b659758b89c0c3cb7e377d" description="" />
-  <keyValuePair key="registration_id" value="2761d0e064b659758b89c0c3cb7e377d" description="" />
+  <keyValuePair key="project_iteration" value="6" description="" />
+  <keyValuePair key="random_id" value="3a726fd230485a03a0c9e6aa2e70d3b6" description="" />
+  <keyValuePair key="registration_id" value="3a726fd230485a03a0c9e6aa2e70d3b6" description="" />
   <keyValuePair key="route_design" value="TRUE" description="" />
   <keyValuePair key="target_device" value="xc7a100t" description="" />
   <keyValuePair key="target_family" value="artix7" description="" />
@@ -19,12 +19,12 @@
   <keyValuePair key="tool_flow" value="Vivado" description="" />
  </section>
  <section name="user_environment" level="1" order="2" description="">
-  <keyValuePair key="cpu_name" value="Intel(R) Xeon(R) Silver 4110 CPU @ 2.10GHz" description="" />
-  <keyValuePair key="cpu_speed" value="2100.000 MHz" description="" />
-  <keyValuePair key="os_name" value="Ubuntu" description="" />
-  <keyValuePair key="os_release" value="Ubuntu 20.04 LTS" description="" />
-  <keyValuePair key="system_ram" value="4.000 GB" description="" />
-  <keyValuePair key="total_processors" value="2" description="" />
+  <keyValuePair key="cpu_name" value="Intel(R) Core(TM) i5-1035G1 CPU @ 1.00GHz" description="" />
+  <keyValuePair key="cpu_speed" value="1190 MHz" description="" />
+  <keyValuePair key="os_name" value="Windows Server 2016 or Windows 10" description="" />
+  <keyValuePair key="os_release" value="major release  (build 9200)" description="" />
+  <keyValuePair key="system_ram" value="16.000 GB" description="" />
+  <keyValuePair key="total_processors" value="1" description="" />
  </section>
  <section name="ip_statistics" level="1" order="3" description="">
   <section name="dist_mem_gen_v8_0_13/1" level="2" order="1" description="">
@@ -168,9 +168,9 @@
    <keyValuePair key="output_load" value="5.000000" description="" />
    <keyValuePair key="output_toggle" value="12.500000" description="" />
    <keyValuePair key="package" value="csg324" description="" />
-   <keyValuePair key="pct_clock_constrained" value="0.670000" description="" />
+   <keyValuePair key="pct_clock_constrained" value="1.000000" description="" />
    <keyValuePair key="pct_inputs_defined" value="0" description="" />
-   <keyValuePair key="platform" value="lin64" description="" />
+   <keyValuePair key="platform" value="nt64" description="" />
    <keyValuePair key="process" value="typical" description="" />
    <keyValuePair key="ram_enable" value="50.000000" description="" />
    <keyValuePair key="ram_write" value="50.000000" description="" />
@@ -484,10 +484,10 @@
    <keyValuePair key="-verilog_define" value="default::[not_specified]" description="" />
   </section>
   <section name="usage" level="2" order="2" description="">
-   <keyValuePair key="elapsed" value="00:00:24s" description="" />
+   <keyValuePair key="elapsed" value="00:00:26s" description="" />
    <keyValuePair key="hls_ip" value="0" description="" />
-   <keyValuePair key="memory_gain" value="439.414MB" description="" />
-   <keyValuePair key="memory_peak" value="1842.965MB" description="" />
+   <keyValuePair key="memory_gain" value="607.219MB" description="" />
+   <keyValuePair key="memory_peak" value="993.734MB" description="" />
   </section>
  </section>
  <section name="unisim_transformation" level="1" order="9" description="">
@@ -511,24 +511,30 @@
    <keyValuePair key="abstractfileview_reload" value="1" description="" />
    <keyValuePair key="addsrcwizard_specify_hdl_netlist_block_design" value="1" description="" />
    <keyValuePair key="addsrcwizard_specify_or_create_constraint_files" value="1" description="" />
-   <keyValuePair key="basedialog_cancel" value="7" description="" />
-   <keyValuePair key="basedialog_ok" value="16" description="" />
-   <keyValuePair key="basedialog_yes" value="6" description="" />
+   <keyValuePair key="basedialog_cancel" value="8" description="" />
+   <keyValuePair key="basedialog_ok" value="17" description="" />
+   <keyValuePair key="basedialog_yes" value="7" description="" />
    <keyValuePair key="confirmsavetexteditsdialog_yes" value="1" description="" />
    <keyValuePair key="constraintschooserpanel_create_file" value="1" description="" />
    <keyValuePair key="coretreetablepanel_core_tree_table" value="7" description="" />
    <keyValuePair key="createconstraintsfilepanel_file_name" value="1" description="" />
    <keyValuePair key="createsrcfiledialog_file_name" value="2" description="" />
    <keyValuePair key="filesetpanel_file_set_panel_tree" value="60" description="" />
-   <keyValuePair key="flownavigatortreepanel_flow_navigator_tree" value="9" description="" />
+   <keyValuePair key="flownavigatortreepanel_flow_navigator_tree" value="10" description="" />
+   <keyValuePair key="fpgachooser_fpga_table" value="3" description="" />
+   <keyValuePair key="mainmenumgr_file" value="2" description="" />
+   <keyValuePair key="mainmenumgr_project" value="1" description="" />
    <keyValuePair key="msgtreepanel_message_view_tree" value="8" description="" />
    <keyValuePair key="numjobschooser_number_of_jobs" value="2" description="" />
    <keyValuePair key="pacommandnames_add_sources" value="3" description="" />
+   <keyValuePair key="pacommandnames_new_project" value="1" description="" />
    <keyValuePair key="paviews_code" value="6" description="" />
-   <keyValuePair key="rungadget_show_warning_and_error_messages_in_messages" value="2" description="" />
+   <keyValuePair key="projectnamechooser_choose_project_location" value="1" description="" />
+   <keyValuePair key="projectnamechooser_project_name" value="1" description="" />
+   <keyValuePair key="rungadget_show_warning_and_error_messages_in_messages" value="3" description="" />
    <keyValuePair key="simpleoutputproductdialog_generate_output_products_immediately" value="5" description="" />
    <keyValuePair key="srcchooserpanel_create_file" value="2" description="" />
-   <keyValuePair key="syntheticagettingstartedview_recent_projects" value="1" description="" />
+   <keyValuePair key="syntheticagettingstartedview_recent_projects" value="2" description="" />
    <keyValuePair key="taskbanner_close" value="1" description="" />
    <keyValuePair key="touchpointsurveydialog_no" value="1" description="" />
    <keyValuePair key="xpg_coefiledialog_add_row" value="2" description="" />
@@ -542,14 +548,15 @@
    <keyValuePair key="closeproject" value="1" description="" />
    <keyValuePair key="coreview" value="1" description="" />
    <keyValuePair key="customizecore" value="1" description="" />
+   <keyValuePair key="newproject" value="1" description="" />
    <keyValuePair key="recustomizecore" value="10" description="" />
-   <keyValuePair key="runbitgen" value="7" description="" />
+   <keyValuePair key="runbitgen" value="8" description="" />
    <keyValuePair key="runimplementation" value="1" description="" />
    <keyValuePair key="savefileproxyhandler" value="1" description="" />
-   <keyValuePair key="showview" value="2" description="" />
+   <keyValuePair key="showview" value="3" description="" />
   </section>
   <section name="other_data" level="2" order="3" description="">
-   <keyValuePair key="guimode" value="3" description="" />
+   <keyValuePair key="guimode" value="4" description="" />
   </section>
   <section name="project_data" level="2" order="4" description="">
    <keyValuePair key="constraintsetcount" value="1" description="" />

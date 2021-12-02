@@ -1,4 +1,4 @@
-set_property SRC_FILE_INFO {cfile:/home/ubuntu/文档/digital-logic-lab/Lab.7/Prob.1/Prob.1.srcs/constrs_1/new/fpga.xdc rfile:../../../Prob.1.srcs/constrs_1/new/fpga.xdc id:1} [current_design]
+set_property SRC_FILE_INFO {cfile:D:/Code/Digital-Logic-Lab/Lab.7/Prob.1/Prob.1.srcs/constrs_1/new/fpga.xdc rfile:../../../Prob.1.srcs/constrs_1/new/fpga.xdc id:1} [current_design]
 set_property src_info {type:XDC file:1 line:12 export:INPUT save:INPUT read:READ} [current_design]
 set_property -dict { PACKAGE_PIN C17   IOSTANDARD LVCMOS33 } [get_ports { led[0] }];
 set_property src_info {type:XDC file:1 line:13 export:INPUT save:INPUT read:READ} [current_design]
