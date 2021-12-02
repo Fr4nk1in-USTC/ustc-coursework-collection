@@ -1,0 +1,96 @@
+% tempalte.tex
+% Author: 傅申
+% 本文件是 实验报告模板.docx 与 实验报告模板.tex 的衍生作品，其著作权属于中国科学技术大学计算机实验教学中心.
+
+% 本文件可使用TeXLive发行版（作者使用的是TeXLive 2021，但理论上2016及以后均可）的xelatex命令编译.
+\documentclass[UTF8,fontset=fandol]{ctexart}
+\usepackage{LabReport}
+
+\begin{document}
+\maketitle{FPGA 原理及 Vivado 综合}
+\section*{实验目的}
+%列举本实验的实验目的，除指导书上列出的之外，鼓励自行总结及扩展。
+\begin{itemize}
+    \item 了解 FPGA 工作原理
+    \item 了解 Verilog 文件和约束文件在 FPGA 开发中的作用
+    \item 学会使用 Vivado 进行 FPGA 开发的完整流程
+\end{itemize}
+\section*{实验环境}
+%列举本实验所用到的各种软硬件环境，如EDA工具、实验平台、实验设备等。
+\begin{itemize}
+    \item Windows PC
+    \item Microsoft Visual Studio Code
+    \item Logisim
+    \item Xilinx Design Tools Vivado HL Design Edition 2019.1 
+\end{itemize}
+\section*{实验练习}
+%如无特殊说明，则应完成对应实验手册上的所有练习题目，将过程和结果以图文并茂的形式体现在本报告中，建议实验过程中随手保存各种截图。
+\begin{ExQuestions}
+  \question Verilog 代码中为时序电路逻辑, 且有 \texttt{a\^\ 1'b1 =~a}, 因此可以在 Logisim 中画出如下图 \ref{Fig.1} 的电路图. 其中, RAM / MUX 内存放的数据分别为 \texttt{1, 0, 1, 0}.
+  \img{.9}{images/fig1.jpg}{实现题目 1. 代码的电路图}{Fig.1}
+  \question 将 xdc 文件中约束开关的语句中端口信号逆置, 即 \texttt{sw[7]} 与 \texttt{sw[0]} 互换, 以此类推, 即可使开关与 LED 一一对应. 部分 xdc 文件中代码如下. 
+  \begin{lstlisting}[basicstyle=\footnotesize\ttfamily, numbers = left, language = XML, frame=lrtb, frameround=tttt, caption={修改后的 xdc 文件}]
+## FPGAOL LED (single-digit-SEGPLAY)
+set_property -dict { PACKAGE_PIN C17   IOSTANDARD LVCMOS33 } [get_ports { led[0] }];
+set_property -dict { PACKAGE_PIN D18   IOSTANDARD LVCMOS33 } [get_ports { led[1] }];
+set_property -dict { PACKAGE_PIN E18   IOSTANDARD LVCMOS33 } [get_ports { led[2] }];
+set_property -dict { PACKAGE_PIN G17   IOSTANDARD LVCMOS33 } [get_ports { led[3] }];
+set_property -dict { PACKAGE_PIN D17   IOSTANDARD LVCMOS33 } [get_ports { led[4] }];
+set_property -dict { PACKAGE_PIN E17   IOSTANDARD LVCMOS33 } [get_ports { led[5] }];
+set_property -dict { PACKAGE_PIN F18   IOSTANDARD LVCMOS33 } [get_ports { led[6] }];
+set_property -dict { PACKAGE_PIN G18   IOSTANDARD LVCMOS33 } [get_ports { led[7] }];
+
+## FPGAOL SWITCH
+set_property -dict { PACKAGE_PIN D14   IOSTANDARD LVCMOS33 } [get_ports { sw[7] }];
+set_property -dict { PACKAGE_PIN F16   IOSTANDARD LVCMOS33 } [get_ports { sw[6] }];
+set_property -dict { PACKAGE_PIN G16   IOSTANDARD LVCMOS33 } [get_ports { sw[5] }];
+set_property -dict { PACKAGE_PIN H14   IOSTANDARD LVCMOS33 } [get_ports { sw[4] }];
+set_property -dict { PACKAGE_PIN E16   IOSTANDARD LVCMOS33 } [get_ports { sw[3] }];
+set_property -dict { PACKAGE_PIN F13   IOSTANDARD LVCMOS33 } [get_ports { sw[2] }];
+set_property -dict { PACKAGE_PIN G13   IOSTANDARD LVCMOS33 } [get_ports { sw[1] }];
+set_property -dict { PACKAGE_PIN H16   IOSTANDARD LVCMOS33 } [get_ports { sw[0] }];    
+  \end{lstlisting}
+  生成 bit 文件后, 烧写入 FPGA 内, 效果如下图 \ref{Fig.2}.
+  \img{.9}{images/fig2.jpg}{FPGA 烧写后的效果}{Fig.2}
+  \question 设计的 30 位计数器模块如下代码 \ref{Code.2}, xdc 文件如下代码 \ref{Code.3}.
+  \begin{lstlisting}[style=verilogstyle, caption = {30 位计数器模块代码}, label = {Code.2}]
+module counter_30bit(
+    input  clk, rst,
+    output [7:0] led );
+reg [29:0] count;
+assign led = count[29:22];
+always @(posedge clk or posedge rst) begin
+    if (rst || count == 30'h3fffffff)
+        count <= 30'h00000000;
+    else
+        count <= count + 1;
+end
+endmodule
+  \end{lstlisting}
+  \begin{lstlisting}[basicstyle=\footnotesize\ttfamily, numbers = left, language = XML, frame=lrtb, frameround=tttt, caption={计数器 xdc 文件}, label = {Code.3}]
+## Clock signal
+set_property -dict { PACKAGE_PIN E3    IOSTANDARD LVCMOS33 } [get_ports { clk }];
+## FPGAOL LED (signle-digit-SEGPLAY)
+set_property -dict { PACKAGE_PIN C17   IOSTANDARD LVCMOS33 } [get_ports { led[0] }];
+set_property -dict { PACKAGE_PIN D18   IOSTANDARD LVCMOS33 } [get_ports { led[1] }];
+set_property -dict { PACKAGE_PIN E18   IOSTANDARD LVCMOS33 } [get_ports { led[2] }];
+set_property -dict { PACKAGE_PIN G17   IOSTANDARD LVCMOS33 } [get_ports { led[3] }];
+set_property -dict { PACKAGE_PIN D17   IOSTANDARD LVCMOS33 } [get_ports { led[4] }];
+set_property -dict { PACKAGE_PIN E17   IOSTANDARD LVCMOS33 } [get_ports { led[5] }];
+set_property -dict { PACKAGE_PIN F18   IOSTANDARD LVCMOS33 } [get_ports { led[6] }];
+set_property -dict { PACKAGE_PIN G18   IOSTANDARD LVCMOS33 } [get_ports { led[7] }];
+## FPGAOL BUTTON & SOFT_CLOCK
+set_property -dict { PACKAGE_PIN B18   IOSTANDARD LVCMOS33 } [get_ports { rst }];
+  \end{lstlisting}
+  将生成的 bit 文件烧写入 FPGA 内, 可以看到 8 个 LED 在有规律地闪烁, 即为计数器的效果, 如下图 \ref{Fig.3}. 如果将计数器改为 32 位的, 那么 LED 闪烁的频率会变为 30 位的四分之一.
+    \img{.85}{images/fig3.jpg}{FPGA 烧写后的效果}{Fig.3}
+\end{ExQuestions} 
+\section*{总结与思考}
+%请填写对于本次实验的总结与思考，鼓励填写对于本实验或者本课程的各种建议和吐槽。
+\begin{description}
+    \item[收获] 学习了如何进行简单的 FPGA 开发
+    \item[难易程度] 中等
+    \item[任务量] 轻松
+    \item[建议] 暂无
+\end{description}
+\end{document}
