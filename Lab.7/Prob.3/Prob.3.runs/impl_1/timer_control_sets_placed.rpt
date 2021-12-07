@@ -1,7 +1,7 @@
 Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 ------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-| Date         : Thu Nov 25 15:03:36 2021
+| Date         : Tue Dec  7 23:52:04 2021
 | Host         : Fr4nk1in running 64-bit major release  (build 9200)
 | Command      : report_control_sets -verbose -file timer_control_sets_placed.rpt
 | Design       : timer
@@ -60,7 +60,7 @@ Table of Contents
 +--------------+-----------------------+------------------------+-----------------+--------------+
 | No           | No                    | No                     |              13 |            6 |
 | No           | No                    | Yes                    |               0 |            0 |
-| No           | Yes                   | No                     |              48 |           15 |
+| No           | Yes                   | No                     |              48 |           16 |
 | Yes          | No                    | No                     |               0 |            0 |
 | Yes          | No                    | Yes                    |               0 |            0 |
 | Yes          | Yes                   | No                     |               0 |            0 |
@@ -73,7 +73,7 @@ Table of Contents
 +-----------------------+---------------+------------------+------------------+----------------+
 |      Clock Signal     | Enable Signal | Set/Reset Signal | Slice Load Count | Bel Load Count |
 +-----------------------+---------------+------------------+------------------+----------------+
-|  clk_100MHz_IBUF_BUFG |               | rst_IBUF         |                4 |              5 |
+|  clk_100MHz_IBUF_BUFG |               | rst_IBUF         |                5 |              5 |
 |  clk_100MHz_IBUF_BUFG |               |                  |                6 |             13 |
 |  clk_100MHz_IBUF_BUFG |               | clear            |                5 |             19 |
 |  clk_100MHz_IBUF_BUFG |               | cnt_1[0]_i_1_n_0 |                6 |             24 |

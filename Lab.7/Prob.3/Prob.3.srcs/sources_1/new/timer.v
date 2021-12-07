@@ -35,11 +35,8 @@ assign pulse_200Hz = (cnt_2 == 19'h1);
 always @(posedge clk_100MHz)
 begin
     if (rst) cnt_1 <= 0;
-    else
-    begin
-        if (cnt_1 >= 9999999) cnt_1 <= 0;
-        else cnt_1 <= cnt_1 + 1;
-    end
+    else if (cnt_1 >= 9999999) cnt_1 <= 0;
+    else cnt_1 <= cnt_1 + 1;
 end
 
 always @(posedge clk_100MHz)
@@ -48,7 +45,7 @@ begin
     else cnt_2 <= cnt_2 + 1;
 end
 
-reg [3:0] deci_sec, sec, ten_sec, min;
+reg [3:0] deca_sec, sec, ten_sec, min;
 always @(posedge clk_100MHz)
 begin
     if (rst)
@@ -56,42 +53,43 @@ begin
         min      <= 4'h1;
         ten_sec  <= 4'h2;
         sec      <= 4'h3;
-        deci_sec <= 4'h4;
+        deca_sec <= 4'h4;
     end
     else if (pulse_10Hz)
     begin
-        if (deci_sec >= 4'h9)
+        if (deca_sec >= 4'h9)
         begin
+            deca_sec <= 4'h0;
             if (sec >= 4'h9)
             begin
+                sec <= 4'h0;
                 if (ten_sec >= 4'h5)
                 begin
-                    if (min >= 4'h9) min <= 4'h0;
-                    else             min <= min + 1;
                     ten_sec <= 4'h0;
+                    if (min >= 4'h9) min <= 4'h0;
+                    else  min <= min + 1;
                 end
                 else ten_sec <= ten_sec + 1;
-                sec <= 4'h0;
             end
             else sec <= sec + 1;
-            deci_sec <= 4'h0;
         end
-        else deci_sec <= deci_sec + 1;
+        else deca_sec <= deca_sec + 1;
     end
 end
 
 always @(posedge clk_100MHz)
 begin
-        begin
-            if (hexplay_an >= 2'h3) hexplay_an <= 2'h0;
-            else                    hexplay_an <= hexplay_an + 1;
-        end
+    if (pulse_200Hz)
+    begin 
+        if (hexplay_an >= 2'h3) hexplay_an <= 2'h0;
+        else hexplay_an <= hexplay_an + 1;
+    end
 end
 
 always @(clk_100MHz)
 begin
     case(hexplay_an)
-    2'h0: hexplay_data <= deci_sec;
+    2'h0: hexplay_data <= deca_sec;
     2'h1: hexplay_data <= sec;
     2'h2: hexplay_data <= ten_sec;
     2'h3: hexplay_data <= min;

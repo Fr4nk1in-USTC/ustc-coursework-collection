@@ -28,35 +28,24 @@ module display(
     );
 reg [19:0] cnt;
 wire clk_100hz;
+// 生成 100Hz 时钟信号
 assign clk_100hz = (cnt >= 500000);
 always @(posedge clk)
 begin
     if (rst) cnt <= 0;
-    else
-    begin
-        if (cnt >= 999999) cnt <= 0;
-        else cnt <= cnt + 1;
-    end
+    else if (cnt >= 999999) cnt <= 0;
+    else cnt <= cnt + 1;
+end
+// 分时复用显示数字
+always @(posedge clk)
+begin
+    if (clk_100hz) an <= 1'b1;
+    else an <= 1'b0;
 end
 always @(posedge clk)
 begin
-    if (rst)
-    begin
-        d <= 4'h0;
-        an <= 1'b0;
-    end
-    else
-    begin
-        if (clk_100hz) 
-        begin
-            an <= 1'b1;
-            d <= sw[7:4];
-        end
-        else
-        begin
-            an <= 1'b0;
-            d <= sw[3:0];
-        end
-    end
+    if (rst) d <= 4'b0;
+    else if (clk_100hz) d <= sw[7:4];
+    else d <= sw[3:0];
 end
 endmodule
