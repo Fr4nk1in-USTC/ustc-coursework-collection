@@ -1,0 +1,364 @@
+% tempalte.tex
+% Author: 傅申
+% 本文件是 实验报告模板.docx 与 实验报告模板.tex 的衍生作品，其著作权属于中国科学技术大学计算机实验教学中心.
+
+% 本文件可使用TeXLive发行版（作者使用的是TeXLive 2021，但理论上2016及以后均可）的xelatex命令编译.
+\documentclass[UTF8,fontset=fandol]{ctexart}
+\usepackage{LabReport}
+\usetikzlibrary{arrows,shapes,chains}
+\begin{document}
+\maketitle{信号处理及有限状态机}
+\section*{实验目的}
+%列举本实验的实验目的，除指导书上列出的之外，鼓励自行总结及扩展。
+\begin{itemize}
+    \item 进一步熟悉 FPGA 开发的整体流程
+    \item 掌握几种常见的信号处理技巧
+    \item 掌握有限状态机的设计方法
+    \item 能够使用有限状态机设计功能电路
+\end{itemize}
+\section*{实验环境}
+%列举本实验所用到的各种软硬件环境，如EDA工具、实验平台、实验设备等。
+\begin{itemize}
+    \item Windows PC
+    \item Microsoft Visual Studio Code
+    \item Logisim
+    \item Xilinx Design Tools Vivado HL Design Edition 2019.1 
+\end{itemize}
+\section*{实验练习}
+%如无特殊说明，则应完成对应实验手册上的所有练习题目，将过程和结果以图文并茂的形式体现在本报告中，建议实验过程中随手保存各种截图。
+\begin{ExQuestions}
+  \question Step 5. 中的代码共有 4 个状态: 0, 1, 2, 3, 分别编码为 00, 01, 10, 11. 其状态跳转图如图 \ref{fig:state_transfer:1}.
+  \begin{figure}[!htbp]
+      \centering
+      \begin{tikzpicture}[->,>=stealth', align = center, auto, node distance=3cm, node/.style = {draw, circle, fill = none, minimum size = 1cm}]
+
+          \node[node](0){0\\(00)};
+          \node[above of = 0, node distance = 1cm](4){输出0};
+          \node[node, right of = 0](1){1\\(01)};
+          \node[above of = 1, node distance = 1cm](5){输出0};
+          \node[node, below of = 1](2){2\\(10)};
+          \node[below of = 2, node distance = 1cm](6){输出0};
+          \node[node, below of = 0](3){3\\(11)};
+          \node[below of = 3, node distance = 1cm](7){输出1};
+          \path[]
+          (0) edge (1)
+          (1) edge (2)
+          (2) edge (3)
+          (3) edge (0);
+      \end{tikzpicture}
+      \caption{Step 5. 的状态跳转图}
+      \label{fig:state_transfer:1}    
+  \end{figure}
+
+  只有当状态为 3 时才输出 1, 其他状态都输出 0. 由此写出有限状态机的代码如下
+  \begin{lstlisting}[style = verilogstyle, caption = {Step 5. 中代码改写为有限状态机的形式}]
+module test(
+    input clk, rst,
+    output led
+);
+parameter STATE_0 = 2'h0;
+parameter STATE_1 = 2'h1;
+parameter STATE_2 = 2'h2;
+parameter STATE_3 = 2'h3;
+reg [1:0] curr_state, next_state;
+// FSM Part 1
+always @(*) case (curr_state)
+    STATE_0: next_state = STATE_1;
+    STATE_1: next_state = STATE_2;
+    STATE_2: next_state = STATE_3;
+    STATE_3: next_state = STATE_0;
+    default: next_state = STATE_0;
+endcase
+// FSM Part 2
+always @(posedge clk or posedge rst) begin
+    if (rst) curr_state <= STATE_0;
+    else curr_state <= next_state;
+end
+// FSM Part 3
+assign led = (curr_state == STATE_3);
+endmodule
+  \end{lstlisting}
+  \question 首先, 采用 Step 2. 中的方式取 sw 信号的边缘, 将最后的与门换成同或门, 即可同时取到 sw 的上升沿与下降沿.
+  然后设计一个位宽为 4 bit 的 D 触发器, 其复位值为 \texttt{4'b0000}. 将 sw 的信号边缘连接到 D 触发器的时钟输入, 
+  并且将计数器电路连接到 D 输入. 最后得到的电路如图 \ref{fig:circuit:3}. 电路设计过程如图 \ref{fig:circuit}.
+  \begin{figure}[!htbp]
+      \centering
+      \subimg{取 sw 信号边缘}{.8}{images/fig1.1.jpg}{fig:circuit:1}\\
+      \subimg{位宽为 4 bit 的 D 触发器}{.8}{images/fig1.2.jpg}{fig:circuit:2}\\
+      \subimg{最终电路}{.8}{images/fig1.3.jpg}{fig:circuit:3}
+      \caption{计数器电路}
+      \label{fig:circuit}
+  \end{figure}
+  \question 因为要根据按钮按下的瞬间进行计数, 所以首先需要取 \texttt{btn} 信号的边缘. 取信号边缘的模块如下
+  \begin{lstlisting}[style = verilogstyle, caption = {取信号边缘的模块}, label = {Code:2}]
+// ./Prob.3/Prob.3.srcs/sources_1/new/SignalEdge.v
+module signal_edge(
+    input clk,
+    input signal,
+    output signal_edge
+    );
+reg signal_r1, signal_r2;
+always @(posedge clk) signal_r1 <= signal;
+always @(posedge clk) signal_r2 <= signal_r1;
+assign signal_edge = signal_r1 & (~signal_r2);
+endmodule
+  \end{lstlisting}
+  在 \texttt{btn\_edge} 信号有效时根据 \texttt{sw} 的情况进行计数.
+  因为需要用到 2 个数码管, 所以我们需要生成一个 100 Hz 的时钟信号, 并采用时分复用的方式进行显示.
+  最后的 Verilog 代码如代码 \ref{Code:3}. 
+  \begin{lstlisting}[style = verilogstyle, caption = {题目 3. 的 Verilog 代码}, label = {Code:3}]
+// ./Prob.3/Prob.3.srcs/sources_1/new/Counter.v
+module counter(
+    input clk_100mhz,
+    input sw,
+    input btn,
+    input rst,
+    output reg hexplay_an,
+    output reg [3:0] hexplay_data
+    );
+// generate a 100 hz clock
+wire clk_100hz;
+reg [19:0] clk_cnt;
+assign clk_100hz = (clk_cnt >= 500000);
+always @(posedge clk_100mhz)
+begin
+    if (clk_cnt >= 1000000) clk_cnt = 0;
+    else clk_cnt = clk_cnt + 20'h00001;
+end
+// get the edge of btn signal
+wire btn_edge;
+signal_edge getBtnEdge(.clk(clk_100mhz), 
+                       .signal(btn), 
+                       .signal_edge(btn_edge));
+// counter
+reg [7:0] cnt;
+always @(posedge clk_100mhz)
+begin
+    if (rst) cnt <= 8'h1f;
+    else if (btn_edge)
+    begin
+        if (sw)
+        begin
+            if (cnt >= 8'hff) cnt <= 8'h00;
+            else cnt <= cnt + 8'h01;
+        end
+        else
+        begin
+            if (cnt == 8'h00) cnt <= 8'hff;
+            else cnt <= cnt - 8'h01;
+        end
+    end
+end
+// segplay
+always @(posedge clk_100mhz)
+begin
+    if (clk_100hz) 
+    begin
+        hexplay_an = 1'b1;
+        hexplay_data = cnt[7:4];
+    end
+    else
+    begin
+        hexplay_an = 1'b0;
+        hexplay_data = cnt[3:0];
+    end
+end
+endmodule
+  \end{lstlisting}
+  部分 xdc 约束文件代码如下
+  \begin{lstlisting}[basicstyle=\footnotesize\ttfamily, numbers = left, language = XML, frame=lrtb, frameround=tttt, caption={题目 3. 的 xdc 文件}, breaklines=true]
+## Clock signal
+#IO_L12P_T1_MRCC_35 Sch=clk100mhz
+set_property -dict { PACKAGE_PIN E3    IOSTANDARD LVCMOS33 } [get_ports { clk_100mhz }]; 
+
+## FPGAOL SWITCH
+
+set_property -dict { PACKAGE_PIN D14   IOSTANDARD LVCMOS33 } [get_ports { sw }];
+set_property -dict { PACKAGE_PIN F16   IOSTANDARD LVCMOS33 } [get_ports { rst }];
+
+## FPGAOL HEXPLAY
+
+set_property -dict { PACKAGE_PIN A14   IOSTANDARD LVCMOS33 } [get_ports { hexplay_data[0] }];
+set_property -dict { PACKAGE_PIN A13   IOSTANDARD LVCMOS33 } [get_ports { hexplay_data[1] }];
+set_property -dict { PACKAGE_PIN A16   IOSTANDARD LVCMOS33 } [get_ports { hexplay_data[2] }];
+set_property -dict { PACKAGE_PIN A15   IOSTANDARD LVCMOS33 } [get_ports { hexplay_data[3] }];
+set_property -dict { PACKAGE_PIN B17   IOSTANDARD LVCMOS33 } [get_ports { hexplay_an }];
+
+## FPGAOL BUTTON & SOFT_CLOCK
+
+set_property -dict { PACKAGE_PIN B18   IOSTANDARD LVCMOS33 } [get_ports { btn }];
+  \end{lstlisting}
+  最后生成比特流后烧写在 FPGAOL 平台, 效果如图 \ref{fig:fpga:1}.
+  \img{.8}{images/fig.2.jpg}{题目 3. 在 FPGA上的显示效果}{fig:fpga:1}
+
+  \question 由题意可知, 有限状态机有 4 个状态, 对应输入序列以 \texttt{0}, \texttt{1}, \texttt{11}, \texttt{110} 结尾, 分别编码为 00, 01, 10, 11. 只有在状态 11 且输入的 \texttt{sw} 为 0 时, 计数器才加 1. 状态转移图如图 \ref{fig:state_transfer:2}.
+  \begin{figure}[!htbp]
+    \centering
+    \begin{tikzpicture}[->,>=stealth', align = center, auto, node distance=4cm, node/.style = {draw, circle, fill = none, minimum size = 1cm}]
+      \node[node] (s0) {State\\00};
+      \node[node, right of = s0] (s1) {State\\01};
+      \node[node, below of = s1] (s2) {State\\10};
+      \node[node, below of = s0] (s3) {State\\11};
+      \node[above of= s0, node distance = 1.1cm] (s0_0) {计数器不变};
+      \node[above of= s1, node distance = 1.1cm] (s1_1) {计数器不变};
+      \node[below of= s2, node distance = 1.1cm] (s2_1) {计数器不变};
+      \node[below of= s3, node distance = 1.4cm] (s3_0) {0: 计数器加 1 \\1: 计数器不变};
+      \path[]
+      (s0) edge [out = 150, in = 210, looseness = 4] node [left] {0} (s0)
+      (s0) edge [bend left = 20] node [above] {1} (s1)
+      (s1) edge [bend left = 20] node [below] {0} (s0)
+      (s1) edge node[right] {1} (s2)
+      (s2) edge [out = 30, in = 330, looseness = 4] node [right] {1} (s2)
+      (s2) edge node [below] {0} (s3)
+      (s3) edge node [left] {0,1} (s0);
+    \end{tikzpicture}
+    \caption{题目 4. 的状态转移图}
+    \label{fig:state_transfer:2}
+  \end{figure}
+  由题意可知, 我们仍然需要取 \texttt{btn} 信号的边缘, 所以仍需要用到代码 \ref{Code:2} 的模块.
+  而需要驱动 6 个数码管, 我们则需要 300 Hz 的时钟/脉冲信号, 但是 300 Hz 不好实现, 因此这里使用 400 Hz 的脉冲信号进行驱动.
+  最后的 Verilog 模块代码如下
+  \begin{lstlisting}[style = verilogstyle, caption = {题目 4. 的 Verilog 模块}, breaklines=true]  
+module array_detect(
+    input clk_100mhz,
+    input btn,
+    input sw,
+    output reg [3:0] hexplay_data,
+    output reg [2:0] hexplay_an
+    );
+// generate a 400 Hz pulse
+wire pulse_400hz;
+reg [18:0] pulse_cnt;
+
+assign pulse_400hz = (pulse_cnt == 19'h00001);
+always @(posedge clk_100mhz)
+begin
+    if (pulse_cnt >= 19'h3d090) pulse_cnt <= 19'h00000;
+    else pulse_cnt <= pulse_cnt + 19'h00001;
+end
+
+// get btn signal edge
+wire btn_edge;
+signal_edge getBtnEdge(.clk(clk_100mhz),
+                        .signal(btn),
+                        .signal_edge(btn_edge));
+
+// input array process
+reg [3:0] input_array;
+initial input_array = 4'h0;
+always @(posedge clk_100mhz)
+begin
+        if (btn_edge) input_array <= {input_array[2:0], sw};
+end
+    
+// FSM
+parameter STATE_0 = 2'b00;
+parameter STATE_1 = 2'b01;
+parameter STATE_2 = 2'b10;
+parameter STATE_3 = 2'b11;
+
+reg [1:0] curr_state, next_state;
+reg [3:0] cnt;
+initial cnt <= 4'h0;
+// Part 1
+always @(*) 
+begin
+    if (sw) 
+    begin
+        case(curr_state)
+            STATE_0: next_state = STATE_1;
+            STATE_1: next_state = STATE_2;
+            STATE_2: next_state = STATE_2;
+            STATE_3: next_state = STATE_0;
+            default: next_state = STATE_0;
+        endcase
+    end
+    else
+    begin
+        case(curr_state)
+            STATE_0: next_state = STATE_0;
+            STATE_1: next_state = STATE_0;
+            STATE_2: next_state = STATE_3;
+            STATE_3: next_state = STATE_0;
+            default: next_state = STATE_0;
+        endcase
+    end
+end
+// Part 2
+always @(posedge clk_100mhz)
+    if (btn_edge) curr_state <= next_state;
+// Part 3
+always @(posedge clk_100mhz)
+begin
+    if (btn_edge) 
+    begin
+        if (curr_state == STATE_3 && sw == 0)
+        begin
+            if (cnt >= 4'hf) cnt <= 4'h0;
+            else cnt <= cnt + 4'h1;
+        end 
+    end
+end
+
+// Segplay
+always @(posedge clk_100mhz)
+begin
+    if (pulse_400hz)
+    begin
+        if (hexplay_an >= 3'h7)
+            hexplay_an <= 3'h0;
+        else if (hexplay_an == 3'h0 ||
+                    hexplay_an == 3'h5)
+                hexplay_an <= hexplay_an + 3'h2;
+        else hexplay_an <= hexplay_an + 3'h1;
+    end
+end
+always @(posedge clk_100mhz)
+begin
+    case (hexplay_an)
+        3'h0: hexplay_data <= cnt;
+        3'h2: hexplay_data <= {3'b000, input_array[0]};
+        3'h3: hexplay_data <= {3'b000, input_array[1]};
+        3'h4: hexplay_data <= {3'b000, input_array[2]};
+        3'h5: hexplay_data <= {3'b000, input_array[3]};
+        3'h7: hexplay_data <= {2'b00, curr_state};
+        default: hexplay_data <= 4'h0;
+    endcase
+end
+endmodule
+  \end{lstlisting}
+  可以看出, 我们使用了两端的两个数码管以及中间的四个数码管, 从左到右依次为: 状态编码, 最近输入四位数值, 目标序列个数. 工程的 xdc 约束文件代码如下
+  \begin{lstlisting}[basicstyle = \footnotesize\ttfamily, breaklines=true, numbers = left, language = XML, frame=lrtb, frameround=tttt, caption={题目 4. 的 xdc 文件}]
+## Clock signal
+#IO_L12P_T1_MRCC_35 Sch=clk100mhz
+set_property -dict { PACKAGE_PIN E3    IOSTANDARD LVCMOS33 } [get_ports { clk_100mhz }]; 
+## FPGAOL SWITCH
+
+set_property -dict { PACKAGE_PIN D14   IOSTANDARD LVCMOS33 } [get_ports { sw }];
+
+## FPGAOL HEXPLAY
+
+set_property -dict { PACKAGE_PIN A14   IOSTANDARD LVCMOS33 } [get_ports { hexplay_data[0] }];
+set_property -dict { PACKAGE_PIN A13   IOSTANDARD LVCMOS33 } [get_ports { hexplay_data[1] }];
+set_property -dict { PACKAGE_PIN A16   IOSTANDARD LVCMOS33 } [get_ports { hexplay_data[2] }];
+set_property -dict { PACKAGE_PIN A15   IOSTANDARD LVCMOS33 } [get_ports { hexplay_data[3] }];
+set_property -dict { PACKAGE_PIN B17   IOSTANDARD LVCMOS33 } [get_ports { hexplay_an[0] }];
+set_property -dict { PACKAGE_PIN B16   IOSTANDARD LVCMOS33 } [get_ports { hexplay_an[1] }];
+set_property -dict { PACKAGE_PIN A18   IOSTANDARD LVCMOS33 } [get_ports { hexplay_an[2] }];
+
+## FPGAOL BUTTON & SOFT_CLOCK
+
+set_property -dict { PACKAGE_PIN B18   IOSTANDARD LVCMOS33 } [get_ports { btn }];
+  \end{lstlisting}
+  生成比特流后烧写如 FPGAOL 平台, 当输入序列为 ``\texttt{0011001110011}'' 时, 显示效果如图 \ref{fig:fpga:2}.
+  \img{.8}{images/fig.3.jpg}{题目 4. 在 FPGA 上的显示效果}{fig:fpga:2}
+\end{ExQuestions}
+\section*{总结与思考}
+%请填写对于本次实验的总结与思考，鼓励填写对于本实验或者本课程的各种建议和吐槽。
+\begin{description}
+    \item[收获] 学习了如何对输入信号进行处理, 能够构造简单的有限状态机.
+    \item[难易程度] 较难
+    \item[任务量] 中等
+    \item[建议] 暂无
+  \end{description}
+\end{document}
