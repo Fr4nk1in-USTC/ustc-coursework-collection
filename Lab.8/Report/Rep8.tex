@@ -78,9 +78,9 @@ end
 assign led = (curr_state == STATE_3);
 endmodule
   \end{lstlisting}
-  \question 首先, 采用 Step 2. 中的方式取 sw 信号的边缘, 将最后的与门换成同或门, 即可同时取到 sw 的上升沿与下降沿.
-  然后设计一个位宽为 4 bit 的 D 触发器, 其复位值为 \texttt{4'b0000}. 将 sw 的信号边缘连接到 D 触发器的时钟输入, 
-  并且将计数器电路连接到 D 输入. 最后得到的电路如图 \ref{fig:circuit:3}. 电路设计过程如图 \ref{fig:circuit}.
+  \question 首先, 采用 Step 2. 中的方式取 sw 信号的边缘, 将最后的与门换成同或门, 即可同时取到 sw 的上升沿与下降沿,
+  将 sw 的信号边缘连接到计数器电路加法器的进位输入,
+  然后设计一个位宽为 4 bit 的 D 触发器, 其复位值为 \texttt{4'b0000}. 将计数器电路连接到触发器 D 输入. 最后得到的电路如图 \ref{fig:circuit:3}. 电路设计过程如图 \ref{fig:circuit}.
   \begin{figure}[!htbp]
       \centering
       \subimg{取 sw 信号边缘}{.8}{images/fig1.1.jpg}{fig:circuit:1}\\
