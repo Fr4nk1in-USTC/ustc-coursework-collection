@@ -1,0 +1,9 @@
+0.6
+2019.1
+May 24 2019
+15:06:07
+D:/Code/Digital-Logic-Lab/Lab.10/LC-3/LC-3.sim/sim_1/behav/xsim/glbl.v,1558713910,verilog,,,,glbl,,,,,,,,
+D:/Code/Digital-Logic-Lab/Lab.10/LC-3/LC-3.srcs/sim_1/new/tb.v,1640192271,verilog,,,,tb,,,,,,,,
+D:/Code/Digital-Logic-Lab/Lab.10/LC-3/LC-3.srcs/sources_1/ip/memory/sim/memory.v,1640192180,verilog,,D:/Code/Digital-Logic-Lab/Lab.10/LC-3/LC-3.srcs/sim_1/new/tb.v,,memory,,,,,,,,
+D:/Code/Digital-Logic-Lab/Lab.10/LC-3/LC-3.srcs/sources_1/new/main.v,1640162639,verilog,,D:/Code/Digital-Logic-Lab/Lab.10/LC-3/LC-3.srcs/sim_1/new/tb.v,,main,,,,,,,,
+D:/Code/Digital-Logic-Lab/Lab.10/LC-3/LC-3.srcs/sources_1/new/signal_edge.v,1640160334,verilog,,D:/Code/Digital-Logic-Lab/Lab.10/LC-3/LC-3.srcs/sim_1/new/tb.v,,signal_edge,,,,,,,,
