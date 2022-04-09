@@ -1,0 +1,4 @@
+.vscode
+*.gz
+busybox*/
+linux*/
