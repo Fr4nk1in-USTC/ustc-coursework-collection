@@ -125,7 +125,7 @@ int process_redirect(int argc, char **argv, int *fd)
     while(i < argc) {
         int tfd;
         if(strcmp(argv[i], ">") == 0) {
-            tfd = open(argv[i+1], O_WRONLY | O_CREAT | O_TRUNC);
+            tfd = open(argv[i+1], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 
             if(tfd < 0)
                 printf("open '%s' error: %s\n", argv[i+1], strerror(errno));
@@ -134,7 +134,7 @@ int process_redirect(int argc, char **argv, int *fd)
             
             i += 2;
         } else if(strcmp(argv[i], ">>") == 0) {
-            tfd = open(argv[i+1], O_WRONLY | O_CREAT | O_APPEND);
+            tfd = open(argv[i+1], O_WRONLY | O_CREAT | O_APPEND, 0666);
 
             if(tfd < 0)
                 printf("open '%s' error: %s\n", argv[i+1], strerror(errno));
@@ -143,7 +143,7 @@ int process_redirect(int argc, char **argv, int *fd)
 
             i += 2;
         } else if(strcmp(argv[i], "<") == 0) {
-            tfd = open(argv[i+1], O_RDONLY);
+            tfd = open(argv[i+1], O_RDONLY, 0666);
 
             if(tfd < 0)
                 printf("open '%s' error: %s\n", argv[i+1], strerror(errno));
@@ -265,19 +265,50 @@ void execute_command(char *command)
         while (wait(NULL) > 0);
         return ;
     } else { // 选做: 三个以上的命令
-        int read_fd;
+        int read_fd; // 上一个管道的读端口
 
         for (int i = 0; i < cmd_count; i++)
         {
             int pipefd[2];
-            if (i) {
+            if (i != cmd_count - 1) {
                 int ret = pipe(pipefd);
                 if (ret < 0) {
-                    printf("pipe error!\n");
+                    printf("pipe error!");
                     return ;
                 }
             }
+            pid_t pid = fork();
+            if (pid == 0) {
+                // 除了最后一条命令外, 都将标准输出重定向到当前管道入口
+                if (i != cmd_count - 1) {
+                    close(pipefd[READ_END]);
+                    dup2(pipefd[WRITE_END], STDOUT_FILENO);
+                    close(pipefd[WRITE_END]);
+                }
+                // 除了第一条命令外, 都将标准输入重定向到上一个管道出口
+                if (i != 0) {
+                    dup2(read_fd, STDIN_FILENO);
+                    close(read_fd);
+                }
+                // 执行指令
+                char *argv[MAX_CMD_ARG_NUM];
+                int  argc;
+                argc = split_string(commands[i], " ", argv);
+                if (exec_builtin(argc, argv, NULL) != -1)
+                    exit(0);
+                execute(argc, argv);
+                exit(255);
+            }
+            close(pipefd[WRITE_END]);
+            if (i != 0)
+                close(read_fd);
+            if (i != cmd_count - 1) 
+                read_fd = pipefd[READ_END];
         }
+        for (int i = 0; i < cmd_count; i++) {
+            while (wait(NULL) < 0) ;
+        }
+        return ;
     }
 }
 
