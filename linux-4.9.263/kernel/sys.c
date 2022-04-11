@@ -2454,3 +2454,15 @@ COMPAT_SYSCALL_DEFINE1(sysinfo, struct compat_sysinfo __user *, info)
 	return 0;
 }
 #endif /* CONFIG_COMPAT */
+
+/* Manually defined system call */
+SYSCALL_DEFINE1(ps_counter, int __user *, num){
+	struct task_struct* task;
+	int counter = 0;
+	printk("[Syscall] ps_counter\n");
+	for_each_process(task){
+		counter++;
+	}
+	copy_to_user(num, &counter, sizeof(int));
+	return 0;
+}

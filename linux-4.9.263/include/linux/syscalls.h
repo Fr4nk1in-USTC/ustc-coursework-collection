@@ -903,4 +903,7 @@ asmlinkage long sys_pkey_mprotect(unsigned long start, size_t len,
 asmlinkage long sys_pkey_alloc(unsigned long flags, unsigned long init_val);
 asmlinkage long sys_pkey_free(int pkey);
 
+/* Manually defined system calls */
+asmlinkage long sys_ps_counter(int __user * num);
+
 #endif

@@ -315,6 +315,7 @@ __SYSCALL_64(328, sys_pwritev2, )
 __SYSCALL_64(329, sys_pkey_mprotect, )
 __SYSCALL_64(330, sys_pkey_alloc, )
 __SYSCALL_64(331, sys_pkey_free, )
+__SYSCALL_64(332, sys_ps_counter, )
 #ifdef CONFIG_X86_X32_ABI
 __SYSCALL_64(512, compat_sys_rt_sigaction, )
 #endif
