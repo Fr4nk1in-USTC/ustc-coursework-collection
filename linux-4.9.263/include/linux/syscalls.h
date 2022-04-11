@@ -905,5 +905,6 @@ asmlinkage long sys_pkey_free(int pkey);
 
 /* Manually defined system calls */
 asmlinkage long sys_ps_counter(int __user * num);
+asmlinkage long sys_ps_info(void __user * info_array, int __user * ps_num);
 
 #endif

@@ -2456,7 +2456,8 @@ COMPAT_SYSCALL_DEFINE1(sysinfo, struct compat_sysinfo __user *, info)
 #endif /* CONFIG_COMPAT */
 
 /* Manually defined system call */
-SYSCALL_DEFINE1(ps_counter, int __user *, num){
+SYSCALL_DEFINE1(ps_counter, int __user *, num)
+{
 	struct task_struct* task;
 	int counter = 0;
 	printk("[Syscall] ps_counter\n");
@@ -2464,5 +2465,39 @@ SYSCALL_DEFINE1(ps_counter, int __user *, num){
 		counter++;
 	}
 	copy_to_user(num, &counter, sizeof(int));
+	return 0;
+}
+
+SYSCALL_DEFINE2(ps_info, void __user *, info_array, int __user *, ps_num)
+{
+	struct task_struct *task;
+	int counter = 0;
+	typedef struct info
+	{
+		char comm[TASK_COMM_LEN];
+		pid_t pid;
+		volatile long state;
+		unsigned long long runtime;
+	} info_t;
+	printk("[Syscall] ps_info\n");
+	int len = 60;
+	info_t * array = (info_t *)kzalloc(len * sizeof(struct info), GFP_KERNEL);
+	for_each_process(task) {
+		counter++;
+		if (counter > len) {
+			len += 20;
+			info_t * p_tmp = (info_t *)kzalloc(len * sizeof(struct info), GFP_KERNEL);
+			memcpy(p_tmp, array, len * sizeof(struct info));
+			kfree(array);
+			array = p_tmp;
+		}
+		strcpy(array[counter - 1].comm, task->comm);
+		array[counter - 1].pid = task->pid;
+		array[counter - 1].state = task->state;
+		array[counter - 1].runtime = task->se.sum_exec_runtime;
+	}
+	copy_to_user(info_array, array, counter * sizeof(struct info));
+	copy_to_user(ps_num, &counter, sizeof(int));
+	kfree(array);
 	return 0;
 }
