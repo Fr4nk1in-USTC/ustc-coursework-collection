@@ -2468,7 +2468,7 @@ SYSCALL_DEFINE1(ps_counter, int __user *, num)
 	return 0;
 }
 
-SYSCALL_DEFINE2(ps_info, void __user *, info_array, int __user *, ps_num)
+SYSCALL_DEFINE2(ps_info, void __user *, infoes, int __user *, ps_num)
 {
 	struct task_struct *task;
 	int counter = 0;
@@ -2480,24 +2480,15 @@ SYSCALL_DEFINE2(ps_info, void __user *, info_array, int __user *, ps_num)
 		unsigned long long runtime;
 	} info_t;
 	printk("[Syscall] ps_info\n");
-	int len = 60;
-	info_t * array = (info_t *)kzalloc(len * sizeof(struct info), GFP_KERNEL);
+	info_t info;
 	for_each_process(task) {
+		strcpy(info.comm, task->comm);
+		info.pid = task->pid;
+		info.state = task->state;
+		info.runtime = task->se.sum_exec_runtime;
+		copy_to_user((info_t *)infoes + counter, &info, sizeof(info_t));
 		counter++;
-		if (counter > len) {
-			len += 20;
-			info_t * p_tmp = (info_t *)kzalloc(len * sizeof(struct info), GFP_KERNEL);
-			memcpy(p_tmp, array, len * sizeof(struct info));
-			kfree(array);
-			array = p_tmp;
-		}
-		strcpy(array[counter - 1].comm, task->comm);
-		array[counter - 1].pid = task->pid;
-		array[counter - 1].state = task->state;
-		array[counter - 1].runtime = task->se.sum_exec_runtime;
 	}
-	copy_to_user(info_array, array, counter * sizeof(struct info));
 	copy_to_user(ps_num, &counter, sizeof(int));
-	kfree(array);
 	return 0;
 }
