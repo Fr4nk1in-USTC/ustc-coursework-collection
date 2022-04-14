@@ -27,9 +27,9 @@
 int split_string(char *string, char *sep, char **string_clips)
 {
     char string_dup[MAX_BUF_SIZE];
-    string_clips[0] = strtok(string, sep);
+    if ((string_clips[0] = strtok(string, sep)) == NULL)
+        return 0;
     int clip_num = 0;
-
     do {
         char *head, *tail;
         head = string_clips[clip_num];
@@ -329,7 +329,8 @@ int main()
 
         // 获取命令行
         fgets(cmdline, MAX_CMDLINE_LENGTH, stdin);
-        strtok(cmdline, "\n");
+        if (strtok(cmdline, "\n") == NULL)
+            continue;
 
         // 基于 ";" 的多命令执行
         cmd_count = split_string(cmdline, ";", commands);
