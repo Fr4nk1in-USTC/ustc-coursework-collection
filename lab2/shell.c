@@ -176,7 +176,7 @@ int execute(int argc, char **argv) {
     fd[WRITE_END] = STDOUT_FILENO;
     // 处理重定向符，如果不做本部分内容，请注释掉process_redirect的调用
     argc = process_redirect(argc, argv, fd);
-    if(exec_builtin(argc, argv, fd) == 0) {
+    if(exec_builtin(argc, argv, fd) != -1) {
         exit(0);
     }
     // 将标准输入输出STDIN_FILENO和STDOUT_FILENO修改为fd对应的文件
@@ -215,7 +215,7 @@ void execute_command(char *command)
         // 外部命令在子进程中完成
         pid_t pid = fork();
         if (pid == 0) {
-            if (execute(argc, argv) != 0)
+            if (execute(argc, argv) != -1)
                 exit(255);
         }
         while (wait(NULL) > 0);
@@ -238,8 +238,6 @@ void execute_command(char *command)
             char *argv[MAX_CMD_ARG_NUM];
             int  argc;
             argc = split_string(commands[0], " ", argv);
-            if (exec_builtin(argc, argv, NULL) != -1)
-                exit(0);
             execute(argc, argv);
             exit(255);
         }
@@ -254,8 +252,6 @@ void execute_command(char *command)
             char *argv[MAX_CMD_ARG_NUM];
             int  argc;
             argc = split_string(commands[1], " ", argv);
-            if (exec_builtin(argc, argv, NULL) != -1)
-                exit(0);
             execute(argc, argv);
             exit(255);
         }
@@ -294,8 +290,6 @@ void execute_command(char *command)
                 char *argv[MAX_CMD_ARG_NUM];
                 int  argc;
                 argc = split_string(commands[i], " ", argv);
-                if (exec_builtin(argc, argv, NULL) != -1)
-                    exit(0);
                 execute(argc, argv);
                 exit(255);
             }
