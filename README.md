@@ -1,4 +1,4 @@
-# oslab
+# USTC 2022 OS L
 2022 春 USTC 操作系统实验, lyk班
 
 # License
