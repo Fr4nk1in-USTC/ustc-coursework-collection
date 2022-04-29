@@ -1,6 +1,6 @@
 /*
  * mm-naive.c - The fastest, least memory-efficient malloc package.
- * 
+ *
  * In this naive approach, a block is allocated by simply incrementing
  * the brk pointer.  A block is pure payload. There are no headers or
  * footers.  Blocks are never coalesced or reused. Realloc is
@@ -18,15 +18,14 @@
 #include "mm.h"
 #include "memlib.h"
 
-
 /*explicit free list start*/
 #define WSIZE 8
 #define DSIZE 16
 #define CHUNKSIZE (1 << 12)
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-#define PACK(size, prev_alloc, alloc) ((size) & ~(1<<1) | (prev_alloc << 1) & ~(1) | (alloc))
-#define PACK_PREV_ALLOC(val, prev_alloc) ((val) & ~(1<<1) | (prev_alloc << 1))
+#define PACK(size, prev_alloc, alloc) (((size) & ~(1 << 1)) | ((prev_alloc << 1) & ~(1)) | (alloc))
+#define PACK_PREV_ALLOC(val, prev_alloc) (((val) & ~(1 << 1)) | (prev_alloc << 1))
 #define PACK_ALLOC(val, alloc) ((val) | (alloc))
 
 #define GET(p) (*(unsigned long *)(p))
@@ -73,7 +72,7 @@ double get_utilization();
 void mm_check(const char *);
 
 /*
-    TODO:
+    ~TODO:
         完成一个简单的分配器内存使用率统计
         user_malloc_size: 用户申请内存量
         heap_size: 分配器占用内存量
@@ -83,10 +82,11 @@ void mm_check(const char *);
 */
 size_t user_malloc_size, heap_size;
 
-double get_utilization() {
-    return (double) ((user_malloc_size * 1.0) / heap_size); 
+double get_utilization()
+{
+    return (double)((user_malloc_size * 1.0) / heap_size);
 }
-/* 
+/*
  * mm_init - initialize the malloc package.
  */
 int mm_init(void)
@@ -108,7 +108,7 @@ int mm_init(void)
     return 0;
 }
 
-/* 
+/*
  * mm_malloc - Allocate a block by incrementing the brk pointer.
  *     Always allocate a block whose size is a multiple of the alignment.
  */
@@ -127,6 +127,7 @@ void *mm_malloc(size_t size)
     if ((bp = find_fit_first(newsize)) != NULL)
     {
         place(bp, newsize);
+        user_malloc_size += GET_SIZE(HDRP(bp)) - WSIZE;
         return bp;
     }
     /*no fit found.*/
@@ -136,6 +137,7 @@ void *mm_malloc(size_t size)
         return NULL;
     }
     place(bp, newsize);
+    user_malloc_size += GET_SIZE(HDRP(bp)) - WSIZE;
 
     return bp;
 }
@@ -154,10 +156,11 @@ void mm_free(void *bp)
     /*printf("%s, addr_start=%u, size_head=%u, size_foot=%u\n",*/
     /*    __FUNCTION__, HDRP(bp), (size_t)GET_SIZE(HDRP(bp)), (size_t)GET_SIZE(FTRP(bp)));*/
 
-     /*notify next_block, i am free*/
+    /*notify next_block, i am free*/
     head_next_bp = HDRP(NEXT_BLKP(bp));
     PUT(head_next_bp, PACK_PREV_ALLOC(GET(head_next_bp), 0));
 
+    user_malloc_size -= size - WSIZE;
     /* add_to_free_list(bp);*/
 
     coalesce(bp);
@@ -196,7 +199,9 @@ static void *extend_heap(size_t words)
 
     if ((long)(bp = mem_sbrk(size)) == -1)
         return NULL;
-    
+
+    heap_size += size;
+
     PUT(HDRP(bp), PACK(size, prev_alloc, 0)); /*last free block*/
     PUT(FTRP(bp), PACK(size, prev_alloc, 0));
 
@@ -211,58 +216,106 @@ static void *coalesce(void *bp)
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
     size_t size = GET_SIZE(HDRP(bp));
     /*
-        TODO:
+        ~TODO:
             将 bp 指向的空闲块 与 相邻块合并
             结合前一块及后一块的分配情况，共有 4 种可能性
             分别完成相应case下的 数据结构维护逻辑
     */
     if (prev_alloc && next_alloc) /* 前后都是已分配的块 */
     {
-       
+        add_to_free_list(bp);
     }
     else if (prev_alloc && !next_alloc) /*前块已分配，后块空闲*/
     {
-        
+        delete_from_free_list(NEXT_BLKP(bp));
+
+        size_t next_size = GET_SIZE(HDRP(NEXT_BLKP(bp)));
+        size += next_size;
+
+        PUT(HDRP(bp), PACK(size, 1, 0));
+        PUT(FTRP(bp), PACK(size, 1, 0));
+
+        add_to_free_list(bp);
     }
     else if (!prev_alloc && next_alloc) /*前块空闲，后块已分配*/
     {
-        
+        size_t prev_size = GET_SIZE(HDRP(PREV_BLKP(bp)));
+        size += prev_size;
+
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 1, 0));
+        PUT(FTRP(bp), PACK(size, 1, 0));
+
+        bp = PREV_BLKP(bp);
     }
     else /*前后都是空闲块*/
     {
-        
+        delete_from_free_list(NEXT_BLKP(bp));
+
+        size_t prev_size = GET_SIZE(HDRP(PREV_BLKP(bp)));
+        size_t next_size = GET_SIZE(HDRP(NEXT_BLKP(bp)));
+        size += prev_size + next_size;
+
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 1, 0));
+        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 1, 0));
+
+        bp = PREV_BLKP(bp);
     }
     return bp;
 }
 
 static void *find_fit_first(size_t asize)
 {
-    /* 
+    /*
         首次匹配算法
-        TODO:
+        ~TODO:
             遍历 freelist， 找到第一个合适的空闲块后返回
-        
+
         HINT: asize 已经计算了块头部的大小
     */
-   return NULL; // 换成实际返回值
+    void *bp;
+    for (bp = free_listp; bp != NULL; bp = (void *)GET_SUCC(bp))
+    {
+        if (asize <= GET_SIZE(HDRP(bp)))
+            return bp;
+    }
+    return NULL; // 换成实际返回值
 }
 
-static void* find_fit_best(size_t asize) {
-    /* 
+static void *find_fit_best(size_t asize)
+{
+    /*
         最佳配算法
-        TODO:
+        ~TODO:
             遍历 freelist， 找到最合适的空闲块，返回
-        
+
         HINT: asize 已经计算了块头部的大小
     */
-    
-    return NULL; // 换成实际返回值
+    void *bp;
+    void *best_fit = NULL;
+    size_t best_size = 0;
+    for (bp = free_listp; bp != NULL; bp = (void *)GET_SUCC(bp))
+    {
+        if (asize <= GET_SIZE(HDRP(bp)))
+        {
+            if (best_fit == NULL)
+            {
+                best_fit = bp;
+                best_size = GET_SIZE(HDRP(bp));
+            }
+            else if (best_size > GET_SIZE(HDRP(bp)))
+            {
+                best_fit = bp;
+                best_size = GET_SIZE(HDRP(bp));
+            }
+        }
+    }
+    return best_fit; // 换成实际返回值
 }
 
 static void place(void *bp, size_t asize)
 {
-    /* 
-        TODO:
+    /*
+        ~TODO:
         将一个空闲块转变为已分配的块
 
         HINTS:
@@ -271,9 +324,23 @@ static void place(void *bp, size_t asize)
             2. 若剩余空间仍可作为一个空闲块，则原空闲块被分割为一个已分配块+一个新的空闲块
             3. 空闲块的最小大小已经 #define，或者根据自己的理解计算该值
     */
-    
 
-    
+    delete_from_free_list(bp);
+    size_t bp_size = GET_SIZE(HDRP(bp));
+    size_t remain_size = bp_size - asize;
+    if (remain_size >= MIN_BLK_SIZE)
+    {
+        PUT(HDRP(bp), PACK(asize, 1, 1));
+        void *new_bp = NEXT_BLKP(bp);
+        PUT(HDRP(new_bp), PACK(remain_size, 1, 0));
+        PUT(FTRP(new_bp), PACK(remain_size, 1, 0));
+        add_to_free_list(new_bp);
+    }
+    else
+    {
+        PUT(HDRP(bp), PACK(bp_size, 1, 1));
+        PUT(HDRP(NEXT_BLKP(bp)), PACK(GET_SIZE(HDRP(NEXT_BLKP(bp))), 1, 1));
+    }
 }
 
 static void add_to_free_list(void *bp)
@@ -296,8 +363,8 @@ static void add_to_free_list(void *bp)
 
 static void delete_from_free_list(void *bp)
 {
-    size_t prev_free_bp=0;
-    size_t next_free_bp=0;
+    size_t prev_free_bp = 0;
+    size_t next_free_bp = 0;
     if (free_listp == NULL)
         return;
     prev_free_bp = GET_PRED(bp);
