@@ -55,9 +55,9 @@ typedef typeof(follow_page) *my_follow_page;
 // typedef typeof(follow_page_mask) *my_follow_page_mask;
 
 // sudo cat /proc/kallsyms | grep page_referenced
-static my_page_referenced mpage_referenced = (my_page_referenced)0xffffffff95ab0780;
+static my_page_referenced mpage_referenced = (my_page_referenced)0xffffffffa00b8400;
 // sudo cat /proc/kallsyms | grep follow_page
-static my_follow_page mfollow_page = (my_follow_page)0xffffffff95a94160;
+static my_follow_page mfollow_page = (my_follow_page)0xffffffffa009bf40;
 // follow_page在具体实现时会调用follow_page_mask函数。
 // 在不同的内核版本中，follow_page不一定可以被访问。
 // 经测试发现，在Linux 4.9.263中，无法使用follow_page函数，但是可以使用follow_page_mask
@@ -194,21 +194,23 @@ static void print_mm_active_info(void)
     // unsigned long vm_flags;
     // int freq = mpage_referenced(page, 0, page->mem_cgroup, &vm_flags);
     
-    struct mm_struct *mm = get_task_mm(my_task_info.task);
-    unsigned int virt_addr;
-    struct page *page;
+    struct mm_struct      *mm = get_task_mm(my_task_info.task);
+    struct vm_area_struct *vma;
+    struct page           *page;
+    unsigned long virt_addr;
     unsigned long vm_flags;
     int freq;
     if (mm)
     {
-        struct vm_area_struct *vma = mm->mmap;
+        vma = mm->mmap;
         while (!IS_ERR_OR_NULL(vma))
         {
             for (virt_addr = vma->vm_start; virt_addr < vma->vm_end; virt_addr += PAGE_SIZE)
             {
                 page = mfollow_page(vma, virt_addr, FOLL_GET);
+                if (IS_ERR_OR_NULL(page)) continue;
                 freq = mpage_referenced(page, 0, (struct mem_cgroup *)(page->memcg_data), &vm_flags);
-                if (!IS_ERR_OR_NULL(page) && freq >= 1) record_one_data(page_to_pfn(page));
+                if (freq > 0) record_one_data(page_to_pfn(page));
             }
             vma = vma->vm_next;
         }
