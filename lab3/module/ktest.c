@@ -176,6 +176,10 @@ static void scan_vma(void)
         }
         mmput(mm);
     }
+    else
+    {
+        pr_err("func: %s mm_struct is NULL\n", __func__);
+    }
 }
 
 // func == 2
@@ -214,8 +218,12 @@ static void print_mm_active_info(void)
             }
             vma = vma->vm_next;
         }
+        flush_buf(1);
     }
-    flush_buf(1);
+    else
+    {
+        pr_err("func: %s mm_struct is NULL\n", __func__);
+    }
 }
 
 static unsigned long virt2phys(struct mm_struct *mm, unsigned long virt)
