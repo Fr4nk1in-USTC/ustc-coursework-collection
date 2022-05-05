@@ -1,0 +1,12 @@
+*.o
+*.mod
+*.ko 
+*.mod.c 
+.*.cmd 
+.tmp_versions 
+*.order 
+*.symvers
+page_fre_pic.jpg
+active_page_log.txt
+expr_result.txt
+lab3_workload
