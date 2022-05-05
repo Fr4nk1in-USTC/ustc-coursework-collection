@@ -43,7 +43,7 @@ MODULE_DESCRIPTION("KTEST!");
 MODULE_VERSION("1.0");
 
 // 定义要输出的文件
-#define OUTPUT_FILE "/home/yll/lab3/part2/expr_result.txt"
+#define OUTPUT_FILE "/home/fushen/oslab/lab3/module/expr_result.txt"
 struct file *log_file = NULL;
 char str_buf[64];    //暂存数据
 char buf[PAGE_SIZE]; //全局变量，用来缓存要写入到文件中的内容
@@ -55,9 +55,9 @@ typedef typeof(follow_page) *my_follow_page;
 // typedef typeof(follow_page_mask) *my_follow_page_mask;
 
 // sudo cat /proc/kallsyms | grep page_referenced
-static my_page_referenced mpage_referenced = (my_page_referenced)0xffffffffa06b0780;
+static my_page_referenced mpage_referenced = (my_page_referenced)0xffffffff95ab0780;
 // sudo cat /proc/kallsyms | grep follow_page
-static my_follow_page mfollow_page = (my_follow_page)0xffffffffa0694160;
+static my_follow_page mfollow_page = (my_follow_page)0xffffffff95a94160;
 // follow_page在具体实现时会调用follow_page_mask函数。
 // 在不同的内核版本中，follow_page不一定可以被访问。
 // 经测试发现，在Linux 4.9.263中，无法使用follow_page函数，但是可以使用follow_page_mask
@@ -165,8 +165,15 @@ static void scan_vma(void)
     struct mm_struct *mm = get_task_mm(my_task_info.task);
     if (mm)
     {
-        // TODO:遍历VMA将VMA的个数记录到my_task_info的vma_cnt变量中
+        // ~TODO:遍历VMA将VMA的个数记录到my_task_info的vma_cnt变量中
+        struct vm_area_struct *vma = mm->mmap;
 
+        my_task_info.vma_cnt = 0;
+        while (!IS_ERR_OR_NULL(vma))
+        {
+            vma = vma->vm_next;
+            my_task_info.vma_cnt++;
+        }
         mmput(mm);
     }
 }
@@ -186,12 +193,60 @@ static void print_mm_active_info(void)
     // kernel v5.9.0
     // unsigned long vm_flags;
     // int freq = mpage_referenced(page, 0, page->mem_cgroup, &vm_flags);
+    
+    struct mm_struct *mm = get_task_mm(my_task_info.task);
+    unsigned int virt_addr;
+    struct page *page;
+    unsigned long vm_flags;
+    int freq;
+    if (mm)
+    {
+        struct vm_area_struct *vma = mm->mmap;
+        while (!IS_ERR_OR_NULL(vma))
+        {
+            for (virt_addr = vma->vm_start; virt_addr < vma->vm_end; virt_addr += PAGE_SIZE)
+            {
+                page = mfollow_page(vma, virt_addr, FOLL_GET);
+                freq = mpage_referenced(page, 0, (struct mem_cgroup *)(page->memcg_data), &vm_flags);
+                if (!IS_ERR_OR_NULL(page) && freq >= 1) record_one_data(page_to_pfn(page));
+            }
+            vma = vma->vm_next;
+        }
+    }
+    flush_buf(1);
 }
 
 static unsigned long virt2phys(struct mm_struct *mm, unsigned long virt)
 {
     struct page *page = NULL;
     // TODO: 多级页表遍历：pgd->pud->pmd->pte，然后从pte到page，最后得到pfn
+    pgd_t *pgd = pgd_offset(mm, virt);
+    if (pgd_none(*pgd) || pgd_bad(*pgd))
+    {
+        pr_err("func: %s pgd is not valid\n", __func__);
+        return NULL;
+    }
+    pud_t *pud = pud_offset((p4d_t *)pgd, virt);
+    if (pud_none(*pud) || pud_bad(*pud))
+    {
+        pr_err("func: %s pud is not valid\n", __func__);
+        return NULL;
+    }
+    pmd_t *pmd = pmd_offset(pud, virt);
+    if (pmd_none(*pmd) || pmd_bad(*pmd))
+    {
+        pr_err("func: %s pmd is not valid\n", __func__);
+        return NULL;
+    }
+    pte_t *pte = pte_offset_kernel(pmd, virt);
+    if (!pte)
+    {
+        
+        pr_err("func: %s pte is not valid\n", __func__);
+        return NULL;
+    }
+    page = pte_page(*pte);
+
     if (page)
     {
         return page_to_pfn(page);
