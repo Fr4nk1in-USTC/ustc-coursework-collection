@@ -1,3 +1,19 @@
+# object files & module files
 *.o
 *.so
+*.mod
+*.ko 
+*.mod.c 
+.*.cmd 
+.tmp_versions 
+*.order 
+*.symvers
+
+# execuable
 workload
+lab3_workload
+
+# temp log file and lab result file
+active_page_log.txt
+expr_result.txt
+page_fre_pic.jpg
