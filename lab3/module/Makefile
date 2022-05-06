@@ -8,4 +8,4 @@ all:
 	make -C /lib/modules/$(shell uname -r)/build/ M=$(shell pwd) modules
 
 clean:
-	rm -rf *.o *.mod *.ko *.mod.c .*.cmd .tmp_versions *.order *.symvers
+	rm -rf *.o *.mod *.ko *.mod.c .*.cmd .tmp_versions *.order *.symvers expr_result*.txt
