@@ -219,6 +219,7 @@ static void print_mm_active_info(void)
             vma = vma->vm_next;
         }
         flush_buf(1);
+        mmput(mm);
     }
     else
     {
@@ -269,14 +270,26 @@ static unsigned long virt2phys(struct mm_struct *mm, unsigned long virt)
 }
 
 // func = 3
-static void traverse_page_table(struct task_struct *task)
+static void traverse_page_table(void)
 {
     printk("func == 3, %s\n", __func__);
-    struct mm_struct *mm = get_task_mm(my_task_info.task);
+    struct mm_struct      *mm = get_task_mm(my_task_info.task);
+    struct vm_area_struct *vma;
+    unsigned long virt_addr;
     if (mm)
     {
         // TODO:遍历VMA，并以PAGE_SIZE为粒度逐个遍历VMA中的虚拟地址，然后进行页表遍历
         // record_two_data(virt_addr, virt2phys(task->mm, virt_addr));
+        vma = mm->mmap;
+        while (!IS_ERR_OR_NULL(vma))
+        {
+            for (virt_addr = vma->vm_start; virt_addr < vma->vm_end; virt_addr += PAGE_SIZE)
+            {
+                record_two_data(virt_addr, virt2phys(mm, virt_addr));
+            }
+            vma = vma->vm_next;
+        }
+        flush_buf(1);
         mmput(mm);
     }
     else
@@ -285,24 +298,62 @@ static void traverse_page_table(struct task_struct *task)
     }
 }
 
+#define my_min(a, b) ((a) < (b) ? (a) : (b))
+#define my_max(a, b) ((a) > (b) ? (a) : (b))
+
 // func == 4 或者 func == 5
 static void print_seg_info(void)
 {
-    struct mm_struct *mm;
-    unsigned long addr;
+    struct mm_struct      *mm;
+    struct vm_area_struct *vma;
+    struct page           *page;
+    unsigned long start_seg;
+    unsigned long end_seg;
+    unsigned long start_addr;
+    unsigned long end_addr;
+    unsigned long virt_addr;
+    unsigned long page_addr;
+    unsigned long start_buf;
+    unsigned long end_buf;
     printk("func == 4 or func == 5, %s\n", __func__);
     mm = get_task_mm(my_task_info.task);
     if (mm == NULL)
     {
-        pr_err("mm_struct is NULL\n");
+        pr_err("func: %s mm_struct is NULL\n", __func__);
         return;
     }
     // TODO: 根据数据段或者代码段的起始地址和终止地址得到其中的页面，然后打印页面内容到文件中
-    // 相关提示：可以使用follow_page函数得到虚拟地址对应的page，然后使用addr=kmap_atomic(page)得到可以直接
+    // 相关提示：可以使用follow_page函数得到虚拟地址对应的page，然后使用page_addr=kmap_atomic(page)得到可以直接
     //          访问的虚拟地址，然后就可以使用memcpy函数将数据段或代码段拷贝到全局变量buf中以写入到文件中
-    //          注意：使用kmap_atomic(page)结束后还需要使用kunmap_atomic(addr)来进行释放操作
+    //          注意：使用kmap_atomic(page)结束后还需要使用kunmap_atomic(page_addr)来进行释放操作
     //          正确结果：如果是运行实验提供的workload，这一部分数据段应该会打印出char *trace_data，
     //                   static char global_data[100]和char hamlet_scene1[8276]的内容。
+    if (ktest_func == 4)
+    {
+        start_seg = mm->start_data;
+        end_seg   = mm->end_data;
+    }
+    else
+    {
+        start_seg = mm->start_code;
+        end_seg   = mm->end_code;
+    }
+    start_addr = (start_seg >> PAGE_SHIFT) << PAGE_SHIFT;
+    end_addr   = (end_seg >> PAGE_SHIFT) << PAGE_SHIFT;
+    for (virt_addr = start_addr; virt_addr <= end_addr; virt_addr += PAGE_SIZE)
+    {
+        vma = find_vma(mm, virt_addr);
+        if (IS_ERR_OR_NULL(vma)) continue;
+        page = mfollow_page(vma, virt_addr, FOLL_GET);
+        if (IS_ERR_OR_NULL(page)) continue;
+        page_addr = kmap_atomic(page);
+        kunmap_atomic(page_addr);
+        start_buf = page_addr + my_max(virt_addr, start_seg) - virt_addr;
+        end_buf   = page_addr + my_min(virt_addr + PAGE_SIZE, end_seg) - virt_addr;
+        memcpy(buf, start_buf, end_buf - start_buf);
+        curr_buf_length = my_min(PAGE_SIZE, end_seg - virt_addr);
+        flush_buf(0);
+    }
     mmput(mm);
 }
 
@@ -352,7 +403,7 @@ static void ktest_to_do(void)
         break;
     case 3:
         // 遍历多级页表得到虚拟地址对应的物理地址
-        traverse_page_table(my_task_info.task);
+        traverse_page_table();
         break;
     case 4:
     case 5:
