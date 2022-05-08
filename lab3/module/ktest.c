@@ -55,9 +55,9 @@ typedef typeof(follow_page) *my_follow_page;
 // typedef typeof(follow_page_mask) *my_follow_page_mask;
 
 // sudo cat /proc/kallsyms | grep page_referenced
-static my_page_referenced mpage_referenced = (my_page_referenced)0xffffffffa00b8400;
+static my_page_referenced mpage_referenced = (my_page_referenced)0xffffffff84eb8400;
 // sudo cat /proc/kallsyms | grep follow_page
-static my_follow_page mfollow_page = (my_follow_page)0xffffffffa009bf40;
+static my_follow_page mfollow_page = (my_follow_page)0xffffffff84e9bf40;
 // follow_page在具体实现时会调用follow_page_mask函数。
 // 在不同的内核版本中，follow_page不一定可以被访问。
 // 经测试发现，在Linux 4.9.263中，无法使用follow_page函数，但是可以使用follow_page_mask
