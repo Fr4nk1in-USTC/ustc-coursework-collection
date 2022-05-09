@@ -55,9 +55,9 @@ typedef typeof(follow_page) *my_follow_page;
 // typedef typeof(follow_page_mask) *my_follow_page_mask;
 
 // sudo cat /proc/kallsyms | grep page_referenced
-static my_page_referenced mpage_referenced = (my_page_referenced)0xffffffff84eb8400;
+static my_page_referenced mpage_referenced = (my_page_referenced)0xffffffff9eab8400;
 // sudo cat /proc/kallsyms | grep follow_page
-static my_follow_page mfollow_page = (my_follow_page)0xffffffff84e9bf40;
+static my_follow_page mfollow_page = (my_follow_page)0xffffffff9ea9bf40;
 // follow_page在具体实现时会调用follow_page_mask函数。
 // 在不同的内核版本中，follow_page不一定可以被访问。
 // 经测试发现，在Linux 4.9.263中，无法使用follow_page函数，但是可以使用follow_page_mask
@@ -186,11 +186,11 @@ static void scan_vma(void)
 static void print_mm_active_info(void)
 {
     printk("func == 2, %s\n", __func__);
-    // TODO: 1. 遍历VMA，并根据VMA的虚拟地址得到对应的struct page结构体（使用mfollow_page函数）
+    // ~TODO: 1. 遍历VMA，并根据VMA的虚拟地址得到对应的struct page结构体（使用mfollow_page函数）
     // struct page *page = mfollow_page(vma, virt_addr, FOLL_GET);
     // unsigned int unused_page_mask;
     // struct page *page = mfollow_page_mask(vma, virt_addr, FOLL_GET, &unused_page_mask);
-    // TODO: 2. 使用page_referenced活跃页面是否被访问，并将被访问的页面物理地址写到文件中
+    // ~TODO: 2. 使用page_referenced活跃页面是否被访问，并将被访问的页面物理地址写到文件中
     // kernel v5.13.0-40
     // unsigned long vm_flags;
     // int freq = mpage_referenced(page, 0, (struct mem_cgroup *)(page->memcg_data), &vm_flags);
@@ -230,7 +230,7 @@ static void print_mm_active_info(void)
 static unsigned long virt2phys(struct mm_struct *mm, unsigned long virt)
 {
     struct page *page = NULL;
-    // TODO: 多级页表遍历：pgd->pud->pmd->pte，然后从pte到page，最后得到pfn
+    // ~TODO: 多级页表遍历：pgd->pud->pmd->pte，然后从pte到page，最后得到pfn
     pgd_t *pgd = pgd_offset(mm, virt);
     if (pgd_none(*pgd) || pgd_bad(*pgd))
     {
@@ -252,7 +252,6 @@ static unsigned long virt2phys(struct mm_struct *mm, unsigned long virt)
     pte_t *pte = pte_offset_kernel(pmd, virt);
     if (!pte)
     {
-        
         pr_err("func: %s pte is not valid\n", __func__);
         return NULL;
     }
@@ -278,7 +277,7 @@ static void traverse_page_table(void)
     unsigned long virt_addr;
     if (mm)
     {
-        // TODO:遍历VMA，并以PAGE_SIZE为粒度逐个遍历VMA中的虚拟地址，然后进行页表遍历
+        // ~TODO:遍历VMA，并以PAGE_SIZE为粒度逐个遍历VMA中的虚拟地址，然后进行页表遍历
         // record_two_data(virt_addr, virt2phys(task->mm, virt_addr));
         vma = mm->mmap;
         while (!IS_ERR_OR_NULL(vma))
@@ -307,14 +306,14 @@ static void print_seg_info(void)
     struct mm_struct      *mm;
     struct vm_area_struct *vma;
     struct page           *page;
-    unsigned long start_seg;
-    unsigned long end_seg;
+    unsigned long seg_start;
+    unsigned long seg_end;
     unsigned long start_addr;
     unsigned long end_addr;
     unsigned long virt_addr;
     unsigned long page_addr;
-    unsigned long start_buf;
-    unsigned long end_buf;
+    unsigned long buf_start;
+    unsigned long buf_size;
     printk("func == 4 or func == 5, %s\n", __func__);
     mm = get_task_mm(my_task_info.task);
     if (mm == NULL)
@@ -322,7 +321,7 @@ static void print_seg_info(void)
         pr_err("func: %s mm_struct is NULL\n", __func__);
         return;
     }
-    // TODO: 根据数据段或者代码段的起始地址和终止地址得到其中的页面，然后打印页面内容到文件中
+    // ~TODO: 根据数据段或者代码段的起始地址和终止地址得到其中的页面，然后打印页面内容到文件中
     // 相关提示：可以使用follow_page函数得到虚拟地址对应的page，然后使用page_addr=kmap_atomic(page)得到可以直接
     //          访问的虚拟地址，然后就可以使用memcpy函数将数据段或代码段拷贝到全局变量buf中以写入到文件中
     //          注意：使用kmap_atomic(page)结束后还需要使用kunmap_atomic(page_addr)来进行释放操作
@@ -330,16 +329,16 @@ static void print_seg_info(void)
     //                   static char global_data[100]和char hamlet_scene1[8276]的内容。
     if (ktest_func == 4)
     {
-        start_seg = mm->start_data;
-        end_seg   = mm->end_data;
+        seg_start = mm->start_data;
+        seg_end   = mm->end_data;
     }
     else
     {
-        start_seg = mm->start_code;
-        end_seg   = mm->end_code;
+        seg_start = mm->start_code;
+        seg_end   = mm->end_code;
     }
-    start_addr = (start_seg >> PAGE_SHIFT) << PAGE_SHIFT;
-    end_addr   = (end_seg >> PAGE_SHIFT) << PAGE_SHIFT;
+    start_addr = (seg_start >> PAGE_SHIFT) << PAGE_SHIFT;
+    end_addr   = (seg_end >> PAGE_SHIFT) << PAGE_SHIFT;
     for (virt_addr = start_addr; virt_addr <= end_addr; virt_addr += PAGE_SIZE)
     {
         vma = find_vma(mm, virt_addr);
@@ -348,10 +347,10 @@ static void print_seg_info(void)
         if (IS_ERR_OR_NULL(page)) continue;
         page_addr = kmap_atomic(page);
         kunmap_atomic(page_addr);
-        start_buf = page_addr + my_max(virt_addr, start_seg) - virt_addr;
-        end_buf   = page_addr + my_min(virt_addr + PAGE_SIZE, end_seg) - virt_addr;
-        memcpy(buf, start_buf, end_buf - start_buf);
-        curr_buf_length = my_min(PAGE_SIZE, end_seg - virt_addr);
+        buf_start = page_addr + my_max(virt_addr, seg_start) - virt_addr;
+        buf_size  = my_min(virt_addr + PAGE_SIZE, seg_end) - my_max(virt_addr, seg_start);
+        memcpy(buf, buf_start, buf_size);
+        curr_buf_length = my_min(PAGE_SIZE, buf_size);
         flush_buf(0);
     }
     mmput(mm);
