@@ -352,8 +352,7 @@ void first_sector_by_cluster(FAT16 *fat16_ins, WORD ClusterN,
  **/
 
 /**
- * @brief
- * 从根目录开始寻找 path 所对应的文件或目录, 并设置相应目录项,
+ * @brief 从根目录开始寻找 path 所对应的文件或目录, 并设置相应目录项,
  * 以及目录项所在的偏移量
  *
  * @param fat16_ins   文件系统元数据指针
@@ -431,7 +430,7 @@ int find_root(FAT16 *fat16_ins, DIR_ENTRY *Root, const char *path,
  * 从子目录开始查找 path 对应的文件或目录, 找到返回0, 没找到返回1,
  * 并将 Dir 填充为查找到的对应目录项
  *
- * Hint1:在 find_subdir 入口处, Dir 应该是要查找的这一级目录的表项,
+ * Hint1: 在 find_subdir 入口处, Dir 应该是要查找的这一级目录的表项,
  * 需要根据其中的簇号, 读取这级目录对应的扇区数据
  *
  * Hint2: 目录的大小是未知的, 可能跨越多个扇区或跨越多个簇;
@@ -692,6 +691,20 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
              * 解析出文件名可使用 path_decode 函数, 使用方法请参考函数注释
              **/
             /*** BEGIN ***/
+            memcpy(&Root,
+                   &sector_buffer[((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR],
+                   BYTES_PER_DIR);
+
+            int is_empty   = (Root.DIR_Name[0] == 0x00);
+            int is_deleted = (Root.DIR_Name[0] == 0xE5);
+            int is_lfn     = (Root.DIR_Attr == 0x0F);
+            if (is_empty)
+                break;
+            if (!is_deleted && !is_lfn) {
+                BYTE *name = path_decode(Root.DIR_Name);
+                filler(buffer, name, NULL, 0);
+                free(name);
+            }
             /*** END ***/
 
             // 当前扇区所有条目已经读取完毕, 将下一个扇区读入sector_buffer
@@ -737,6 +750,23 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
         for (uint i = 1; Dir.DIR_Name[0] != 0x00; i++) {
             // TODO: 读取对应目录项, 并用 filler 填充到 buffer
             /*** BEGIN ***/
+            BYTE *filename;
+
+            memcpy(&Dir,
+                   &sector_buffer[((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR],
+                   BYTES_PER_DIR);
+
+            int is_empty   = (Dir.DIR_Name[0] == 0x00);
+            int is_deleted = (Dir.DIR_Name[0] == 0xE5);
+            int is_lfn     = (Dir.DIR_Attr == 0x0F);
+            if (is_empty)
+                break;
+            if (!is_deleted && !is_lfn) {
+                BYTE *name = path_decode(Dir.DIR_Name);
+                filler(buffer, name, NULL, 0);
+                free(name);
+            }
+
             /*** END ***/
 
             // 当前扇区的所有目录项已经读完.
@@ -745,6 +775,9 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
                 if (DirSecCnt < fat16_ins->Bpb.BPB_SecPerClus) {
                     // TODO: 将下一个扇区的数据读入 sector_buffer
                     /*** BEGIN ***/
+                    sector_read(fat16_ins->fd, FirstSectorofCluster + DirSecCnt,
+                                sector_buffer);
+                    DirSecCnt++;
                     /*** END ***/
                 } else  // 当前簇已经读完, 需要读取下一个簇的内容
                 {
@@ -771,6 +804,11 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
                     // Hint: 最后, 你需要将 i
                     // 和 DirSecCnt 设置到正确的值
                     /*** BEGIN ***/
+                    ClusterN = FatClusEntryVal;
+                    first_sector_by_cluster(
+                        fat16_ins, ClusterN, &FatClusEntryVal,
+                        &FirstSectorofCluster, sector_buffer);
+                    i = 0;
                     /*** END ***/
                 }
             }
