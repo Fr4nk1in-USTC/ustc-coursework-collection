@@ -1,2 +1,4 @@
-simple_fat16_part1
-simple_fat16_part2
+simple_fat16
+*.o
+
+fat_dir/
