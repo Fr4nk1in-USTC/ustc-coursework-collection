@@ -53,7 +53,7 @@ FAT16 *get_fat16_ins()
 /**
  * @brief 计算编号为 cluster 的簇在硬盘中的偏移量
  *
- * @param fat16_ins FAT16 元数据指针
+ * @param fat16_ins FAT16元数据指针
  * @param cluster   簇号
  * @return long     簇在硬盘 (镜像文件) 中的偏移量
  */
@@ -68,24 +68,24 @@ long get_cluster_offset(FAT16 *fat16_ins, uint16_t cluster)
 }
 
 /**
- * @brief 将输入路径按“/”分割成多个字符串, 并按照FAT文件名格式转换字符串.
+ * @brief 将输入路径按 "/" 分割成多个字符串, 并按照FAT文件名格式转换字符串.
  *
  * 例如：当 pathInputConst 为 "/dir1/dir2/file.txt" 时, 函数将其分割为 "dir1",
- * "dir2", "file.txt" 三层, 三层文件名分别转换为 "DIR1       ", "DIR2 " 和 "FILE
- * TXT".
- * 所以函数将设置 pathDepth_ret 为 3, 并返回长度为 3 的字符串数组,
- * 返回如上如上所述的三个长度为 11 的字符串. 当某层的文件名或拓展名过长时,
- * 会自动截断文件名和拓展名,
- * 如 "/verylongname.extension" 会被转换为 "VERYLONGEXT".
+ * "dir2", "file.txt" 三层, 三层文件名分别转换为 "DIR1       ", "DIR2        "
+ * 和 "FILE    TXT".
+ * 所以函数将设置 pathDepth_ret 为 3, 并返回长度为 3 的字符串数组, 返回如上如上所述的
+ * 三个长度 为 11 的字符串.
+ *
+ * 当某层的文件名或拓展名过长时, 会自动截断文件名和拓展名, 如
+ * "/verylongname.extension" 会被转换为 "VERYLONGEXT".
+ *
  * 若某层文件名为 "." 或者 ".." 则会特殊处理, 分别转换为 ".           " 和
- * "..        ", 分别代表当前目录和父目录.
+ * "..          ", 分别代表当前目录和父目录.
  *
  * @param pathInputConst  输入的文件路径名, 如 /home/user/m.c
- * @param pathDepth_ret   输出参数, 将会被设置为输入路径的层数, 如上面的例子中为
- * 3
- * @return char**
- * 转换后的 FAT 格式的文件名, 字符串数组, 包含 pathDepth_ret 个字符串,
- * 每个字符串长度都为 11, 依次为转换后每层的文件名
+ * @param pathDepth_ret   输出参数, 将被设置为输入路径的层数, 如上面的例子中为 3
+ * @return char**         转换后的 FAT 格式的文件名, 字符串数组, 包含 pathDepth_ret
+ *                        个字符串, 每个字符串长度都为 11, 依次为转换后每层的文件名
  */
 char **path_split(const char *pathInputConst, int *pathDepth_ret)
 {
@@ -147,16 +147,14 @@ char **path_split(const char *pathInputConst, int *pathDepth_ret)
                     }
                 }
             } else if (paths[i][j] == '\0')
-            { /* End of the file name, fills with ' ' character the
-               * rest of the file name and the file extension
-               * fields */
+            { /* End of the file name, fills with ' ' character the rest of the
+               * file name and the file extension fields */
                 for (; k < 11; k++) {
                     pathFormatted[i][k] = ' ';
                 }
                 break;
             } else if (paths[i][j] >= 'a' && paths[i][j] <= 'z')
-            { /* Turns lower case characters into upper case
-                 characters */
+            { /* Turns lower case characters into upper case characters */
                 pathFormatted[i][k++] = paths[i][j] - 'a' + 'A';
             } else {
                 pathFormatted[i][k++] = paths[i][j];
@@ -172,8 +170,7 @@ char **path_split(const char *pathInputConst, int *pathDepth_ret)
 }
 
 /**
- * @brief 将 FAT 格式的文件名转换为文件名字符串, 如 "FILE TXT" 会被转换为
- * "file.txt"
+ * @brief 将 FAT 格式的文件名转换为文件名字符串, 如 "FILE TXT" 会被转换为 "file.txt"
  *
  * @param path    FAT 格式的文件名, 长度为 11 的字符串
  * @return BYTE*  普通格式的文件名字符串
@@ -217,8 +214,7 @@ BYTE *path_decode(BYTE *path)
  * @brief 获得父目录的路径. 如输入 path = "dir1/dir2/texts", 得到 "dir1/dir2"
  *
  * @param path        路径
- * @param orgPaths    由 `org_path_split` 分割后的路径, 如 {"dir1", "dir2",
- * "tests"}
+ * @param orgPaths    由 `org_path_split` 分割后的路径, 如 {"dir1", "dir2", "tests"}
  * @param pathDepth   由 `org_path_split` 返回的路径层数, 如 3
  * @return char*      父目录的路径
  */
@@ -267,22 +263,20 @@ FAT16 *pre_init_fat16(const char *imageFilePath)
         + (fat16_ins->Bpb.BPB_FATSz16 * fat16_ins->Bpb.BPB_NumFATS);
 
     /* Number of sectors in the root directory */
-    DWORD RootDirSectors = ((fat16_ins->Bpb.BPB_RootEntCnt * 32)
-                            + (fat16_ins->Bpb.BPB_BytsPerSec - 1))
-                         / fat16_ins->Bpb.BPB_BytsPerSec;
+    DWORD RootDirSectors =
+        ((fat16_ins->Bpb.BPB_RootEntCnt * 32) + (fat16_ins->Bpb.BPB_BytsPerSec - 1))
+        / fat16_ins->Bpb.BPB_BytsPerSec;
 
     /* First sector of the data region (cluster #2) */
     fat16_ins->FirstDataSector =
         fat16_ins->Bpb.BPB_RsvdSecCnt
-        + (fat16_ins->Bpb.BPB_NumFATS * fat16_ins->Bpb.BPB_FATSz16)
-        + RootDirSectors;
+        + (fat16_ins->Bpb.BPB_NumFATS * fat16_ins->Bpb.BPB_FATSz16) + RootDirSectors;
 
     fat16_ins->FatOffset =
         fat16_ins->Bpb.BPB_RsvdSecCnt * fat16_ins->Bpb.BPB_BytsPerSec;
-    fat16_ins->FatSize =
-        fat16_ins->Bpb.BPB_BytsPerSec * fat16_ins->Bpb.BPB_FATSz16;
+    fat16_ins->FatSize = fat16_ins->Bpb.BPB_BytsPerSec * fat16_ins->Bpb.BPB_FATSz16;
     fat16_ins->RootOffset =
-        fat16_ins->FatOffset * fat16_ins->FatSize * fat16_ins->Bpb.BPB_NumFATS;
+        fat16_ins->FatOffset + fat16_ins->FatSize * fat16_ins->Bpb.BPB_NumFATS;
     fat16_ins->ClusterSize =
         fat16_ins->Bpb.BPB_BytsPerSec * fat16_ins->Bpb.BPB_SecPerClus;
     fat16_ins->DataOffset =
@@ -292,11 +286,11 @@ FAT16 *pre_init_fat16(const char *imageFilePath)
 }
 
 /**
- * @brief 返回簇号为 ClusterN 对应的FAT表项
+ * @brief 返回簇号为 ClusterN 对应的 FAT 表项
  *
  * @param fat16_ins 文件系统元数据指针
- * @param ClusterN  簇号 (注意合法的簇号从2开始)
- * @return WORD     FAT 表项 (每个表项2字节, 故用 WORD 存储)
+ * @param ClusterN  簇号 (注意合法的簇号从 2 开始)
+ * @return WORD     FAT 表项 (每个表项 2 字节, 故用 WORD 存储)
  */
 WORD fat_entry_by_cluster(FAT16 *fat16_ins, WORD ClusterN)
 {
@@ -305,8 +299,8 @@ WORD fat_entry_by_cluster(FAT16 *fat16_ins, WORD ClusterN)
     WORD FATOffset = ClusterN * 2;
     /* FatSecNum is the sector number of the FAT sector that contains the entry
      * for cluster N in the first FAT */
-    WORD FatSecNum = fat16_ins->Bpb.BPB_RsvdSecCnt
-                   + (FATOffset / fat16_ins->Bpb.BPB_BytsPerSec);
+    WORD FatSecNum =
+        fat16_ins->Bpb.BPB_RsvdSecCnt + (FATOffset / fat16_ins->Bpb.BPB_BytsPerSec);
     WORD FatEntOffset = FATOffset % fat16_ins->Bpb.BPB_BytsPerSec;
 
     /* Reads the sector and extract the FAT entry contained on it */
@@ -331,9 +325,8 @@ WORD fat_entry_by_cluster(FAT16 *fat16_ins, WORD ClusterN)
  * @param FirstSectorofCluster    输出参数, 对应簇的第一个扇区的扇区号
  * @param buffer                  输出参数, 对应簇第一个扇区的内容
  */
-void first_sector_by_cluster(FAT16 *fat16_ins, WORD ClusterN,
-                             WORD *FatClusEntryVal, WORD *FirstSectorofCluster,
-                             BYTE *buffer)
+void first_sector_by_cluster(FAT16 *fat16_ins, WORD ClusterN, WORD *FatClusEntryVal,
+                             WORD *FirstSectorofCluster, BYTE *buffer)
 {
     *FatClusEntryVal      = fat_entry_by_cluster(fat16_ins, ClusterN);
     *FirstSectorofCluster = ((ClusterN - 2) * fat16_ins->Bpb.BPB_SecPerClus)
@@ -345,24 +338,24 @@ void first_sector_by_cluster(FAT16 *fat16_ins, WORD ClusterN,
 /**
  * Browse directory entries in root directory.
  * @param offset_dir: the offset of corresponding dir_entry, used for write
- * file, i.e. update file size
+ *file, i.e. update file size
  * ==================================================================================
  * Return
  * 0, if we did find a file corresponding to the given path or 1 if we did not
  **/
 
 /**
- * @brief 从根目录开始寻找 path 所对应的文件或目录, 并设置相应目录项,
+ * @brief
+ * 从根目录开始寻找 path 所对应的文件或目录, 并设置相应目录项,
  * 以及目录项所在的偏移量
  *
  * @param fat16_ins   文件系统元数据指针
  * @param Root        输出参数, 对应的目录项
  * @param path        要查找的路径
  * @param offset_dir  输出参数, 对应目录项在镜像文件中的偏移量 (字节)
- * @return int        是否找到路径对应的文件或目录 (0:找到,  1:未找到)
+ * @return int        是否找到路径对应的文件或目录 (0:找到, 1:未找到)
  */
-int find_root(FAT16 *fat16_ins, DIR_ENTRY *Root, const char *path,
-              off_t *offset_dir)
+int find_root(FAT16 *fat16_ins, DIR_ENTRY *Root, const char *path, off_t *offset_dir)
 {
     int  RootDirCnt = 1;
     BYTE buffer[BYTES_PER_SECTOR];
@@ -378,8 +371,8 @@ int find_root(FAT16 *fat16_ins, DIR_ENTRY *Root, const char *path,
         memcpy(Root, &buffer[((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR],
                BYTES_PER_DIR);
 
-        /* If the directory entry is free, all the next directory entries
-         * are also free. So this file/directory could not be found */
+        /* If the directory entry is free, all the next directory entries are
+         * also free. So this file/directory could not be found */
         if (Root->DIR_Name[0] == 0x00) {
             return 1;
         }
@@ -387,36 +380,34 @@ int find_root(FAT16 *fat16_ins, DIR_ENTRY *Root, const char *path,
         /* Check whether dir entry has been delete */
         int is_del = (Root->DIR_Name[0] == 0xe5);
         /* Comparing strings character by character */
-        int is_eq =
-            strncmp((const char *)Root->DIR_Name, paths[0], 11) == 0 ? 1 : 0;
+        int is_eq = strncmp((const char *)Root->DIR_Name, paths[0], 11) == 0 ? 1 : 0;
         int is_valid = (!is_del) && is_eq;
 
-        /* If the path is only one file (ATTR_ARCHIVE) and it is located in
-         * the root directory, stop searching */
+        /* If the path is only one file (ATTR_ARCHIVE) and it is located in the
+         * root directory, stop searching */
         if (is_valid && Root->DIR_Attr == ATTR_ARCHIVE) {
             *offset_dir = fat16_ins->RootOffset + (i - 1) * BYTES_PER_DIR;
             return 0;
         }
 
-        /* If the path is only one directory (ATTR_DIRECTORY) and it is
-         * located in the root directory, stop searching */
+        /* If the path is only one directory (ATTR_DIRECTORY) and it is located
+         * in the root directory, stop searching */
         if (is_valid && Root->DIR_Attr == ATTR_DIRECTORY && pathDepth == 1) {
             *offset_dir = fat16_ins->RootOffset + (i - 1) * BYTES_PER_DIR;
             return 0;
         }
 
-        /* If the first level of the path is a directory, continue
-         * searching in the root's sub-directories */
+        /* If the first level of the path is a directory, continue searching
+         * in the root's sub-directories */
         if (is_valid && Root->DIR_Attr == ATTR_DIRECTORY) {
-            return find_subdir(fat16_ins, Root, paths, pathDepth, 1,
-                               offset_dir);
+            return find_subdir(fat16_ins, Root, paths, pathDepth, 1, offset_dir);
         }
 
         /* End of bytes for this sector (1 sector == 512 bytes == 16 DIR
          * entries) Read next sector */
         if (i % 16 == 0 && i != fat16_ins->Bpb.BPB_RootEntCnt) {
-            sector_read(fat16_ins->fd,
-                        fat16_ins->FirstRootDirSecNum + RootDirCnt, buffer);
+            sector_read(fat16_ins->fd, fat16_ins->FirstRootDirSecNum + RootDirCnt,
+                        buffer);
             RootDirCnt++;
         }
     }
@@ -425,19 +416,17 @@ int find_root(FAT16 *fat16_ins, DIR_ENTRY *Root, const char *path,
     return 1;
 }
 
-/**
- * TODO:
- * 从子目录开始查找 path 对应的文件或目录, 找到返回0, 没找到返回1,
- * 并将 Dir 填充为查找到的对应目录项
+/** TODO: 从子目录开始查找 path 对应的文件或目录, 找到返回 0, 没找到返回 1, 并将 Dir
+ *        填充为查找到的对应目录项
  *
  * Hint1: 在 find_subdir 入口处, Dir 应该是要查找的这一级目录的表项,
- * 需要根据其中的簇号, 读取这级目录对应的扇区数据
+ *        需要根据其中的簇号, 读取这级目录对应的扇区数据
  *
- * Hint2: 目录的大小是未知的, 可能跨越多个扇区或跨越多个簇;
- * 当查找到某表项以 0x00 开头就可以停止查找
+ * Hint2: 目录的大小是未知的, 可能跨越多个扇区或跨越多个簇; 当查找到某表项以 0x00
+ *        开头就可以停止查找
  *
  * Hint3: 需要查找名字为 paths[curDepth] 的文件或目录, 同样需要根据 pathDepth
- * 判断是否继续调用 find_subdir 函数
+ *        判断是否继续调用 find_subdir 函数
  **/
 
 /**
@@ -449,7 +438,7 @@ int find_root(FAT16 *fat16_ins, DIR_ENTRY *Root, const char *path,
  * @param pathDepth   路径的总层数, `path_split` 输出的结果
  * @param curDepth    当前在查找的路径层数
  * @param offset_dir  输出参数, 输出查找到的文件目录项在镜像文件中的偏移 (字节)
- * @return int        是否找到路径对应的文件或目录 (0: 找到, 1: 未找到)
+ * @return int        是否找到路径对应的文件或目录 (0:找到, 1:未找到)
  */
 int find_subdir(FAT16 *fat16_ins, DIR_ENTRY *Dir, char **paths, int pathDepth,
                 int curDepth, off_t *offset_dir)
@@ -472,15 +461,13 @@ int find_subdir(FAT16 *fat16_ins, DIR_ENTRY *Dir, char **paths, int pathDepth,
         /* Check whether dir entry has been delete */
         int is_del = (Dir->DIR_Name[0] == 0xe5);
         /* Comparing strings */
-        is_eq = strncmp((const char *)Dir->DIR_Name, paths[curDepth], 11) == 0 ?
-                    1 :
-                    0;
+        is_eq =
+            strncmp((const char *)Dir->DIR_Name, paths[curDepth], 11) == 0 ? 1 : 0;
         int is_valid = (!is_del) && is_eq;
 
         /* Stop searching if the last file of the path is located in this
          * directory */
-        if ((is_valid && Dir->DIR_Attr == ATTR_ARCHIVE
-             && curDepth + 1 == pathDepth)
+        if ((is_valid && Dir->DIR_Attr == ATTR_ARCHIVE && curDepth + 1 == pathDepth)
             || (is_valid && Dir->DIR_Attr == ATTR_DIRECTORY
                 && curDepth + 1 == pathDepth))
         {
@@ -490,26 +477,25 @@ int find_subdir(FAT16 *fat16_ins, DIR_ENTRY *Dir, char **paths, int pathDepth,
             return 0;
         }
 
-        /* Recursively keep searching if the directory has been found and
-         * it isn't the last file */
+        /* Recursively keep searching if the directory has been found and it
+         * isn't the last file */
         if (is_valid && Dir->DIR_Attr == ATTR_DIRECTORY) {
             return find_subdir(fat16_ins, Dir, paths, pathDepth, curDepth + 1,
                                offset_dir);
         }
 
-        /* A sector needs to be readed 16 times by the buffer to reach the
-         * end. */
+        /* A sector needs to be readed 16 times by the buffer to reach the end.
+         */
         if (i % 16 == 0) {
-            /* If there are still sector to be read in the cluster,
-             * read the next sector. */
+            /* If there are still sector to be read in the cluster, read the
+             * next sector. */
             if (DirSecCnt < fat16_ins->Bpb.BPB_SecPerClus) {
-                sector_read(fat16_ins->fd, FirstSectorofCluster + DirSecCnt,
-                            buffer);
+                sector_read(fat16_ins->fd, FirstSectorofCluster + DirSecCnt, buffer);
                 DirSecCnt++;
             } else { /* Reaches the end of the cluster */
 
-                /* Not strictly necessary, but here we reach the
-                 * end of the clusters of this directory entry. */
+                /* Not strictly necessary, but here we reach the end of the
+                 * clusters of this directory entry. */
                 if (FatClusEntryVal == 0xffff) {
                     return 1;
                 }
@@ -531,8 +517,8 @@ int find_subdir(FAT16 *fat16_ins, DIR_ENTRY *Dir, char **paths, int pathDepth,
 }
 
 /**
- * @brief  分割字符串但不转换格式, 如 "/dir1/dir2/text" 会转化为
- * {"dir1","dir2","text"}. 注意 pathInput 会被修改.
+ * @brief 分割字符串但不转换格式, 如 "/dir1/dir2/text" 会转化为 {"dir1", "dir2",
+ *        "text"}. 注意 pathInput 会被修改.
  *
  * @param pathInput 输入的字符串
  * @return char**   分割后的字符串
@@ -625,8 +611,7 @@ int fat16_getattr(const char *path, struct stat *stbuf)
 
             /* Number of blocks */
             if (stbuf->st_size % stbuf->st_blksize != 0) {
-                stbuf->st_blocks =
-                    (int)(stbuf->st_size / stbuf->st_blksize) + 1;
+                stbuf->st_blocks = (int)(stbuf->st_size / stbuf->st_blksize) + 1;
             } else {
                 stbuf->st_blocks = (int)(stbuf->st_size / stbuf->st_blksize);
             }
@@ -654,12 +639,12 @@ int fat16_getattr(const char *path, struct stat *stbuf)
  *
  * @param path    要读取目录的路径
  * @param buffer  结果缓冲区
- * @param filler  用于填充结果的函数, 本次实验按 filler(buffer, 文件名, NULL, 0)
- *                的方式调用即可. 你也可以参考 <fuse.h> 第 58 行附近的函数声明
- *                和注释来获得更多信息.
+ * @param filler  用于填充结果的函数, 本次实验按 filler(buffer, 文件名, NULL,
+ *                0)的方式调用即可.
+ *                你也可以参考 <fuse.h> 第 58 行附近的函数声明和注释来获得更多信息.
  * @param offset  忽略
  * @param fi      忽略
- * @return int    成功返回0, 失败返回POSIX错误代码的负值
+ * @return int    成功返回 0, 失败返回 POSIX 错误代码的负值
  */
 int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
                   off_t offset, struct fuse_file_info *fi)
@@ -672,23 +657,20 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
     // 如果要读取的目录是根目录
     if (strcmp(path, "/") == 0) {
         DIR_ENTRY Root;
-        /**
-         * TODO:
+        /** TODO:
          * 将root directory下的文件或目录通过filler填充到buffer中
          * 注意不需要遍历子目录
          **/
         // Hint: 读取根文件目录区域所在的第一个扇区
-        sector_read(fat16_ins->fd, fat16_ins->FirstRootDirSecNum,
-                    sector_buffer);
-        // Hint: 依次读取根目录中每个目录项, 目录项的最大条数是RootEntCnt
+        sector_read(fat16_ins->fd, fat16_ins->FirstRootDirSecNum, sector_buffer);
+        // Hint: 依次读取根目录中每个目录项, 目录项的最大条数是 RootEntCnt
         for (uint i = 1; i <= fat16_ins->Bpb.BPB_RootEntCnt; i++) {
-            /**
-             * TODO:
-             * 这段代码中, 从扇区数据 (存放在sector_buffer) 中正确位置位置读取
-             * 到相应的目录项, 并从目录项中解析出正确的文件名/目录名, 然后通过
-             * filler 函数填充到 buffer 中.
-             * filler 函数的用法：filler(buffer, 文件名, NULL, 0)
-             * 解析出文件名可使用 path_decode 函数, 使用方法请参考函数注释
+            /** TODO: 这段代码中, 从扇区数据 (存放在 sector_buffer) 中正确位置
+             *        读取到相应的目录项, 并从目录项中解析出正确的文件名/目录名,
+             *        然后通过 filler 函数填充到 buffer 中.
+             *
+             *        filler函数的用法：filler(buffer, 文件名, NULL, 0)
+             *        解析出文件名可使用 path_decode 函数, 使用方法请参考函数注释
              **/
             /*** BEGIN ***/
             memcpy(&Root,
@@ -707,7 +689,7 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
             }
             /*** END ***/
 
-            // 当前扇区所有条目已经读取完毕, 将下一个扇区读入sector_buffer
+            // 当前扇区所有条目已经读取完毕, 将下一个扇区读入 sector_buffer
             if (i % 16 == 0 && i != fat16_ins->Bpb.BPB_RootEntCnt) {
                 sector_read(fat16_ins->fd,
                             fat16_ins->FirstRootDirSecNum + RootDirCnt,
@@ -719,36 +701,32 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
     {
         DIR_ENTRY Dir;
         off_t     offset_dir;
-        /**
-         * TODO: 本段代码的逻辑类似上一段代码, 但是需要先找到 path
-         * 所对应的目录的目录区域位置. 我们提供了 find_root 函数,
-         * 来获取这个位置, 获得了目录项位置后, 与上一段代码一样,
-         * 你需要遍历其下目录项, 将文件或目录名通过 filler 填充到 buffer 中,
-         * 同样注意不需要遍历子目录
+        /** TODO: 本段代码的逻辑类似上一段代码, 但是需要先找到 path 所对应的目录的
+         *        目录区域位置. 我们提供了 find_root 函数, 来获取这个位置,
+         *        获得了目录项位置后, 与上一段代码一样, 你需要遍历其下目录项,
+         *        将文件或目录名通过 filler 填充到 buffer 中,
+         *        同样注意不需要遍历子目录
          *
-         * Hint:
-         * 需要考虑目录大小, 子目录的目录区域不一定连续, 可能跨扇区, 跨簇
+         * Hint: 需要考虑目录大小, 子目录的目录区域不一定连续, 可能跨扇区, 跨簇
          **/
 
-        /* Finds the first corresponding directory entry in the root
-         * directory and store the result in the directory entry Dir */
+        /* Finds the first corresponding directory entry in the root directory
+         * and store the result in the directory entry Dir */
         find_root(fat16_ins, &Dir, path, &offset_dir);
 
         /* Calculating the first cluster sector for the given path */
-        WORD ClusterN;         // 当前读取的簇号
-        WORD FatClusEntryVal;  // 该簇的FAT表项 (大部分情况下,
-                               // 代表下一个簇的簇号,
+        WORD ClusterN;  // 当前读取的簇号
+        WORD FatClusEntryVal;  // 该簇的 FAT 表项 (大部分情况下, 代表下一个簇的簇号,
                                // 请参考实验文档对FAT表项的说明)
         WORD FirstSectorofCluster;  // 该簇的第一个扇区号
 
-        ClusterN =
-            Dir.DIR_FstClusLO;  // 目录项中存储了我们要读取的第一个簇的簇号
+        ClusterN = Dir.DIR_FstClusLO;  // 目录项中存储了我们要读取的第一个簇的簇号
         first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
                                 &FirstSectorofCluster, sector_buffer);
 
         /* Start searching the root's sub-directories starting from Dir */
         for (uint i = 1; Dir.DIR_Name[0] != 0x00; i++) {
-            // TODO: 读取对应目录项, 并用 filler 填充到 buffer
+            // TODO: 读取对应目录项, 并用filler填充到buffer
             /*** BEGIN ***/
             BYTE *filename;
 
@@ -766,14 +744,13 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
                 filler(buffer, name, NULL, 0);
                 free(name);
             }
-
             /*** END ***/
 
             // 当前扇区的所有目录项已经读完.
             if (i % 16 == 0) {
                 // 如果当前簇还有未读的扇区
                 if (DirSecCnt < fat16_ins->Bpb.BPB_SecPerClus) {
-                    // TODO: 将下一个扇区的数据读入 sector_buffer
+                    // TODO: 将下一个扇区的数据读入sector_buffer
                     /*** BEGIN ***/
                     sector_read(fat16_ins->fd, FirstSectorofCluster + DirSecCnt,
                                 sector_buffer);
@@ -781,33 +758,27 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
                     /*** END ***/
                 } else  // 当前簇已经读完, 需要读取下一个簇的内容
                 {
-                    // Hint:
-                    // 下一个簇的簇号已经存储在FatClusEntryVal当中
-                    // Hint:
-                    // 为什么？你可以参考first_sector_by_cluster的函数注释,
-                    // 以及文档中对FAT表项的说明
+                    // Hint: 下一个簇的簇号已经存储在 FatClusEntryVal 当中
+                    // Hint: 为什么? 你可以参考 first_sector_by_cluster 的函数注释,
+                    //       以及文档中对 FAT 表项的说明
 
                     // 已经到达最后一个簇
-                    // (0xFFFF代表什么？请参考文档中对FAT表项的说明)
+                    // (0xFFFF 代表什么? 请参考文档中对 FAT 表项的说明)
                     if (FatClusEntryVal == 0xffff) {
                         return 0;
                     }
 
-                    // TODO:
-                    // 读取下一个簇 (即簇号为 FatClusEntryVal 的簇) 的第一个扇区
-                    //
-                    // Hint: 你需要通过 first_sector_by_cluster
-                    // 函数读取下一个簇, 注意将 FatClusEntyVal
-                    // 需要存储下一个簇的簇号
-                    // Hint: 你可模仿函数开头对 first_sector_by_cluster
-                    // 的调用方法, 但注意传入正确的簇号
-                    // Hint: 最后, 你需要将 i
-                    // 和 DirSecCnt 设置到正确的值
+                    // TODO: 读取下一个簇 (即簇号为 FatClusEntryVal 的簇)
+                    //       的第一个扇区
+                    // Hint: 你需要通过 first_sector_by_cluster 函数读取下一个簇,
+                    //       注意将 FatClusEntyVal 需要存储下一个簇的簇号
+                    // Hint: 你可模仿函数开头对 first_sector_by_cluster 的调用方法,
+                    //       但注意传入正确的簇号
+                    // Hint: 最后,  你需要将 i 和 DirSecCnt 设置到正确的值
                     /*** BEGIN ***/
                     ClusterN = FatClusEntryVal;
-                    first_sector_by_cluster(
-                        fat16_ins, ClusterN, &FatClusEntryVal,
-                        &FirstSectorofCluster, sector_buffer);
+                    first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
+                                            &FirstSectorofCluster, sector_buffer);
                     i = 0;
                     /*** END ***/
                 }
@@ -818,9 +789,9 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
 }
 
 /**
- * @brief
- * 从path对应的文件的offset字节处开始读取size字节的数据到buffer中,
- * 并返回实际读取的字节数. Hint: 文件大小属性是Dir.DIR_FileSize.
+ * @brief 从 path 对应的文件的 offset 字节处开始读取 size 字节的数据到 buffer 中,
+ *        并返回实际读取的字节数.
+ * Hint: 文件大小属性是 Dir.DIR_FileSize.
  *
  * @param path    要读取文件的路径
  * @param buffer  结果缓冲区
@@ -836,50 +807,47 @@ int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
      */
     FAT16 *fat16_ins = get_fat16_ins();
 
-    /**
-     * TODO:
-     * 在这个函数中,
-     * 你需要将 path 代表的文件从 offset 位置开始 size 个字节读取到 buffer 中.
-     * 为此, 你需要完成以下几个步骤:
-     * 1. 由于文件是按簇组织的, 簇又是由扇区组成的, 要读取的偏移量可能在簇和扇区
-     * 的中间, 所以本函数的关键就是读取范围的开始和结束的簇, 扇区, 扇区中的偏移,
-     * 为此, 你需要计算出：
-     *      1. 要读取数据的在文件中的范围 (字节)：
-     *      这很简单, beginBytes = offset, endBytes = offset + size - 1
-     *      2. beginBytes在文件中哪一个簇, endBytes在文件中哪一个簇？
-     *      3. beginBytes在簇中第几个扇区, endBytes在簇中第几个扇区？
-     *      4. beginBytes在扇区中哪个位置, endBytes在扇区中哪个位置？
-     * 2. 计算出上述值后, 你需要通过 find_root 找到文件对应的目录项, 并找到文件
-     * 首个簇号. 这个步骤和 readdir 中比较相似, 可以参考.
+    /** TODO: 在这个函数中, 你需要将 path 代表的文件从 offset 位置开始 size 个字节
+     *        读取到 buffer中. 为此, 你需要完成以下几个步骤:
+     * 1. 由于文件是按簇组织的, 簇又是由扇区组成的, 要读取的偏移量可能在
+     *    簇和扇区的中间, 所以本函数的关键就是读取范围的开始和结束的簇, 扇区,
+     *    扇区中的偏移, 为此, 你需要计算出：
+     *     1. 要读取数据的在文件中的范围 (字节)：这很简单, beginBytes = offset,
+     *        endBytes = offset + size - 1
+     *     2. beginBytes 在文件中哪一个簇, endBytes 在文件中哪一个簇?
+     *     3. beginBytes 在簇中第几个扇区, endBytes 在簇中第几个扇区?
+     *     4. beginBytes 在扇区中哪个位置, endBytes 在扇区中哪个位置?
+     * 2. 计算出上述值后, 你需要通过 find_root 找到文件对应的目录项,
+     *    并找到文件首个簇号. 这个步骤和 readdir 中比较相似, 可以参考.
      * 3. 找到首个簇号后, 通过 FAT 表依次遍历找到下一个簇的簇号, 直到 beginBytes
-     * 所在簇. 遍历簇的方法是通过 fat_entry_by_cluster 读取 FAT 表项 (也就是下
-     * 一个簇号). 注意模仿 readdir 处理文件结束. (哪一个簇号代表文件结束？)
-     * 4. 读取beginBytes对应的扇区, 然后循环读取簇和扇区, 同时填充 buffer,
-     * 直到 endBytes 所在的扇区.
+     *    所在簇. 遍历簇的方法是通过 fat_entry_by_cluster 读取 FAT 表项
+     *    (也就是下一个簇号). 注意模仿 readdir 处理文件结束.
+     *    (哪一个簇号代表文件结束?)
+     * 4. 读取 beginBytes 对应的扇区, 然后循环读取簇和扇区, 同时填充 buffer,
+     *    直到 endBytes 所在的扇区.
      * 5. 注意第一个和最后一个扇区中, 根据偏移量, 我们不一定需要扇区中所有数据,
-     * 请根据你在 1.4 中算出的值将正确的部分填入 buffer. 而中间所有扇区,
-     * 一定需要被全部读取.
+     *    请根据你在 1.4 中算出的值将正确的部分填入 buffer. 而中间所有扇区,
+     *    一定需要被全部读取.
      *
-     * HINT:
-     * 如果你觉得对上述位置的计算很困难, 你也可以考虑将将所有簇全部依次读入内存,
-     * 再截取正确的部分填入 buffer. 我们不推荐那么做, 但不做强制要求,
-     * 如果你用这种方法实现了正确的功能, 同样能获得该部分全部分数.
+     *  HINT: 如果你觉得对上述位置的计算很困难, 你也可以考虑将将所有簇全部依次
+     *        读入内存, 再截取正确的部分填入buffer. 我们不推荐那么做, 但不做强制要求,
+     *        如果你用这种方法实现了正确的功能, 同样能获得该部分全部分数.
      **/
 
     /*** BEGIN ***/
+
     /*** END ***/
     return 0;
 }
 
 // ------------------TASK2: 创建/删除文件-----------------------------------
 /**
- * @brief 在path对应的路径创建新文件
+ * @brief 在 path 对应的路径创建新文件
  *
  * @param path    要创建的文件路径
- * @param mode    要创建文件的类型, 本次实验可忽略,
- * 默认所有创建的文件都为普通文件
+ * @param mode    要创建文件的类型, 本次实验可忽略, 默认所有创建的文件都为普通文件
  * @param devNum  忽略, 要创建文件的设备的设备号
- * @return int    成功返回0, 失败返回POSIX错误代码的负值
+ * @return int    成功返回 0, 失败返回 POSIX 错误代码的负值
  */
 int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
 {
@@ -894,11 +862,8 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
     const char **orgPaths = (const char **)org_path_split(copyPath);
     char        *prtPath  = get_prt_path(path, orgPaths, pathDepth);
 
-    /**
-     * TODO:
-     * 查找可用的 entry, 注意区分根目录和子目录
-     * 下面提供了一些可能使用到的临时变量
-     * 如果觉得不够用, 可以自己定义更多的临时变量
+    /** TODO: 查找可用的 entry, 注意区分根目录和子目录
+     * 下面提供了一些可能使用到的临时变量, 如果觉得不够用, 可以自己定义更多的临时变量
      * 这块和前面有很多相似的地方, 注意对照来实现
      **/
     BYTE  sector_buffer[BYTES_PER_SECTOR];
@@ -911,10 +876,11 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
         /**
          * 遍历根目录下的目录项
          * 如果发现有同名文件, 则直接中断, findFlag=0
-         * 找到可用的空闲目录项, 即 0x00 位移处为 0x00 或者 0xe5 的项,
-         * findFlag=1 并记录对应的 sectorNum, offset 等可能会用得到的信息
+         * 找到可用的空闲目录项, 即 0x00 位移处为 0x00 或者 0xe5 的项, findFlag=1
+         * 并记录对应的 sectorNum, offset 等可能会用得到的信息
          **/
         /*** BEGIN ***/
+
         /*** END ***/
     }
     /* Else if parent directory is sub-directory */
@@ -923,11 +889,12 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
         /**
          * 遍历根目录下的目录项
          * 如果发现有同名文件, 则直接中断, findFlag=0
-         * 找到可用的空闲目录项, 即 0x00 位移处为 0x00 或者 0xe5 的项,
-         * findFlag=1 并记录对应的 sectorNum, offset 等可能会用得到的信息
+         * 找到可用的空闲目录项, 即 0x00 位移处为 0x00 或者 0xe5 的项, findFlag=1
+         * 并记录对应的 sectorNum, offset 等可能会用得到的信息
          * 注意跨扇区和跨簇的问题, 不过写到这里你应该已经很熟了
          **/
         /*** BEGIN ***/
+
         /*** END ***/
     }
 
@@ -936,6 +903,7 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
     if (findFlag == 1) {
         // TODO: 正确调用 dir_entry_create 创建目录项
         /*** BEGIN ***/
+
         /*** END ***/
     }
     return 0;
@@ -970,9 +938,10 @@ int dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
     BYTE *entry_info = malloc(BYTES_PER_DIR * sizeof(BYTE));
 
     /**
-     * TODO:为新表项填入文件名和文件属性
+     * TODO: 为新表项填入文件名和文件属性
      **/
     /*** BEGIN ***/
+
     /*** END ***/
 
     /**
@@ -989,8 +958,8 @@ int dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
 
     /* File update time */
     /* 时间部分可以阅读实验文档 */
-    value = time_ptr->tm_sec / 2 + (time_ptr->tm_min << 5)
-          + (time_ptr->tm_hour << 11);
+    value =
+        time_ptr->tm_sec / 2 + (time_ptr->tm_min << 5) + (time_ptr->tm_hour << 11);
     memcpy(entry_info + 22, &value, 2 * sizeof(BYTE));
 
     /* File update date */
@@ -999,24 +968,26 @@ int dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
     memcpy(entry_info + 24, &value, 2 * sizeof(BYTE));
 
     /**
-     * TODO:为新表项填入文件首簇号与文件大小
+     * TODO: 为新表项填入文件首簇号与文件大小
      **/
     /* First Cluster Number & File Size */
     /*** BEGIN ***/
+
     /*** END ***/
 
     /**
-     * TODO:将创建好的新表项信息写入到磁盘
+     * TODO: 将创建好的新表项信息写入到磁盘
      **/
     /* Write the above entry to specified location */
     /*** BEGIN ***/
+
     /*** END ***/
     free(entry_info);
     return 0;
 }
 
 /**
- * @brief 释放簇号对应的簇, 只需修改FAT对应表项, 并返回下一个簇的簇号.
+ * @brief 释放簇号对应的簇, 只需修改 FAT 对应表项, 并返回下一个簇的簇号.
  *
  * @param fat16_ins   文件系统指针
  * @param ClusterNum  要释放的簇号
@@ -1030,14 +1001,13 @@ int free_cluster(FAT16 *fat16_ins, int ClusterNum)
                             &FirstSectorofCluster, sector_buffer);
 
     FILE *fd = fat16_ins->fd;
-    /**
-     * TODO:
-     * 修改 FAT 表
+    /** TODO: 修改FAT表
      * 注意两个表都要修改
      * FAT 表 1 和表 2 的偏移地址怎么计算参考实验文档
      * 每个表项为 2 个字节
      **/
     /*** BEGIN ***/
+
     /*** END ***/
 
     return FATClusEntryval;
@@ -1062,13 +1032,14 @@ int fat16_unlink(const char *path)
         return 1;
     }
 
-    /**
-     * TODO: 回收该文件所占有的簇 (注意你可能需要先完善 free_cluster 函数)
-     *  你需要先获得第一个簇的簇号 (你可以在 Dir 结构体中找到它) ,
-     * 调用使用 free_cluster 释放它. 并获得下一需要释放的簇的簇号, 直至文件末尾.
-     * 在完善了 free_cluster 函数后, 此处代码量很小
-     * 你也可以不使用 free_cluster 函数, 通过自己的方式实现 */
+    /** TODO: 回收该文件所占有的簇 (注意你可能需要先完善 free_cluster 函数)
+     *  你需要先获得第一个簇的簇号 (你可以在 Dir 结构体中找到它),
+     *  调用使用 free_cluster 释放它. 并获得下一需要释放的簇的簇号, 直至文件末尾.
+     *  在完善了free_cluster函数后, 此处代码量很小
+     *  你也可以不使用 free_cluster 函数, 通过自己的方式实现
+     */
     /*** BEGIN ***/
+
     /*** END ***/
 
     // 查找需要删除文件的父目录路径
@@ -1078,9 +1049,7 @@ int fat16_unlink(const char *path)
     const char **orgPaths = (const char **)org_path_split(copyPath);
     char        *prtPath  = get_prt_path(path, orgPaths, pathDepth);
 
-    /**
-     * TODO:
-     * 定位文件在父目录中的 entry, 注意区分根目录和子目录
+    /** TODO: 定位文件在父目录中的 entry, 注意区分根目录和子目录
      * 下面提供了一些可能使用到的临时变量
      * 如果觉得不够用, 可以自己定义更多的临时变量
      * 这块和前面有很多相似的地方, 注意对照来实现
@@ -1101,6 +1070,7 @@ int fat16_unlink(const char *path)
          * 并记录对应的 sectorNum, offset 等可能会用得到的信息
          **/
         /*** BEGIN ***/
+
         /*** END ***/
     } else /* Else if parent directory is sub-directory */ {
         /**
@@ -1111,12 +1081,11 @@ int fat16_unlink(const char *path)
          * 注意跨扇区和跨簇的问题, 不过写到这里你应该已经很熟了
          **/
         /*** BEGIN ***/
+
         /*** END ***/
     }
 
-    /**
-     * TODO:
-     * 删除文件, 对相应 entry 做标记
+    /** TODO: 删除文件, 对相应 entry 做标记
      * 思考要修改 entry 中的哪些域
      * 注意目录项被删除时的标记为曾被使用但目前已删除
      * 和一个完全没用过的目录项的标记是不一样的
@@ -1125,6 +1094,7 @@ int fat16_unlink(const char *path)
     /* Update file entry, change its first byte of file name to 0xe5 */
     if (findFlag == 1) {
         /*** BEGIN ***/
+
         /*** END ***/
     }
     return 0;
