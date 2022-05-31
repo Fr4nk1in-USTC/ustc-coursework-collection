@@ -330,7 +330,7 @@ void first_sector_by_cluster(FAT16 *fat16_ins, WORD ClusterN, WORD *FatClusEntry
 {
     *FatClusEntryVal      = fat_entry_by_cluster(fat16_ins, ClusterN);
     *FirstSectorofCluster = ((ClusterN - 2) * fat16_ins->Bpb.BPB_SecPerClus)
-                          + fat16_ins->FirstDataSector;
+                            + fat16_ins->FirstDataSector;
 
     sector_read(fat16_ins->fd, *FirstSectorofCluster, buffer);
 }
@@ -345,9 +345,8 @@ void first_sector_by_cluster(FAT16 *fat16_ins, WORD ClusterN, WORD *FatClusEntry
  **/
 
 /**
- * @brief
- * 从根目录开始寻找 path 所对应的文件或目录, 并设置相应目录项,
- * 以及目录项所在的偏移量
+ * @brief 从根目录开始寻找 path 所对应的文件或目录, 并设置相应目录项,
+ *        以及目录项所在的偏移量
  *
  * @param fat16_ins   文件系统元数据指针
  * @param Root        输出参数, 对应的目录项
@@ -472,8 +471,8 @@ int find_subdir(FAT16 *fat16_ins, DIR_ENTRY *Dir, char **paths, int pathDepth,
                 && curDepth + 1 == pathDepth))
         {
             *offset_dir = get_cluster_offset(fat16_ins, ClusterN)
-                        + (DirSecCnt - 1) * BYTES_PER_SECTOR
-                        + (i - 1) * BYTES_PER_DIR;
+                          + (DirSecCnt - 1) * BYTES_PER_SECTOR
+                          + (i - 1) * BYTES_PER_DIR;
             return 0;
         }
 
@@ -640,7 +639,7 @@ int fat16_getattr(const char *path, struct stat *stbuf)
  * @param path    要读取目录的路径
  * @param buffer  结果缓冲区
  * @param filler  用于填充结果的函数, 本次实验按 filler(buffer, 文件名, NULL,
- *                0)的方式调用即可.
+ *                0) 的方式调用即可.
  *                你也可以参考 <fuse.h> 第 58 行附近的函数声明和注释来获得更多信息.
  * @param offset  忽略
  * @param fi      忽略
@@ -712,7 +711,10 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
 
         /* Finds the first corresponding directory entry in the root directory
          * and store the result in the directory entry Dir */
-        find_root(fat16_ins, &Dir, path, &offset_dir);
+        if (find_root(fat16_ins, &Dir, path, &offset_dir))
+            return -ENOENT;
+        if (Dir.DIR_Attr == ATTR_ARCHIVE)
+            return -ENOTDIR;
 
         /* Calculating the first cluster sector for the given path */
         WORD ClusterN;  // 当前读取的簇号
@@ -779,7 +781,8 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
                     ClusterN = FatClusEntryVal;
                     first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
                                             &FirstSectorofCluster, sector_buffer);
-                    i = 0;
+                    i         = 0;
+                    DirSecCnt = 1;
                     /*** END ***/
                 }
             }
@@ -798,7 +801,7 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
  * @param size    需要读取的数据长度
  * @param offset  要读取的数据所在偏移量
  * @param fi      忽略
- * @return int    成功返回实际读写的字符数, 失败返回0.
+ * @return int    成功返回实际读写的字符数, 失败返回 0.
  */
 int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
                struct fuse_file_info *fi)
@@ -808,7 +811,7 @@ int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
     FAT16 *fat16_ins = get_fat16_ins();
 
     /** TODO: 在这个函数中, 你需要将 path 代表的文件从 offset 位置开始 size 个字节
-     *        读取到 buffer中. 为此, 你需要完成以下几个步骤:
+     *        读取到 buffer 中. 为此, 你需要完成以下几个步骤:
      * 1. 由于文件是按簇组织的, 簇又是由扇区组成的, 要读取的偏移量可能在
      *    簇和扇区的中间, 所以本函数的关键就是读取范围的开始和结束的簇, 扇区,
      *    扇区中的偏移, 为此, 你需要计算出：
@@ -830,14 +833,126 @@ int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
      *    一定需要被全部读取.
      *
      *  HINT: 如果你觉得对上述位置的计算很困难, 你也可以考虑将将所有簇全部依次
-     *        读入内存, 再截取正确的部分填入buffer. 我们不推荐那么做, 但不做强制要求,
-     *        如果你用这种方法实现了正确的功能, 同样能获得该部分全部分数.
+     *        读入内存, 再截取正确的部分填入 buffer. 我们不推荐那么做, 但不做
+     *        强制要求, 如果你用这种方法实现了正确的功能, 同样能获得该部分全部分数.
      **/
 
     /*** BEGIN ***/
+    BYTE      sector_buffer[BYTES_PER_SECTOR];
+    DIR_ENTRY Dir;
+    off_t     offset_dir;
+    WORD      cluster_num;         // 当前读取的簇号
+    WORD      fat_clus_entry_val;  // 该簇的 FAT 表项 (下一个簇号)
+    WORD      first_sec_of_clus;   // 该簇的第一个扇区号
+    if (find_root(fat16_ins, &Dir, path, &offset_dir))
+        return 0;
 
+    size_t begin_bytes = offset;
+    size_t end_bytes   = offset + size - 1;
+    if (end_bytes > Dir.DIR_FileSize)
+        end_bytes = Dir.DIR_FileSize;
+
+    WORD begin_cluster = begin_bytes / fat16_ins->ClusterSize;
+    WORD end_cluster   = end_bytes / fat16_ins->ClusterSize;
+    WORD begin_sector  = (begin_bytes % fat16_ins->ClusterSize) / BYTES_PER_SECTOR;
+    WORD end_sector    = (end_bytes % fat16_ins->ClusterSize) / BYTES_PER_SECTOR;
+    WORD begin_offset  = (begin_bytes % fat16_ins->ClusterSize) % BYTES_PER_SECTOR;
+    WORD end_offset    = (end_bytes % fat16_ins->ClusterSize) % BYTES_PER_SECTOR;
+
+    cluster_num = Dir.DIR_FstClusLO;  // 目录项中存储了我们要读取的第一个簇的簇号
+    first_sector_by_cluster(fat16_ins, cluster_num, &fat_clus_entry_val,
+                            &first_sec_of_clus, sector_buffer);
+
+    WORD   cluster_cnt = 0;  // 记录读取的簇数
+    WORD   sector_cnt  = 0;  // 记录读取的扇区数
+    size_t read_size   = 0;  // 读取的字节数
+
+    // 找到 begin_cluster
+    while (cluster_cnt < begin_cluster) {
+        if (fat_clus_entry_val == CLUSTER_END)
+            return read_size;
+        cluster_num = fat_clus_entry_val;
+        first_sector_by_cluster(fat16_ins, cluster_num, &fat_clus_entry_val,
+                                &first_sec_of_clus, sector_buffer);
+        cluster_cnt++;
+    }
+
+    // begin_cluster 和 end_cluster 为同一个簇
+    if (begin_cluster == end_cluster) {
+        if (begin_sector == end_sector) {
+            sector_read(fat16_ins->fd, first_sec_of_clus + begin_sector,
+                        sector_buffer);
+            memcpy(buffer + read_size, sector_buffer + begin_offset,
+                   end_offset - begin_offset + 1);
+            read_size += end_offset - begin_offset + 1;
+        } else {
+            sector_read(fat16_ins->fd, first_sec_of_clus + begin_sector,
+                        sector_buffer);
+            memcpy(buffer + read_size, sector_buffer + begin_offset,
+                   BYTES_PER_SECTOR - begin_offset);
+            read_size += BYTES_PER_SECTOR - begin_offset;
+            for (sector_cnt = begin_sector + 1; sector_cnt < end_sector;
+                 sector_cnt++) {
+                sector_read(fat16_ins->fd, first_sec_of_clus + sector_cnt,
+                            sector_buffer);
+                memcpy(buffer + read_size, sector_buffer, BYTES_PER_SECTOR);
+                read_size += BYTES_PER_SECTOR;
+            }
+            sector_read(fat16_ins->fd, first_sec_of_clus + end_sector,
+                        sector_buffer);
+            memcpy(buffer + read_size, sector_buffer, end_offset + 1);
+            read_size += end_offset + 1;
+        }
+    } else {
+        // 读取第一个簇
+        sector_read(fat16_ins->fd, first_sec_of_clus + begin_sector, sector_buffer);
+        memcpy(buffer + read_size, sector_buffer + begin_offset,
+               BYTES_PER_SECTOR - begin_offset);
+        read_size += BYTES_PER_SECTOR - begin_offset;
+        for (sector_cnt = begin_sector + 1;
+             sector_cnt < fat16_ins->Bpb.BPB_SecPerClus; sector_cnt++)
+        {
+            sector_read(fat16_ins->fd, first_sec_of_clus + sector_cnt,
+                        sector_buffer);
+            memcpy(buffer + read_size, sector_buffer, BYTES_PER_SECTOR);
+            read_size += BYTES_PER_SECTOR;
+        }
+        // 读取中间簇
+        if (fat_clus_entry_val == CLUSTER_END)
+            return read_size;
+        cluster_num = fat_clus_entry_val;
+        first_sector_by_cluster(fat16_ins, cluster_num, &fat_clus_entry_val,
+                                &first_sec_of_clus, sector_buffer);
+        cluster_cnt++;
+        while (cluster_cnt < end_cluster) {
+            for (sector_cnt = 0; sector_cnt < fat16_ins->Bpb.BPB_SecPerClus;
+                 sector_cnt++) {
+                sector_read(fat16_ins->fd, first_sec_of_clus + sector_cnt,
+                            sector_buffer);
+                memcpy(buffer + read_size, sector_buffer, BYTES_PER_SECTOR);
+                read_size += BYTES_PER_SECTOR;
+            }
+            if (fat_clus_entry_val == CLUSTER_END)
+                return read_size;
+            cluster_num = fat_clus_entry_val;
+            first_sector_by_cluster(fat16_ins, cluster_num, &fat_clus_entry_val,
+                                    &first_sec_of_clus, sector_buffer);
+            cluster_cnt++;
+        }
+        // 读取最后一个簇
+        for (sector_cnt = 0; sector_cnt < end_sector; sector_cnt++) {
+            sector_read(fat16_ins->fd, first_sec_of_clus + sector_cnt,
+                        sector_buffer);
+            memcpy(buffer + read_size, sector_buffer, BYTES_PER_SECTOR);
+            read_size += BYTES_PER_SECTOR;
+        }
+        sector_read(fat16_ins->fd, first_sec_of_clus + end_sector, sector_buffer);
+        memcpy(buffer + read_size, sector_buffer, end_offset + 1);
+        read_size += end_offset + 1;
+    }
+    printf("read_size: %d\n", read_size);
+    return read_size;
     /*** END ***/
-    return 0;
 }
 
 // ------------------TASK2: 创建/删除文件-----------------------------------
@@ -964,7 +1079,7 @@ int dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
 
     /* File update date */
     value = time_ptr->tm_mday + (time_ptr->tm_mon << 5)
-          + ((time_ptr->tm_year - 80) << 9);
+            + ((time_ptr->tm_year - 80) << 9);
     memcpy(entry_info + 24, &value, 2 * sizeof(BYTE));
 
     /**
