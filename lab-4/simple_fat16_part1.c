@@ -330,7 +330,7 @@ void first_sector_by_cluster(FAT16 *fat16_ins, WORD ClusterN, WORD *FatClusEntry
 {
     *FatClusEntryVal      = fat_entry_by_cluster(fat16_ins, ClusterN);
     *FirstSectorofCluster = ((ClusterN - 2) * fat16_ins->Bpb.BPB_SecPerClus)
-                            + fat16_ins->FirstDataSector;
+                          + fat16_ins->FirstDataSector;
 
     sector_read(fat16_ins->fd, *FirstSectorofCluster, buffer);
 }
@@ -471,8 +471,8 @@ int find_subdir(FAT16 *fat16_ins, DIR_ENTRY *Dir, char **paths, int pathDepth,
                 && curDepth + 1 == pathDepth))
         {
             *offset_dir = get_cluster_offset(fat16_ins, ClusterN)
-                          + (DirSecCnt - 1) * BYTES_PER_SECTOR
-                          + (i - 1) * BYTES_PER_DIR;
+                        + (DirSecCnt - 1) * BYTES_PER_SECTOR
+                        + (i - 1) * BYTES_PER_DIR;
             return 0;
         }
 
@@ -673,7 +673,7 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
              **/
             /*** BEGIN ***/
             memcpy(&Root,
-                   &sector_buffer[((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR],
+                   sector_buffer + ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR,
                    BYTES_PER_DIR);
 
             int is_empty   = (Root.DIR_Name[0] == 0x00);
@@ -682,7 +682,7 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
             if (is_empty)
                 break;
             if (!is_deleted && !is_lfn) {
-                BYTE *name = path_decode(Root.DIR_Name);
+                char *name = (char *)path_decode(Root.DIR_Name);
                 filler(buffer, name, NULL, 0);
                 free(name);
             }
@@ -730,10 +730,8 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
         for (uint i = 1; Dir.DIR_Name[0] != 0x00; i++) {
             // TODO: 读取对应目录项, 并用filler填充到buffer
             /*** BEGIN ***/
-            BYTE *filename;
-
             memcpy(&Dir,
-                   &sector_buffer[((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR],
+                   sector_buffer + ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR,
                    BYTES_PER_DIR);
 
             int is_empty   = (Dir.DIR_Name[0] == 0x00);
@@ -742,7 +740,7 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
             if (is_empty)
                 break;
             if (!is_deleted && !is_lfn) {
-                BYTE *name = path_decode(Dir.DIR_Name);
+                char *name = (char *)path_decode(Dir.DIR_Name);
                 filler(buffer, name, NULL, 0);
                 free(name);
             }
@@ -950,7 +948,6 @@ int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
         memcpy(buffer + read_size, sector_buffer, end_offset + 1);
         read_size += end_offset + 1;
     }
-    printf("read_size: %d\n", read_size);
     return read_size;
     /*** END ***/
 }
@@ -995,7 +992,36 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
          * 并记录对应的 sectorNum, offset 等可能会用得到的信息
          **/
         /*** BEGIN ***/
+        DIR_ENTRY Root;
+        sector_read(fat16_ins->fd, fat16_ins->FirstRootDirSecNum, sector_buffer);
+        for (uint i = 1; i <= fat16_ins->Bpb.BPB_RootEntCnt; i++) {
+            memcpy(&Root,
+                   sector_buffer + ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR,
+                   BYTES_PER_DIR);
 
+            int is_empty   = (Root.DIR_Name[0] == 0x00);
+            int is_deleted = (Root.DIR_Name[0] == 0xE5);
+            int is_lfn     = (Root.DIR_Attr == 0x0F);
+            if (is_empty || is_deleted) {
+                sectorNum = fat16_ins->FirstRootDirSecNum + RootDirCnt - 1;
+                offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
+                findFlag  = 1;
+                break;
+            } else if (!is_lfn) {
+                if (strncmp((char *)Root.DIR_Name, paths[pathDepth - 1], 11) == 0) {
+                    findFlag = 0;
+                    break;
+                }
+            }
+
+            // 当前扇区所有条目已经读取完毕, 将下一个扇区读入 sector_buffer
+            if (i % 16 == 0 && i != fat16_ins->Bpb.BPB_RootEntCnt) {
+                sector_read(fat16_ins->fd,
+                            fat16_ins->FirstRootDirSecNum + RootDirCnt,
+                            sector_buffer);
+                RootDirCnt++;
+            }
+        }
         /*** END ***/
     }
     /* Else if parent directory is sub-directory */
@@ -1009,7 +1035,58 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
          * 注意跨扇区和跨簇的问题, 不过写到这里你应该已经很熟了
          **/
         /*** BEGIN ***/
+        DIR_ENTRY Dir;
+        off_t     offset_dir;
 
+        if (find_root(fat16_ins, &Dir, prtPath, &offset_dir))
+            return -ENOENT;
+        if (Dir.DIR_Attr == ATTR_ARCHIVE)
+            return -ENOTDIR;
+
+        ClusterN = Dir.DIR_FstClusLO;
+        first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
+                                &FirstSectorofCluster, sector_buffer);
+
+        /* Start searching the root's sub-directories starting from Dir */
+        for (uint i = 1; Dir.DIR_Name[0] != 0x00; i++) {
+            memcpy(&Dir,
+                   sector_buffer + ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR,
+                   BYTES_PER_DIR);
+
+            int is_empty   = (Dir.DIR_Name[0] == 0x00);
+            int is_deleted = (Dir.DIR_Name[0] == 0xE5);
+            int is_lfn     = (Dir.DIR_Attr == 0x0F);
+            if (is_empty || is_deleted) {
+                sectorNum = FirstSectorofCluster + DirSecCnt - 1;
+                offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
+                findFlag  = 1;
+                break;
+            } else if (!is_lfn) {
+                if (strncmp((char *)Dir.DIR_Name, paths[pathDepth - 1], 11) == 0) {
+                    findFlag = 0;
+                    break;
+                }
+            }
+
+            // 当前扇区的所有目录项已经读完.
+            if (i % 16 == 0) {
+                // 如果当前簇还有未读的扇区
+                if (DirSecCnt < fat16_ins->Bpb.BPB_SecPerClus) {
+                    sector_read(fat16_ins->fd, FirstSectorofCluster + DirSecCnt,
+                                sector_buffer);
+                    DirSecCnt++;
+                } else {
+                    if (FatClusEntryVal == 0xffff) {
+                        return 0;
+                    }
+                    ClusterN = FatClusEntryVal;
+                    first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
+                                            &FirstSectorofCluster, sector_buffer);
+                    i         = 0;
+                    DirSecCnt = 1;
+                }
+            }
+        }
         /*** END ***/
     }
 
@@ -1018,7 +1095,8 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
     if (findFlag == 1) {
         // TODO: 正确调用 dir_entry_create 创建目录项
         /*** BEGIN ***/
-
+        dir_entry_create(fat16_ins, sectorNum, offset, paths[pathDepth - 1],
+                         ATTR_ARCHIVE, CLUSTER_END, 0);
         /*** END ***/
     }
     return 0;
@@ -1056,7 +1134,9 @@ int dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
      * TODO: 为新表项填入文件名和文件属性
      **/
     /*** BEGIN ***/
-
+    memset(entry_info, 0, BYTES_PER_DIR);
+    memcpy(entry_info, Name, 11 * sizeof(BYTE));
+    entry_info[11] = attr;
     /*** END ***/
 
     /**
@@ -1079,7 +1159,7 @@ int dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
 
     /* File update date */
     value = time_ptr->tm_mday + (time_ptr->tm_mon << 5)
-            + ((time_ptr->tm_year - 80) << 9);
+          + ((time_ptr->tm_year - 80) << 9);
     memcpy(entry_info + 24, &value, 2 * sizeof(BYTE));
 
     /**
@@ -1087,7 +1167,8 @@ int dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
      **/
     /* First Cluster Number & File Size */
     /*** BEGIN ***/
-
+    memcpy(entry_info + 26, &firstClusterNum, 2 * sizeof(BYTE));
+    memcpy(entry_info + 28, &fileSize, 4 * sizeof(BYTE));
     /*** END ***/
 
     /**
@@ -1095,7 +1176,10 @@ int dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
      **/
     /* Write the above entry to specified location */
     /*** BEGIN ***/
-
+    BYTE sector_buffer[BYTES_PER_SECTOR];
+    sector_read(fat16_ins->fd, sectorNum, sector_buffer);
+    memcpy(sector_buffer + offset, entry_info, BYTES_PER_DIR * sizeof(BYTE));
+    sector_write(fat16_ins->fd, sectorNum, sector_buffer);
     /*** END ***/
     free(entry_info);
     return 0;
@@ -1122,7 +1206,22 @@ int free_cluster(FAT16 *fat16_ins, int ClusterNum)
      * 每个表项为 2 个字节
      **/
     /*** BEGIN ***/
+    // clang-format off
+    WORD  fat_offset    = (WORD)ClusterNum * 2;
+    DWORD fat_1_sec_num = fat16_ins->Bpb.BPB_RsvdSecCnt 
+                        + fat_offset / fat16_ins->Bpb.BPB_BytsPerSec;
+    DWORD fat_2_sec_num = fat16_ins->Bpb.BPB_RsvdSecCnt + fat16_ins->Bpb.BPB_FATSz16
+                        + fat_offset / fat16_ins->Bpb.BPB_BytsPerSec;
+    WORD fat_1_offset   = fat_offset % fat16_ins->Bpb.BPB_BytsPerSec;
+    WORD fat_2_offset   = fat_offset % fat16_ins->Bpb.BPB_BytsPerSec;
+    // clang-format on
+    sector_read(fd, fat_1_sec_num, sector_buffer);
+    sector_buffer[fat_1_offset] = 0x00;
+    sector_write(fd, fat_1_sec_num, sector_buffer);
 
+    sector_read(fd, fat_2_sec_num, sector_buffer);
+    sector_buffer[fat_2_offset] = 0x00;
+    sector_write(fd, fat_2_sec_num, sector_buffer);
     /*** END ***/
 
     return FATClusEntryval;
@@ -1144,7 +1243,10 @@ int fat16_unlink(const char *path)
     off_t     offset_dir;
     // 释放使用过的簇
     if (find_root(fat16_ins, &Dir, path, &offset_dir) == 1) {
-        return 1;
+        return -ENOENT;
+    }
+    if (Dir.DIR_Attr == ATTR_DIRECTORY) {
+        return -EISDIR;
     }
 
     /** TODO: 回收该文件所占有的簇 (注意你可能需要先完善 free_cluster 函数)
@@ -1154,7 +1256,10 @@ int fat16_unlink(const char *path)
      *  你也可以不使用 free_cluster 函数, 通过自己的方式实现
      */
     /*** BEGIN ***/
-
+    WORD iter_clus_num = Dir.DIR_FstClusLO;
+    while (iter_clus_num != 0xffff) {
+        iter_clus_num = free_cluster(fat16_ins, iter_clus_num);
+    }
     /*** END ***/
 
     // 查找需要删除文件的父目录路径
@@ -1174,7 +1279,7 @@ int fat16_unlink(const char *path)
     BYTE  sector_buffer[BYTES_PER_SECTOR];
     DWORD sectorNum;
     int   offset, i, findFlag = 0, RootDirCnt = 1, DirSecCnt = 1;
-    WORD  FatClusEntryVal, FirstSectorofCluster;
+    WORD  ClusterN, FatClusEntryVal, FirstSectorofCluster;
 
     /* If parent directory is root */
     if (strcmp(prtPath, "/") == 0) {
@@ -1185,7 +1290,36 @@ int fat16_unlink(const char *path)
          * 并记录对应的 sectorNum, offset 等可能会用得到的信息
          **/
         /*** BEGIN ***/
+        DIR_ENTRY Root;
+        sector_read(fat16_ins->fd, fat16_ins->FirstRootDirSecNum, sector_buffer);
+        for (uint i = 1; i <= fat16_ins->Bpb.BPB_RootEntCnt; i++) {
+            memcpy(&Root,
+                   sector_buffer + ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR,
+                   BYTES_PER_DIR);
 
+            int is_empty   = (Root.DIR_Name[0] == 0x00);
+            int is_deleted = (Root.DIR_Name[0] == 0xE5);
+            int is_lfn     = (Root.DIR_Attr == 0x0F);
+
+            if (is_empty) {
+                break;
+            } else if (!is_deleted || !is_lfn) {
+                if (strncmp((char *)Root.DIR_Name, paths[pathDepth - 1], 11) == 0) {
+                    sectorNum = fat16_ins->FirstRootDirSecNum + RootDirCnt - 1;
+                    offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
+                    findFlag  = 1;
+                    break;
+                }
+            }
+
+            // 当前扇区所有条目已经读取完毕, 将下一个扇区读入 sector_buffer
+            if (i % 16 == 0 && i != fat16_ins->Bpb.BPB_RootEntCnt) {
+                sector_read(fat16_ins->fd,
+                            fat16_ins->FirstRootDirSecNum + RootDirCnt,
+                            sector_buffer);
+                RootDirCnt++;
+            }
+        }
         /*** END ***/
     } else /* Else if parent directory is sub-directory */ {
         /**
@@ -1196,7 +1330,55 @@ int fat16_unlink(const char *path)
          * 注意跨扇区和跨簇的问题, 不过写到这里你应该已经很熟了
          **/
         /*** BEGIN ***/
+        if (find_root(fat16_ins, &Dir, prtPath, &offset_dir))
+            return -ENOENT;
+        if (Dir.DIR_Attr == ATTR_ARCHIVE)
+            return -ENOTDIR;
+        
+        ClusterN = Dir.DIR_FstClusLO;
+        first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
+                                &FirstSectorofCluster, sector_buffer);
 
+        /* Start searching the root's sub-directories starting from Dir */
+        for (uint i = 1; Dir.DIR_Name[0] != 0x00; i++) {
+            memcpy(&Dir,
+                   sector_buffer + ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR,
+                   BYTES_PER_DIR);
+
+            int is_empty   = (Dir.DIR_Name[0] == 0x00);
+            int is_deleted = (Dir.DIR_Name[0] == 0xE5);
+            int is_lfn     = (Dir.DIR_Attr == 0x0F);
+
+            if (is_empty) {
+                break;
+            } else if (!is_deleted || !is_lfn) {
+                if (strncmp((char *)Dir.DIR_Name, paths[pathDepth - 1], 11) == 0) {
+                    sectorNum = FirstSectorofCluster + DirSecCnt - 1;
+                    offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
+                    findFlag  = 1;
+                    break;
+                }
+            }
+
+            // 当前扇区的所有目录项已经读完.
+            if (i % 16 == 0) {
+                // 如果当前簇还有未读的扇区
+                if (DirSecCnt < fat16_ins->Bpb.BPB_SecPerClus) {
+                    sector_read(fat16_ins->fd, FirstSectorofCluster + DirSecCnt,
+                                sector_buffer);
+                    DirSecCnt++;
+                } else {
+                    if (FatClusEntryVal == 0xffff) {
+                        return 0;
+                    }
+                    ClusterN = FatClusEntryVal;
+                    first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
+                                            &FirstSectorofCluster, sector_buffer);
+                    i         = 0;
+                    DirSecCnt = 1;
+                }
+            }
+        }
         /*** END ***/
     }
 
@@ -1209,7 +1391,9 @@ int fat16_unlink(const char *path)
     /* Update file entry, change its first byte of file name to 0xe5 */
     if (findFlag == 1) {
         /*** BEGIN ***/
-
+        paths[pathDepth - 1][0] = 0xe5;
+        dir_entry_create(fat16_ins, sectorNum, offset, paths[pathDepth - 1],
+                         ATTR_ARCHIVE, CLUSTER_END, 0);
         /*** END ***/
     }
     return 0;
