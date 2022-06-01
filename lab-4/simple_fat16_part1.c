@@ -1207,13 +1207,13 @@ int free_cluster(FAT16 *fat16_ins, int ClusterNum)
      **/
     /*** BEGIN ***/
     // clang-format off
-    WORD  fat_offset    = (WORD)ClusterNum * 2;
+    WORD  clus_offset    = (WORD)ClusterNum * 2;
     DWORD fat_1_sec_num = fat16_ins->Bpb.BPB_RsvdSecCnt 
-                        + fat_offset / fat16_ins->Bpb.BPB_BytsPerSec;
+                        + clus_offset / fat16_ins->Bpb.BPB_BytsPerSec;
     DWORD fat_2_sec_num = fat16_ins->Bpb.BPB_RsvdSecCnt + fat16_ins->Bpb.BPB_FATSz16
-                        + fat_offset / fat16_ins->Bpb.BPB_BytsPerSec;
-    WORD fat_1_offset   = fat_offset % fat16_ins->Bpb.BPB_BytsPerSec;
-    WORD fat_2_offset   = fat_offset % fat16_ins->Bpb.BPB_BytsPerSec;
+                        + clus_offset / fat16_ins->Bpb.BPB_BytsPerSec;
+    WORD fat_1_offset   = clus_offset % fat16_ins->Bpb.BPB_BytsPerSec;
+    WORD fat_2_offset   = clus_offset % fat16_ins->Bpb.BPB_BytsPerSec;
     // clang-format on
     sector_read(fd, fat_1_sec_num, sector_buffer);
     sector_buffer[fat_1_offset] = 0x00;
@@ -1257,9 +1257,8 @@ int fat16_unlink(const char *path)
      */
     /*** BEGIN ***/
     WORD iter_clus_num = Dir.DIR_FstClusLO;
-    while (iter_clus_num != 0xffff) {
+    while (iter_clus_num != CLUSTER_END)
         iter_clus_num = free_cluster(fat16_ins, iter_clus_num);
-    }
     /*** END ***/
 
     // 查找需要删除文件的父目录路径
@@ -1334,7 +1333,7 @@ int fat16_unlink(const char *path)
             return -ENOENT;
         if (Dir.DIR_Attr == ATTR_ARCHIVE)
             return -ENOTDIR;
-        
+
         ClusterN = Dir.DIR_FstClusLO;
         first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
                                 &FirstSectorofCluster, sector_buffer);
