@@ -122,7 +122,7 @@ WORD alloc_clusters(FAT16 *fat16_ins, uint32_t n)
         sector_read(fat16_ins->fd, firstFatSecNum + i, sectorBuffer);
         for (uint32_t j = 0; j < fat16_ins->Bpb.BPB_BytsPerSec; j += 2) {
             memcpy(&clusEntry, &sectorBuffer[j], sizeof(WORD));
-            if (clusEntry == 0x0000) {
+            if (clusEntry == CLUSTER_FREE) {
                 clusters[allocated] = (i * fat16_ins->Bpb.BPB_BytsPerSec + j) / 2;
                 allocated++;
                 if (allocated == n) {
