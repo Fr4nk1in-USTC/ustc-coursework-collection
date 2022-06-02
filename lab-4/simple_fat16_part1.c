@@ -852,10 +852,14 @@ int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
 
     WORD begin_cluster = begin_bytes / fat16_ins->ClusterSize;
     WORD end_cluster   = end_bytes / fat16_ins->ClusterSize;
-    WORD begin_sector  = (begin_bytes % fat16_ins->ClusterSize) / BYTES_PER_SECTOR;
-    WORD end_sector    = (end_bytes % fat16_ins->ClusterSize) / BYTES_PER_SECTOR;
-    WORD begin_offset  = (begin_bytes % fat16_ins->ClusterSize) % BYTES_PER_SECTOR;
-    WORD end_offset    = (end_bytes % fat16_ins->ClusterSize) % BYTES_PER_SECTOR;
+    WORD begin_sector =
+        (begin_bytes % fat16_ins->ClusterSize) / fat16_ins->Bpb.BPB_BytsPerSec;
+    WORD end_sector =
+        (end_bytes % fat16_ins->ClusterSize) / fat16_ins->Bpb.BPB_BytsPerSec;
+    WORD begin_offset =
+        (begin_bytes % fat16_ins->ClusterSize) % fat16_ins->Bpb.BPB_BytsPerSec;
+    WORD end_offset =
+        (end_bytes % fat16_ins->ClusterSize) % fat16_ins->Bpb.BPB_BytsPerSec;
 
     cluster_num = Dir.DIR_FstClusLO;  // 目录项中存储了我们要读取的第一个簇的簇号
     first_sector_by_cluster(fat16_ins, cluster_num, &fat_clus_entry_val,
