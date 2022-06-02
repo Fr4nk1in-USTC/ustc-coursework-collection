@@ -23,6 +23,10 @@
 
 #define MAX_SHORT_NAME_LEN 13
 
+static FILE *backup_fd[2];
+static const char  *FAT_FILE_NAME       = "fat16.img";
+static const char  *BACKUP_FILE_NAME[2] = {"fat16.img.bak", "fat16.img.bak2"};
+
 typedef uint8_t  BYTE;
 typedef uint16_t WORD;
 typedef uint32_t DWORD;
@@ -74,22 +78,24 @@ typedef struct {
     FILE  *fd;                  // 镜像文件指针
     DWORD  FirstRootDirSecNum;  // 根目录区域所在扇区号
     DWORD  FirstDataSector;     // 首个数据区域所在扇区号
-    DWORD  FatOffset;           // 文件分配表（FAT）所在的偏移量（字节）
-    DWORD  RootOffset;          // 根目录所在区域的偏移量（字节）
-    DWORD  DataOffset;          // 数据区域的偏移量（字节）
-    DWORD  FatSize;             // 单个FAT的大小
-    DWORD  ClusterSize;         // 单个簇的大小(字节)
+    DWORD  FatOffset;    // 文件分配表（FAT）所在的偏移量（字节）
+    DWORD  RootOffset;   // 根目录所在区域的偏移量（字节）
+    DWORD  DataOffset;   // 数据区域的偏移量（字节）
+    DWORD  FatSize;      // 单个FAT的大小
+    DWORD  ClusterSize;  // 单个簇的大小(字节)
     BPB_BS Bpb;
 } FAT16;  // 存储发文件系统所需要的元数据的数据结构
+
+FAT16 *get_fat16_ins();
 
 void   sector_read(FILE *fd, unsigned int secnum, void *buffer);
 void   sector_write(FILE *fd, unsigned int secnum, const void *buffer);
 size_t io_read(FILE *fd, void *buf, long offset, size_t size);
 size_t io_write(FILE *fd, const void *buf, long offset, size_t size);
 
-int    find_root(FAT16 *, DIR_ENTRY *Dir, const char *path, off_t *dir_offset);
-int    find_subdir(FAT16 *, DIR_ENTRY *Dir, char **paths, int pathDepth,
-                   int curDepth, off_t *dir_offset);
+int find_root(FAT16 *, DIR_ENTRY *Dir, const char *path, off_t *dir_offset);
+int find_subdir(FAT16 *, DIR_ENTRY *Dir, char **paths, int pathDepth, int curDepth,
+                off_t *dir_offset);
 char **path_split(const char *pathInput, int *pathSz);
 BYTE  *path_decode(BYTE *);
 char **org_path_split(char *pathInput);
@@ -97,13 +103,12 @@ char  *get_prt_path(const char *path, const char **orgPaths, int pathDepth);
 
 FAT16 *pre_init_fat16(const char *imageFilePath);
 WORD   fat_entry_by_cluster(FAT16 *fat16_ins, WORD ClusterN);
-void   first_sector_by_cluster(FAT16 *fat16_ins, WORD ClusterN,
-                               WORD *FatClusEntryVal, WORD *FirstSectorofCluster,
-                               BYTE *buffer);
-long   get_cluster_offset(FAT16 *fat16_ins, uint16_t cluster);
-int    dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
-                        BYTE attr, WORD firstClusterNum, DWORD fileSize);
-int    free_cluster(FAT16 *fat16_ins, int ClusterNum);
+void first_sector_by_cluster(FAT16 *fat16_ins, WORD ClusterN, WORD *FatClusEntryVal,
+                             WORD *FirstSectorofCluster, BYTE *buffer);
+long get_cluster_offset(FAT16 *fat16_ins, uint16_t cluster);
+int  dir_entry_create(FAT16 *fat16_ins, int sectorNum, int offset, char *Name,
+                      BYTE attr, WORD firstClusterNum, DWORD fileSize);
+int  free_cluster(FAT16 *fat16_ins, int ClusterNum);
 
 void *fat16_init(struct fuse_conn_info *conn);
 void  fat16_destroy(void *data);

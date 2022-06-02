@@ -4,9 +4,6 @@
 #include <errno.h>
 #include <string.h>
 
-// 忘记写到fat16.h 里的函数定义
-extern FAT16 *get_fat16_ins();
-
 /**
  * @brief 请勿修改该函数.
  * 该函数用于修复 5 月 13 日发布的 simple_fat16_part1.c 中 RootOffset 和 DataOffset

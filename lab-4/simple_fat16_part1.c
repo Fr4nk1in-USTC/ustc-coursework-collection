@@ -9,8 +9,6 @@
 #include <time.h>
 #include <unistd.h>
 
-const char *FAT_FILE_NAME = "fat16.img";
-
 /**
  * @brief 读取扇区号为 secnum 的扇区, 将数据存储到 buffer 中
  *
@@ -18,7 +16,7 @@ const char *FAT_FILE_NAME = "fat16.img";
  * @param secnum  需要读取的扇区号
  * @param buffer  数据要存储到的缓冲区指针
  */
-void sector_read(FILE *fd, unsigned int secnum, void *buffer)
+__attribute__((weak)) void sector_read(FILE *fd, unsigned int secnum, void *buffer)
 {
     fseek(fd, BYTES_PER_SECTOR * secnum, SEEK_SET);
     fread(buffer, BYTES_PER_SECTOR, 1, fd);
@@ -31,7 +29,8 @@ void sector_read(FILE *fd, unsigned int secnum, void *buffer)
  * @param secnum  需要写入的扇区号
  * @param buffer  需要写入的数据
  */
-void sector_write(FILE *fd, unsigned int secnum, const void *buffer)
+__attribute__((weak)) void sector_write(FILE *fd, unsigned int secnum,
+                                        const void *buffer)
 {
     fseek(fd, BYTES_PER_SECTOR * secnum, SEEK_SET);
     fwrite(buffer, BYTES_PER_SECTOR, 1, fd);
@@ -240,7 +239,7 @@ char *get_prt_path(const char *path, const char **orgPaths, int pathDepth)
  * @param imageFilePath 镜像文件路径
  * @return FAT16*       存储元数据的 FAT16 结构指针
  */
-FAT16 *pre_init_fat16(const char *imageFilePath)
+__attribute__((weak)) FAT16 *pre_init_fat16(const char *imageFilePath)
 {
     /* Opening the FAT16 image file */
     FILE *fd = fopen(imageFilePath, "rb+");

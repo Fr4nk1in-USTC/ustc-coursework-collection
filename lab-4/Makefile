@@ -6,13 +6,19 @@ CC=gcc
 
 all: simple_fat16
 
-simple_fat16: simple_fat16_part1.o simple_fat16_part2.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+default: simple_fat16_part1.o simple_fat16_part2.o
+	$(CC) $(CFLAGS) -o simple_fat16 $^ $(LDFLAGS) $(LDLIBS)
+
+backup: simple_fat16_backup.o simple_fat16_part1.o simple_fat16_part2.o
+	$(CC) $(CFLAGS) -o simple_fat16 $^ $(LDFLAGS) $(LDLIBS)
 
 simple_fat16_part1.o: simple_fat16_part1.c fat16.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 simple_fat16_part2.o: simple_fat16_part2.c fat16.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+simple_fat16_backup.o: simple_fat16_backup.c fat16.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 simple_fat16_test.o: simple_fat16_test.c fat16.h
