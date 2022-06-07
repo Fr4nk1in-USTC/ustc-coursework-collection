@@ -1,5 +1,10 @@
+#include "backup.h"
 #include "fat16.h"
+
 #include <string.h>
+
+const char *BACKUP_FILE_NAME[2] = {"fat16.img.bak", "fat16.img.bak2"};
+FILE       *backup_fd[2];
 
 void sector_read(FILE *fd, unsigned int secnum, void *buffer)
 {
@@ -30,13 +35,13 @@ void sector_read(FILE *fd, unsigned int secnum, void *buffer)
             backup_bit[1] = (backup_buffer[1][i] >> j) & 0x01;
             if (origin_bit != backup_bit[0] || origin_bit != backup_bit[1]) {
                 fprintf(stderr,
-                        "Find uncompatible data at sector %u, byte %d, "
+                        "\nERROR: Found uncompatible data at sector %u, byte %d, "
                         "bit %d\n",
                         secnum, i, j);
                 correct_bit = (origin_bit + backup_bit[0] + backup_bit[1]) >> 1;
                 fprintf(stderr,
                         "\tCorrect bit %1d, origin bit %1d, "
-                        "backup bit %1d & %1d\n",
+                        "backup bit %1d & %1d\n\n",
                         correct_bit, origin_bit, backup_bit[0], backup_bit[1]);
                 if (correct_bit) {
                     origin_buffer[i]    |= (BYTE)(1 << j);
