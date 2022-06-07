@@ -174,7 +174,7 @@ WORD alloc_clusters(FAT16 *fat16_ins, uint32_t n)
  * @param mode 文件模式, 本次实验可忽略, 默认都为普通文件夹
  * @return int 成功:0, 失败: POSIX 错误代码的负值
  */
-int fat16_mkdir(const char *path, mode_t mode)
+__attribute__((weak)) int fat16_mkdir(const char *path, mode_t mode)
 {
     /* Gets volume data supplied in the context during the fat16_init function */
     FAT16 *fat16_ins = get_fat16_ins_fix();
@@ -273,7 +273,7 @@ int fat16_mkdir(const char *path, mode_t mode)
                     dirSecCnt++;
                 } else {
                     if (fatClusEntryVal == CLUSTER_END)
-                        return 0;
+                        break;
 
                     clusterN = fatClusEntryVal;
                     first_sector_by_cluster(fat16_ins, clusterN, &fatClusEntryVal,
@@ -359,7 +359,7 @@ void dir_entry_write(FAT16 *fat16_ins, off_t offset, const DIR_ENTRY *Dir)
  * @param path 要删除的文件夹路径
  * @return int 成功:0,  失败: POSIX错误代码的负值
  */
-int fat16_rmdir(const char *path)
+__attribute__((weak)) int fat16_rmdir(const char *path)
 {
     /* Gets volume data supplied in the context during the fat16_init function */
     FAT16 *fat16_ins = get_fat16_ins_fix();
@@ -406,7 +406,7 @@ int fat16_rmdir(const char *path)
         if (isEmpty) {
             break;
         }
-        if (!isDeleted || !isLFN) {
+        if (!isDeleted && !isLFN) {
             if (strncmp((char *)curDir.DIR_Name, ".          ", 11) != 0
                 && strncmp((char *)curDir.DIR_Name, "..         ", 11) != 0)
             {
@@ -423,7 +423,7 @@ int fat16_rmdir(const char *path)
                 dirSecCnt++;
             } else {
                 if (fatClusEntryVal == CLUSTER_END)
-                    return 0;
+                    break;
 
                 clusterN = fatClusEntryVal;
                 first_sector_by_cluster(fat16_ins, clusterN, &fatClusEntryVal,
@@ -679,8 +679,9 @@ int write_file(FAT16 *fat16_ins, DIR_ENTRY *Dir, off_t offset_dir, const void *b
  * @param fi      本次实验可忽略该参数
  * @return int    成功返回写入的字节数, 失败返回 POSIX 错误代码的负值.
  */
-int fat16_write(const char *path, const char *data, size_t size, off_t offset,
-                struct fuse_file_info *fi)
+__attribute__((weak)) int fat16_write(const char *path, const char *data,
+                                      size_t size, off_t offset,
+                                      struct fuse_file_info *fi)
 {
     FAT16 *fat16_ins = get_fat16_ins_fix();
     /** TODO: 大部分工作都在 write_file 里完成了, 这里调用 find_root 获得目录项,
@@ -689,7 +690,9 @@ int fat16_write(const char *path, const char *data, size_t size, off_t offset,
     /*** BEGIN ***/
     DIR_ENTRY dir;
     off_t     offsetDir;
-    find_root(fat16_ins, &dir, path, &offsetDir);
+    if (find_root(fat16_ins, &dir, path, &offsetDir)) {
+        return -ENOENT;
+    }
     return write_file(fat16_ins, &dir, offsetDir, data, offset, size);
     /*** END ***/
 }
@@ -705,7 +708,7 @@ int fat16_write(const char *path, const char *data, size_t size, off_t offset,
  * @param size 新的文件大小
  * @return int 成功返回 0, 失败返回 POSIX 错误代码的负值.
  */
-int fat16_truncate(const char *path, off_t size)
+__attribute__((weak)) int fat16_truncate(const char *path, off_t size)
 {
     /* Gets volume data supplied in the context during the fat16_init function */
     FAT16 *fat16_ins = get_fat16_ins_fix();
@@ -760,7 +763,7 @@ int fat16_truncate(const char *path, off_t size)
             // 修改最后一个簇 FAT 表项
             write_fat_entry(fat16_ins, newLastClus, CLUSTER_END);
             // 释放后面的簇
-            while(is_cluster_inuse(firstFreeClus)) {
+            while (is_cluster_inuse(firstFreeClus)) {
                 firstFreeClus = free_cluster(fat16_ins, firstFreeClus);
             }
         }

@@ -98,8 +98,8 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
                     /*** END ***/
                 } else  
                 {
-                    if (FatClusEntryVal == 0xffff) {
-                        return 0;
+                    if (FatClusEntryVal == CLUSTER_END) {
+                        break;
                     }
                     /*** BEGIN ***/
                     ClusterN = FatClusEntryVal;
@@ -175,7 +175,7 @@ int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
     // 找到 begin_cluster
     while (cluster_cnt < begin_cluster) {
         if (fat_clus_entry_val == CLUSTER_END)
-            return read_size;
+            return 0;
         cluster_num = fat_clus_entry_val;
         first_sector_by_cluster(fat16_ins, cluster_num, &fat_clus_entry_val,
                                 &first_sec_of_clus, sector_buffer);
@@ -364,8 +364,8 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
                                 sector_buffer);
                     DirSecCnt++;
                 } else {
-                    if (FatClusEntryVal == 0xffff) {
-                        return 0;
+                    if (FatClusEntryVal == CLUSTER_END) {
+                        break;
                     }
                     ClusterN = FatClusEntryVal;
                     first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
@@ -558,7 +558,7 @@ int fat16_unlink(const char *path)
 
             if (is_empty) {
                 break;
-            } else if (!is_deleted || !is_lfn) {
+            } else if (!is_deleted && !is_lfn) {
                 if (strncmp((char *)Root.DIR_Name, paths[pathDepth - 1], 11) == 0) {
                     sectorNum = fat16_ins->FirstRootDirSecNum + RootDirCnt - 1;
                     offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
@@ -599,7 +599,7 @@ int fat16_unlink(const char *path)
 
             if (is_empty) {
                 break;
-            } else if (!is_deleted || !is_lfn) {
+            } else if (!is_deleted && !is_lfn) {
                 if (strncmp((char *)Dir.DIR_Name, paths[pathDepth - 1], 11) == 0) {
                     sectorNum = FirstSectorofCluster + DirSecCnt - 1;
                     offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
@@ -616,8 +616,8 @@ int fat16_unlink(const char *path)
                                 sector_buffer);
                     DirSecCnt++;
                 } else {
-                    if (FatClusEntryVal == 0xffff) {
-                        return 0;
+                    if (FatClusEntryVal == CLUSTER_END) {
+                        break;
                     }
                     ClusterN = FatClusEntryVal;
                     first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
@@ -846,7 +846,7 @@ int fat16_mkdir(const char *path, mode_t mode)
                     dirSecCnt++;
                 } else {
                     if (fatClusEntryVal == CLUSTER_END)
-                        return 0;
+                        break;
 
                     clusterN = fatClusEntryVal;
                     first_sector_by_cluster(fat16_ins, clusterN, &fatClusEntryVal,
@@ -954,7 +954,7 @@ int fat16_rmdir(const char *path)
         if (isEmpty) {
             break;
         }
-        if (!isDeleted || !isLFN) {
+        if (!isDeleted && !isLFN) {
             if (strncmp((char *)curDir.DIR_Name, ".          ", 11) != 0
                 && strncmp((char *)curDir.DIR_Name, "..         ", 11) != 0)
             {
@@ -971,7 +971,7 @@ int fat16_rmdir(const char *path)
                 dirSecCnt++;
             } else {
                 if (fatClusEntryVal == CLUSTER_END)
-                    return 0;
+                    break;
 
                 clusterN = fatClusEntryVal;
                 first_sector_by_cluster(fat16_ins, clusterN, &fatClusEntryVal,
@@ -1237,7 +1237,9 @@ int fat16_write(const char *path, const char *data, size_t size, off_t offset,
     /*** BEGIN ***/
     DIR_ENTRY dir;
     off_t     offsetDir;
-    find_root(fat16_ins, &dir, path, &offsetDir);
+    if (find_root(fat16_ins, &dir, path, &offsetDir)) {
+        return -ENOENT;
+    }
     return write_file(fat16_ins, &dir, offsetDir, data, offset, size);
     /*** END ***/
 }

@@ -644,8 +644,9 @@ int fat16_getattr(const char *path, struct stat *stbuf)
  * @param fi      忽略
  * @return int    成功返回 0, 失败返回 POSIX 错误代码的负值
  */
-int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
-                  off_t offset, struct fuse_file_info *fi)
+__attribute__((weak)) int fat16_readdir(const char *path, void *buffer,
+                                        fuse_fill_dir_t filler, off_t offset,
+                                        struct fuse_file_info *fi)
 {
     FAT16 *fat16_ins = get_fat16_ins();
 
@@ -763,8 +764,8 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
 
                     // 已经到达最后一个簇
                     // (0xFFFF 代表什么? 请参考文档中对 FAT 表项的说明)
-                    if (FatClusEntryVal == 0xffff) {
-                        return 0;
+                    if (FatClusEntryVal == CLUSTER_END) {
+                        break;
                     }
 
                     // TODO: 读取下一个簇 (即簇号为 FatClusEntryVal 的簇)
@@ -800,8 +801,8 @@ int fat16_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
  * @param fi      忽略
  * @return int    成功返回实际读写的字符数, 失败返回 0.
  */
-int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
-               struct fuse_file_info *fi)
+__attribute__((weak)) int fat16_read(const char *path, char *buffer, size_t size,
+                                     off_t offset, struct fuse_file_info *fi)
 {
     /* Gets volume data supplied in the context during the fat16_init function
      */
@@ -871,7 +872,7 @@ int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
     // 找到 begin_cluster
     while (cluster_cnt < begin_cluster) {
         if (fat_clus_entry_val == CLUSTER_END)
-            return read_size;
+            return 0;
         cluster_num = fat_clus_entry_val;
         first_sector_by_cluster(fat16_ins, cluster_num, &fat_clus_entry_val,
                                 &first_sec_of_clus, sector_buffer);
@@ -964,7 +965,7 @@ int fat16_read(const char *path, char *buffer, size_t size, off_t offset,
  * @param devNum  忽略, 要创建文件的设备的设备号
  * @return int    成功返回 0, 失败返回 POSIX 错误代码的负值
  */
-int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
+__attribute__((weak)) int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
 {
     /* Gets volume data supplied in the context during the fat16_init function
      */
@@ -1079,8 +1080,8 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
                                 sector_buffer);
                     DirSecCnt++;
                 } else {
-                    if (FatClusEntryVal == 0xffff) {
-                        return 0;
+                    if (FatClusEntryVal == CLUSTER_END) {
+                        break;
                     }
                     ClusterN = FatClusEntryVal;
                     first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
@@ -1236,7 +1237,7 @@ int free_cluster(FAT16 *fat16_ins, int ClusterNum)
  * @param path  要删除的文件路径
  * @return int  成功返回 0, 失败返回 POSIX 错误代码的负值
  */
-int fat16_unlink(const char *path)
+__attribute__((weak)) int fat16_unlink(const char *path)
 {
     /* Gets volume data supplied in the context during the fat16_init function
      */
@@ -1305,7 +1306,7 @@ int fat16_unlink(const char *path)
 
             if (is_empty) {
                 break;
-            } else if (!is_deleted || !is_lfn) {
+            } else if (!is_deleted && !is_lfn) {
                 if (strncmp((char *)Root.DIR_Name, paths[pathDepth - 1], 11) == 0) {
                     sectorNum = fat16_ins->FirstRootDirSecNum + RootDirCnt - 1;
                     offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
@@ -1353,7 +1354,7 @@ int fat16_unlink(const char *path)
 
             if (is_empty) {
                 break;
-            } else if (!is_deleted || !is_lfn) {
+            } else if (!is_deleted && !is_lfn) {
                 if (strncmp((char *)Dir.DIR_Name, paths[pathDepth - 1], 11) == 0) {
                     sectorNum = FirstSectorofCluster + DirSecCnt - 1;
                     offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
@@ -1370,8 +1371,8 @@ int fat16_unlink(const char *path)
                                 sector_buffer);
                     DirSecCnt++;
                 } else {
-                    if (FatClusEntryVal == 0xffff) {
-                        return 0;
+                    if (FatClusEntryVal == CLUSTER_END) {
+                        break;
                     }
                     ClusterN = FatClusEntryVal;
                     first_sector_by_cluster(fat16_ins, ClusterN, &FatClusEntryVal,
