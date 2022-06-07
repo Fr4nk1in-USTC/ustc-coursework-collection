@@ -727,7 +727,7 @@ __attribute__((weak)) int fat16_readdir(const char *path, void *buffer,
                                 &FirstSectorofCluster, sector_buffer);
 
         /* Start searching the root's sub-directories starting from Dir */
-        for (uint i = 1; Dir.DIR_Name[0] != 0x00; i++) {
+        for (uint i = 1;; i++) {
             // TODO: 读取对应目录项, 并用filler填充到buffer
             /*** BEGIN ***/
             memcpy(&Dir,
@@ -1052,7 +1052,7 @@ __attribute__((weak)) int fat16_mknod(const char *path, mode_t mode, dev_t devNu
                                 &FirstSectorofCluster, sector_buffer);
 
         /* Start searching the root's sub-directories starting from Dir */
-        for (uint i = 1; Dir.DIR_Name[0] != 0x00; i++) {
+        for (uint i = 1;; i++) {
             memcpy(&Dir,
                    sector_buffer + ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR,
                    BYTES_PER_DIR);
@@ -1343,7 +1343,7 @@ __attribute__((weak)) int fat16_unlink(const char *path)
                                 &FirstSectorofCluster, sector_buffer);
 
         /* Start searching the root's sub-directories starting from Dir */
-        for (uint i = 1; Dir.DIR_Name[0] != 0x00; i++) {
+        for (uint i = 1;; i++) {
             memcpy(&Dir,
                    sector_buffer + ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR,
                    BYTES_PER_DIR);

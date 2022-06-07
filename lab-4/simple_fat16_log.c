@@ -936,7 +936,7 @@ int fat16_rmdir(const char *path)
     first_sector_by_cluster(fat16_ins, clusterN, &fatClusEntryVal,
                             &firstSectorOfCluster, sectorBuffer);
 
-    for (uint i = 1; curDir.DIR_Name[0] != 0x00; i++) {
+    for (uint i = 1;; i++) {
         memcpy(&curDir, sectorBuffer + ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR,
                BYTES_PER_DIR);
 

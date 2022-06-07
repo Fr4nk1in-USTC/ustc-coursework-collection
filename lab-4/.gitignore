@@ -1,5 +1,6 @@
 simple_fat16
 bit_flip
 *.o
+*.log
 
 fat_dir/
