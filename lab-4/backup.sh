@@ -1,6 +1,5 @@
 #!/usr/bin/bash
-gcc -O2 -o bit_flip bit_flip.c 
-make backup
+gcc -O2 -o bit_flip bit_flip.c
 
 echo ""
 echo "Initializing backup file..."
@@ -36,10 +35,22 @@ md5sum fat16.img.bak
 md5sum fat16.img.bak2
 echo ""
 
+echo ""
 while true; do
-    read -p "Continue Mounting Image? (Y/n)" yn
+    read -p "Continue Mounting Image WITHOUT Backup Check? (Y/n)" yn
     case $yn in
-        [Yy]* ) make install; break;;
+        [Yy]* ) make default; break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer y(es) or n(o).";;
+    esac
+done
+./simple_fat16 -s -d ./fat_dir
+echo ""
+
+while true; do
+    read -p "Continue Mounting Image WITH Backup Check? (Y/n)" yn
+    case $yn in
+        [Yy]* ) make backup; break;;
         [Nn]* ) exit;;
         * ) echo "Please answer y(es) or n(o).";;
     esac
@@ -48,6 +59,7 @@ done
 ./simple_fat16 -s -d ./fat_dir
 
 echo ""
+
 echo "Recheck MD5 sum:"
 md5sum fat16.img
 md5sum fat16.img.bak

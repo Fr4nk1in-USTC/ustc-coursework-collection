@@ -23,9 +23,7 @@
 
 #define MAX_SHORT_NAME_LEN 13
 
-static FILE *backup_fd[2];
-static const char  *FAT_FILE_NAME       = "fat16.img";
-static const char  *BACKUP_FILE_NAME[2] = {"fat16.img.bak", "fat16.img.bak2"};
+static const char *FAT_FILE_NAME = "fat16.img";
 
 typedef uint8_t  BYTE;
 typedef uint16_t WORD;
@@ -87,6 +85,7 @@ typedef struct {
 } FAT16;  // 存储发文件系统所需要的元数据的数据结构
 
 FAT16 *get_fat16_ins();
+FAT16 *get_fat16_ins_fix();
 
 void   sector_read(FILE *fd, unsigned int secnum, void *buffer);
 void   sector_write(FILE *fd, unsigned int secnum, const void *buffer);
@@ -125,6 +124,19 @@ int   fat16_rmdir(const char *path);
 int   fat16_write(const char *path, const char *data, size_t size, off_t offset,
                   struct fuse_file_info *fi);
 int   fat16_truncate(const char *path, off_t size);
+
+int    is_cluster_inuse(uint16_t cluster_num);
+int    write_fat_entry(FAT16 *fat16_ins, WORD clusterN, WORD data);
+WORD   alloc_clusters(FAT16 *fat16_ins, uint32_t n);
+void   dir_entry_delete(FAT16 *fat16_ins, off_t offset);
+void   dir_entry_write(FAT16 *fat16_ins, off_t offset, const DIR_ENTRY *Dir);
+size_t write_to_cluster_at_offset(FAT16 *fat16_ins, WORD clusterN, off_t offset,
+                                  const BYTE *data, size_t size);
+WORD   file_last_cluster(FAT16 *fat16_ins, DIR_ENTRY *Dir, int64_t *count);
+int    file_new_cluster(FAT16 *fat16_ins, DIR_ENTRY *Dir, WORD last_cluster,
+                        DWORD count);
+int write_file(FAT16 *fat16_ins, DIR_ENTRY *Dir, off_t offset_dir, const void *buff,
+               off_t offset, size_t length);
 
 void run_tests();
 
