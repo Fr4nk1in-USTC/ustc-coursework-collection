@@ -1222,29 +1222,47 @@ int write_file(FAT16 *fat16_ins, DIR_ENTRY *Dir, off_t offset_dir, const void *b
      */
     /*** BEGIN ***/
     // HINT: 记得把修改过的Dir写回目录项 (如果你之前没有写回)
-    WORD  beginBytes  = offset;
-    WORD  endBytes    = offset + length;
-    WORD  beginClus   = Dir->DIR_FstClusLO + beginBytes / fat16_ins->ClusterSize;
-    WORD  endClus     = Dir->DIR_FstClusLO + endBytes / fat16_ins->ClusterSize;
-    off_t beginOffset = beginBytes % fat16_ins->ClusterSize;
-    off_t endOffset   = endBytes % fat16_ins->ClusterSize;
-    int   writeSize   = 0;
+    // HINT: 记得把修改过的Dir写回目录项 (如果你之前没有写回)
+    DWORD  beginBytes  = offset;
+    DWORD  endBytes    = offset + length - 1;
+    DWORD  beginClus   = beginBytes / fat16_ins->ClusterSize;
+    DWORD  endClus     = endBytes / fat16_ins->ClusterSize;
+    off_t  beginOffset = beginBytes % fat16_ins->ClusterSize;
+    off_t  endOffset   = endBytes % fat16_ins->ClusterSize;
+    size_t writeSize   = 0;
+
+    // 找到 begin_cluster
+    WORD clusNum = Dir->DIR_FstClusLO;
+    WORD clusCnt = 0;
+    while (clusCnt < beginClus) {
+        clusNum = fat_entry_by_cluster(fat16_ins, clusNum);
+        clusCnt++;
+        if (clusNum == CLUSTER_END) {
+            return -EIO;
+        }
+    }
 
     if (beginClus == endClus) {
-        writeSize += write_to_cluster_at_offset(fat16_ins, beginClus, beginOffset,
-                                                buff, length);
+        writeSize += write_to_cluster_at_offset(fat16_ins, clusNum, beginOffset,
+                                                buff, endOffset - beginOffset + 1);
     } else {
-        writeSize +=
-            write_to_cluster_at_offset(fat16_ins, beginClus, beginOffset, buff,
-                                       fat16_ins->ClusterSize - beginOffset);
-
-        for (WORD i = beginClus + 1; i < endClus; i++) {
-            writeSize += write_to_cluster_at_offset(fat16_ins, i, 0, buff,
-                                                    fat16_ins->ClusterSize);
+        for (clusCnt = beginClus; clusCnt <= endClus; clusCnt++) {
+            if (clusNum == CLUSTER_END) {
+                return -EIO;
+            }
+            if (clusCnt == beginClus) {
+                writeSize += write_to_cluster_at_offset(
+                    fat16_ins, clusNum, beginOffset, buff + writeSize,
+                    fat16_ins->ClusterSize - beginOffset);
+            } else if (clusCnt == endClus) {
+                writeSize += write_to_cluster_at_offset(
+                    fat16_ins, clusNum, 0, buff + writeSize, endOffset + 1);
+            } else {
+                writeSize += write_to_cluster_at_offset(
+                    fat16_ins, clusNum, 0, buff + writeSize, fat16_ins->ClusterSize);
+            }
+            clusNum = fat_entry_by_cluster(fat16_ins, clusNum);
         }
-
-        writeSize +=
-            write_to_cluster_at_offset(fat16_ins, endClus, 0, buff, endOffset);
     }
     /*** END ***/
     return writeSize;
@@ -2174,3 +2192,6 @@ simple_fat16_log.o: simple_fat16_log.c fat16.h log.h
 [BEGIN] Read called for path /test.txt, size 4096, offset 0.
 [END] Read succeeded for path /test.txt, 1 bytes read.
 ```
+
+## 二者结合
+结合起来就是 [simple_fat_optional.c](./simple_fat16_optional.c), 不再赘述.

@@ -1,3 +1,4 @@
+#include "backup.h"
 #include "fat16.h"
 #include "log.h"
 
@@ -10,6 +11,9 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+
+const char *BACKUP_FILE_NAME[2] = {"fat16.img.bak", "fat16.img.bak2"};
+FILE       *backup_fd[2];
 
 const char *log_filename = "mount_fat16.log";
 FILE       *log_fd;
@@ -76,6 +80,15 @@ FAT16 *pre_init_fat16(const char *imageFilePath)
         exit(EXIT_FAILURE);
     }
 
+    backup_fd[0] = fopen(BACKUP_FILE_NAME[0], "rb+");
+    backup_fd[1] = fopen(BACKUP_FILE_NAME[1], "rb+");
+    if (backup_fd[0] == NULL || backup_fd[1] == NULL) {
+        fprintf(stderr, "Missing backup file!\n");
+        log_printf("[ERROR] Missing backup file.\n");
+        up(&file_operations_mutex);
+        exit(EXIT_FAILURE);
+    }
+
     FAT16 *fat16_ins = malloc(sizeof(FAT16));
 
     fat16_ins->fd = fd;
@@ -120,13 +133,69 @@ void sector_read(FILE *fd, unsigned int secnum, void *buffer)
         down(&file_read_write_mutex);
     up(&reader_count_mutex);
 
+    BYTE origin_buffer[BYTES_PER_SECTOR];
     fseek(fd, BYTES_PER_SECTOR * secnum, SEEK_SET);
-    fread(buffer, BYTES_PER_SECTOR, 1, fd);
+    fread(origin_buffer, BYTES_PER_SECTOR, 1, fd);
+
+    FILE *backup_fd_copy[2] = {backup_fd[0], backup_fd[1]};
+    BYTE  backup_buffer[2][BYTES_PER_SECTOR];
+    fseek(backup_fd_copy[0], BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fread(backup_buffer[0], BYTES_PER_SECTOR, 1, backup_fd_copy[0]);
+    fseek(backup_fd_copy[1], BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fread(backup_buffer[1], BYTES_PER_SECTOR, 1, backup_fd_copy[1]);
+
+    int find_flag     = 0;
+    int origin_bit    = 0;
+    int backup_bit[2] = {0, 0};
+    int correct_bit   = 0;
+    for (int i = 0; i < BYTES_PER_SECTOR; i++) {
+        if (origin_buffer[i] == backup_buffer[0][i]
+            && origin_buffer[i] == backup_buffer[1][i])
+            continue;
+
+        find_flag = 1;
+        for (int j = 0; j < 8; j++) {
+            origin_bit    = (origin_buffer[i] >> j) & 0x01;
+            backup_bit[0] = (backup_buffer[0][i] >> j) & 0x01;
+            backup_bit[1] = (backup_buffer[1][i] >> j) & 0x01;
+            
+            if (origin_bit != backup_bit[0] || origin_bit != backup_bit[1] || backup_bit[0] != backup_bit[1]) {
+                correct_bit = (origin_bit + backup_bit[0] + backup_bit[1]) >> 1;
+                fprintf(stderr,
+                        "ERROR: Found uncompatible data at sector %u, byte %d, "
+                        "bit %d\n",
+                        secnum, i, j);
+                fprintf(stderr,
+                        "\tCorrect bit %1d, origin bit %1d, "
+                        "backup bit %1d & %1d\n",
+                        correct_bit, origin_bit, backup_bit[0], backup_bit[1]);
+                log_printf(
+                    "[CAUTION] Found uncompatible data at sector %u, byte %d, "
+                    "bit %d, overwriting with correct bit %d.\n",
+                    secnum, i, j, correct_bit);
+
+                if (correct_bit) {
+                    origin_buffer[i]    |= (BYTE)(1 << j);
+                    backup_buffer[0][i] |= (BYTE)(1 << j);
+                    backup_buffer[1][i] |= (BYTE)(1 << j);
+                } else {
+                    origin_buffer[i]    &= ~(BYTE)(1 << j);
+                    backup_buffer[0][i] &= ~(BYTE)(1 << j);
+                    backup_buffer[1][i] &= ~(BYTE)(1 << j);
+                }
+            }
+        }
+    }
+    memcpy(buffer, origin_buffer, BYTES_PER_SECTOR);
 
     down(&reader_count_mutex);
     if (--reader_count == 0)
         up(&file_read_write_mutex);
     up(&reader_count_mutex);
+
+    if (find_flag) {
+        sector_write(fd, secnum, origin_buffer);
+    }
 }
 
 void sector_write(FILE *fd, unsigned int secnum, const void *buffer)
@@ -136,6 +205,15 @@ void sector_write(FILE *fd, unsigned int secnum, const void *buffer)
     fseek(fd, BYTES_PER_SECTOR * secnum, SEEK_SET);
     fwrite(buffer, BYTES_PER_SECTOR, 1, fd);
     fflush(fd);
+
+    FILE *backup_fd_copy[2] = {backup_fd[0], backup_fd[1]};
+    fseek(backup_fd_copy[0], BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fwrite(buffer, BYTES_PER_SECTOR, 1, backup_fd_copy[0]);
+    fflush(backup_fd_copy[0]);
+
+    fseek(backup_fd_copy[1], BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fwrite(buffer, BYTES_PER_SECTOR, 1, backup_fd_copy[1]);
+    fflush(backup_fd_copy[1]);
 
     up(&file_read_write_mutex);
 }

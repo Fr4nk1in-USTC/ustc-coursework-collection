@@ -67,9 +67,7 @@ int write_fat_entry(FAT16 *fat16_ins, WORD clusterN, WORD data)
     uint firstFatSecNum;  // 第一个 FAT 表开始的扇区号
     uint clusterOffset;  // clusterN 这个簇对应的表项, 在每个 FAT 表项的哪个偏移量
     uint clusterSec;  // clusterN 这个簇对应的表项, 在每个 FAT 表中的第几个扇区
-                      // (Hint: 这个值与 clusterSec 的关系是?)
     uint secOffset;  // clusterN 这个簇对应的表项, 在所在扇区的哪个偏移量
-                     // (Hint: 这个值与 clusterSec 的关系是?)
     /*** BEGIN ***/
     firstFatSecNum = fat16_ins->Bpb.BPB_RsvdSecCnt;
     clusterOffset  = clusterN * 2;
@@ -123,7 +121,6 @@ WORD alloc_clusters(FAT16 *fat16_ins, uint32_t n)
                 clusters[allocated] = (i * fat16_ins->Bpb.BPB_BytsPerSec + j) / 2;
                 allocated++;
                 if (allocated == n) {
-                    clusters[allocated] = CLUSTER_END;
                     break;
                 }
             }
@@ -513,7 +510,6 @@ size_t write_to_cluster_at_offset(FAT16 *fat16_ins, WORD clusterN, off_t offset,
         writeSize += fat16_ins->Bpb.BPB_BytsPerSec - beginOffset;
         // 写入中间扇区
         for (WORD sectorCnt = beginSector + 1; sectorCnt < endSector; sectorCnt++) {
-            sector_read(fat16_ins->fd, sectorCnt, sectorBuffer);
             memcpy(sectorBuffer, data + writeSize, fat16_ins->Bpb.BPB_BytsPerSec);
             sector_write(fat16_ins->fd, sectorCnt, sectorBuffer);
             writeSize += fat16_ins->Bpb.BPB_BytsPerSec;
@@ -544,15 +540,11 @@ WORD file_last_cluster(FAT16 *fat16_ins, DIR_ENTRY *Dir, int64_t *count)
     // TODO: 找到Dir对应的文件的最后一个簇编号, 并将该文件当前簇的数目填充入count
     // HINT: 可能用到的函数: is_cluster_inuse和fat_entry_by_cluster函数.
     /*** BEGIN ***/
-    WORD clusterN        = Dir->DIR_FstClusLO;
-    WORD fatClusEntryVal = Dir->DIR_FstClusLO;
-    if (is_cluster_inuse(clusterN)) {
-        do {
-            cnt++;
-            clusterN        = fatClusEntryVal;
-            fatClusEntryVal = fat_entry_by_cluster(fat16_ins, clusterN);
-        } while (is_cluster_inuse(fatClusEntryVal));
-        cur = clusterN;
+    WORD clusterN = Dir->DIR_FstClusLO;
+    while (is_cluster_inuse(clusterN)) {
+        cnt++;
+        cur      = clusterN;
+        clusterN = fat_entry_by_cluster(fat16_ins, clusterN);
     }
     /*** END ***/
     if (count != NULL) {  // 如果count为NULL, 不填充count
@@ -630,7 +622,6 @@ int write_file(FAT16 *fat16_ins, DIR_ENTRY *Dir, off_t offset_dir, const void *b
         int64_t newClusNum = ((newSize - 1) / fat16_ins->ClusterSize) + 1;
         int64_t curClusNum;
         WORD    lastClus = file_last_cluster(fat16_ins, Dir, &curClusNum);
-
         if (newClusNum > curClusNum) {
             int ret =
                 file_new_cluster(fat16_ins, Dir, lastClus, newClusNum - curClusNum);
@@ -647,29 +638,46 @@ int write_file(FAT16 *fat16_ins, DIR_ENTRY *Dir, off_t offset_dir, const void *b
      */
     /*** BEGIN ***/
     // HINT: 记得把修改过的Dir写回目录项 (如果你之前没有写回)
-    WORD  beginBytes  = offset;
-    WORD  endBytes    = offset + length;
-    WORD  beginClus   = Dir->DIR_FstClusLO + beginBytes / fat16_ins->ClusterSize;
-    WORD  endClus     = Dir->DIR_FstClusLO + endBytes / fat16_ins->ClusterSize;
-    off_t beginOffset = beginBytes % fat16_ins->ClusterSize;
-    off_t endOffset   = endBytes % fat16_ins->ClusterSize;
-    int   writeSize   = 0;
+    DWORD  beginBytes  = offset;
+    DWORD  endBytes    = offset + length - 1;
+    DWORD  beginClus   = beginBytes / fat16_ins->ClusterSize;
+    DWORD  endClus     = endBytes / fat16_ins->ClusterSize;
+    off_t  beginOffset = beginBytes % fat16_ins->ClusterSize;
+    off_t  endOffset   = endBytes % fat16_ins->ClusterSize;
+    size_t writeSize   = 0;
+
+    // 找到 begin_cluster
+    WORD clusNum = Dir->DIR_FstClusLO;
+    WORD clusCnt = 0;
+    while (clusCnt < beginClus) {
+        clusNum = fat_entry_by_cluster(fat16_ins, clusNum);
+        clusCnt++;
+        if (clusNum == CLUSTER_END) {
+            return -EIO;
+        }
+    }
 
     if (beginClus == endClus) {
-        writeSize += write_to_cluster_at_offset(fat16_ins, beginClus, beginOffset,
-                                                buff, length);
+        writeSize += write_to_cluster_at_offset(fat16_ins, clusNum, beginOffset,
+                                                buff, endOffset - beginOffset + 1);
     } else {
-        writeSize +=
-            write_to_cluster_at_offset(fat16_ins, beginClus, beginOffset, buff,
-                                       fat16_ins->ClusterSize - beginOffset);
-
-        for (WORD i = beginClus + 1; i < endClus; i++) {
-            writeSize += write_to_cluster_at_offset(fat16_ins, i, 0, buff,
-                                                    fat16_ins->ClusterSize);
+        for (clusCnt = beginClus; clusCnt <= endClus; clusCnt++) {
+            if (clusNum == CLUSTER_END) {
+                return -EIO;
+            }
+            if (clusCnt == beginClus) {
+                writeSize += write_to_cluster_at_offset(
+                    fat16_ins, clusNum, beginOffset, buff + writeSize,
+                    fat16_ins->ClusterSize - beginOffset);
+            } else if (clusCnt == endClus) {
+                writeSize += write_to_cluster_at_offset(
+                    fat16_ins, clusNum, 0, buff + writeSize, endOffset + 1);
+            } else {
+                writeSize += write_to_cluster_at_offset(
+                    fat16_ins, clusNum, 0, buff + writeSize, fat16_ins->ClusterSize);
+            }
+            clusNum = fat_entry_by_cluster(fat16_ins, clusNum);
         }
-
-        writeSize +=
-            write_to_cluster_at_offset(fat16_ins, endClus, 0, buff, endOffset);
     }
     /*** END ***/
     return writeSize;

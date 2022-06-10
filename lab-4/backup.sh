@@ -58,8 +58,8 @@ while true; do
     esac
 done
 
-make backup;
-./simple_fat16 -s -d ./fat_dir
+make;
+./simple_fat16_all -d ./fat_dir
 
 echo ""
 

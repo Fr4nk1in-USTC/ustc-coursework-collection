@@ -57,6 +57,8 @@ void sector_read(FILE *fd, unsigned int secnum, void *buffer)
     }
     if (find_flag) {
         sector_write(fd, secnum, origin_buffer);
+        sector_write(backup_fd_copy[0], secnum, backup_buffer[0]);
+        sector_write(backup_fd_copy[1], secnum, backup_buffer[1]);
     }
     memcpy(buffer, origin_buffer, BYTES_PER_SECTOR);
 }
