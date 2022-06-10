@@ -26,7 +26,7 @@ void log_open()
     log_fd = fopen(log_filename, "a");
 
     if (log_fd == NULL) {
-        perror("[ERRO] Could not open log file.");
+        perror("[ERROR] Could not open log file.");
         exit(EXIT_FAILURE);
     }
 
