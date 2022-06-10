@@ -39,23 +39,26 @@ echo ""
 while true; do
     read -p "Continue Mounting Image WITHOUT Backup Check? (Y/n)" yn
     case $yn in
-        [Yy]* ) make default; break;;
+        [Yy]* ) break;;
         [Nn]* ) exit;;
         * ) echo "Please answer y(es) or n(o).";;
     esac
 done
+
+make default;
 ./simple_fat16 -s -d ./fat_dir
 echo ""
 
 while true; do
     read -p "Continue Mounting Image WITH Backup Check? (Y/n)" yn
     case $yn in
-        [Yy]* ) make backup; break;;
+        [Yy]* ) break;;
         [Nn]* ) exit;;
         * ) echo "Please answer y(es) or n(o).";;
     esac
 done
 
+make backup;
 ./simple_fat16 -s -d ./fat_dir
 
 echo ""

@@ -5,6 +5,41 @@
 - `find_root()` 返回 0 时表示找到
 - `DIR_ENTRY` 结构体的 `DIR_Name` 元素并不是字符串, 因为其没有以 `\0` 结尾, 所以与 `paths[-1]` 比较时应该使用 `strncmp()` 函数, 返回 0 是表示两字符串相等.
 
+# 知识问答
+1.  FAT16 文件的目录名等元数据存储在哪? 数据存储在哪, 是怎么组织的?
+    - 文件的元数据信息以目录项的形式存储在根目录 (当文件处于根目录下) 或子目录的数据区域 (当文件处于子目录下). 
+    - 文件的数据存储在数据区域, 按簇以链表的形式组织, 下一个簇的地址存储在 FAT 表中.
+2.  FAT16 系统中需要两个 FAT 表的目的是什么?
+    - 出于系统冗余考虑
+3.  FAT16 中的根目录和子目录在磁盘存储上有什么区别?
+    - 根目录存储在专门的根目录区, 在 FAT16 中它永远紧随 FAT 区域之后, 大小一定是整数个扇区大小, 没有自己的目录项
+    - 子目录作为文件存储在数据区域, 有自己的目录项, 大小取决于其中的目录项数.
+4.  FAT16 的文件名存储格式是怎样的, 如何转化成实际用户看到的文件名?
+    - 非 LFN: 8 位文件名 + 3 位拓展名 (过长则截断, 不足则空格补全), 全部用大写存储. 转化方式: 大写转小写, 去除空格并在文件名和扩展名之间加 `.`
+    - LFN: 使用一个或多个目录项属性为 `0x0F` 的 LFN 项存储文件名.
+5.  不考虑 LFN, FAT16 文件系统中支持的最大文件名长度是多少, 为什么?
+    - 最大文件名长度为 8 字节: `DIR_Name` 的 11 字节减去拓展名的 3 字节.
+6.  FAT16 文件系统的最大单文件的大小是多少, 受限于什么因素?
+    - FAT16 中一个簇号为 16 位, 因此最多有 2^16 个簇, 且簇号 `0x0000`, `0x0001`, `0xFFF0` - `0xFFFF` 无法被使用, 而簇的大小一般不超过 32K = 2^15 字节, 所以最大单文件大小为 (2^16-18)*2^15 字节, 约 2GBytes.
+    - 如果考虑文件目录项的大小段, 其长度为 4 字节, 所能支持的最大文件大小为 2^32 = 4GBytes.
+7.  FAT16 文件系统分配空间的基本单位是什么, 文件系统读写磁盘的基本单位是什么?
+    - 分配空间的基本单位为簇
+    - 读写磁盘的基本单位为扇区
+8.  FAT16 文件系统的根目录数量达到最大值的时候, 再次创建目录时, 会自动分配空闲簇吗?
+    - 不会自动分配空闲簇, 因为根目录数量最大值是固定的.
+9.  FAT16 文件系统某个文件夹下的所有目录项都是紧密排列的吗?
+    - 根目录下所有目录项都是紧密排列的, 其中可能包含被删除的目录项和 LFN 项, 所以可用的目录项不是紧密排列的.
+    - 子目录可能跨簇, 因为子目录分配的簇不一定是连续的, 所以其下的目录项不一定是紧密排列的.
+10. FAT16 文件系统的布局是什么样的? 分为哪几个部分, 它们的位置在哪?
+    - 依次为
+      - 保留扇区
+        - 引导扇区
+        - 文件系统信息扇区
+        - 保留空间
+      - FAT 表区
+      - 根目录区
+      - 数据区
+
 # Part 1 (Completed in 6 Hour)
 
 ## Task 1: FAT16 文件系统读操作
@@ -1321,4 +1356,821 @@ int fat16_truncate(const char *path, off_t size)
     dir_entry_write(fat16_ins, offsetDir, &dir);
     return 0;
 }
+```
+
+# 附加部分
+> 为了减少不必要的复制粘贴, 这部分对要修改的函数进行重载处理, 具体方法见 [Stack Overflow](https://stackoverflow.com/a/617588) (只对 gcc 有效). 即
+> 
+> 1. 给要重载的函数定义打上 `__attribute__((weak))`.
+> 2. 在别处写上新的重载函数.
+> 
+> 具体被重载的函数见下面的介绍与 [`part_1.c`](./simple_fat16_part1.c) 和 [`part_2.c`](./simple_fat16_part2.c)
+## 实现文件系统的三备份容错机制
+### 具体修改
+重载了 `pre_init_fat16()`, `sector_read()`, `sector_write()` 函数, 并添加了 `FILE *backup_fd[2]` 和 `const char *BACKUP_FILE_NAME[2]` 两个全局变量, 具体可见 [`backup.h`](./backup.h) 和 [`backup.c`](simple_fat16_backup.c).
+
+1. 在 `pre_init_fat16()` 中初始化 `FILE *backup_fd[2]`
+2. 在 `sector_read()` 中, 每次读取都对原始镜像文件和两个备份镜像文件的对应扇区进行读取, 然后逐字节对比三个扇区, 若发现不同则定位并修改被错误的 bit, 输出错误信息.
+3. 在 `sector_write()` 中, 每次都对三个镜像文件进行写入.
+
+如下
+```c
+const char *BACKUP_FILE_NAME[2] = {"fat16.img.bak", "fat16.img.bak2"};
+FILE       *backup_fd[2];
+
+void sector_read(FILE *fd, unsigned int secnum, void *buffer)
+{
+    BYTE origin_buffer[BYTES_PER_SECTOR];
+    fseek(fd, BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fread(origin_buffer, BYTES_PER_SECTOR, 1, fd);
+
+    FILE *backup_fd_copy[2] = {backup_fd[0], backup_fd[1]};
+    BYTE  backup_buffer[2][BYTES_PER_SECTOR];
+    fseek(backup_fd_copy[0], BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fread(backup_buffer[0], BYTES_PER_SECTOR, 1, backup_fd_copy[0]);
+    fseek(backup_fd_copy[1], BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fread(backup_buffer[1], BYTES_PER_SECTOR, 1, backup_fd_copy[1]);
+
+    int find_flag     = 0;
+    int origin_bit    = 0;
+    int backup_bit[2] = {0, 0};
+    int correct_bit   = 0;
+    for (int i = 0; i < BYTES_PER_SECTOR; i++) {
+        if (origin_buffer[i] == backup_buffer[0][i]
+            && origin_buffer[i] == backup_buffer[1][i])
+            continue;
+
+        find_flag = 1;
+        for (int j = 0; j < 8; j++) {
+            origin_bit    = (origin_buffer[i] >> j) & 0x01;
+            backup_bit[0] = (backup_buffer[0][i] >> j) & 0x01;
+            backup_bit[1] = (backup_buffer[1][i] >> j) & 0x01;
+            if (origin_bit != backup_bit[0] || origin_bit != backup_bit[1]) {
+                fprintf(stderr,
+                        "\nERROR: Found uncompatible data at sector %u, byte %d, "
+                        "bit %d\n",
+                        secnum, i, j);
+                correct_bit = (origin_bit + backup_bit[0] + backup_bit[1]) >> 1;
+                fprintf(stderr,
+                        "\tCorrect bit %1d, origin bit %1d, "
+                        "backup bit %1d & %1d\n\n",
+                        correct_bit, origin_bit, backup_bit[0], backup_bit[1]);
+                if (correct_bit) {
+                    origin_buffer[i]    |= (BYTE)(1 << j);
+                    backup_buffer[0][i] |= (BYTE)(1 << j);
+                    backup_buffer[1][i] |= (BYTE)(1 << j);
+                } else {
+                    origin_buffer[i]    &= ~(BYTE)(1 << j);
+                    backup_buffer[0][i] &= ~(BYTE)(1 << j);
+                    backup_buffer[1][i] &= ~(BYTE)(1 << j);
+                }
+            }
+        }
+    }
+    if (find_flag) {
+        sector_write(fd, secnum, origin_buffer);
+    }
+    memcpy(buffer, origin_buffer, BYTES_PER_SECTOR);
+}
+
+void sector_write(FILE *fd, unsigned int secnum, const void *buffer)
+{
+    fseek(fd, BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fwrite(buffer, BYTES_PER_SECTOR, 1, fd);
+    fflush(fd);
+
+    FILE *backup_fd_copy[2] = {backup_fd[0], backup_fd[1]};
+    fseek(backup_fd_copy[0], BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fwrite(buffer, BYTES_PER_SECTOR, 1, backup_fd_copy[0]);
+    fflush(backup_fd_copy[0]);
+
+    fseek(backup_fd_copy[1], BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fwrite(buffer, BYTES_PER_SECTOR, 1, backup_fd_copy[1]);
+    fflush(backup_fd_copy[1]);
+}
+
+FAT16 *pre_init_fat16(const char *imageFilePath)
+{
+    /* Opening the FAT16 image file */
+    FILE *fd = fopen(imageFilePath, "rb+");
+
+    if (fd == NULL) {
+        fprintf(stderr, "Missing FAT16 image file!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    backup_fd[0] = fopen(BACKUP_FILE_NAME[0], "rb+");
+    backup_fd[1] = fopen(BACKUP_FILE_NAME[1], "rb+");
+    if (backup_fd[0] == NULL || backup_fd[1] == NULL) {
+        fprintf(stderr, "Missing backup file!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    FAT16 *fat16_ins = malloc(sizeof(FAT16));
+
+    fat16_ins->fd = fd;
+
+    /* Reads the BPB */
+    sector_read(fat16_ins->fd, 0, &fat16_ins->Bpb);
+
+    /* First sector of the root directory */
+    fat16_ins->FirstRootDirSecNum =
+        fat16_ins->Bpb.BPB_RsvdSecCnt
+        + (fat16_ins->Bpb.BPB_FATSz16 * fat16_ins->Bpb.BPB_NumFATS);
+
+    /* Number of sectors in the root directory */
+    DWORD RootDirSectors =
+        ((fat16_ins->Bpb.BPB_RootEntCnt * 32) + (fat16_ins->Bpb.BPB_BytsPerSec - 1))
+        / fat16_ins->Bpb.BPB_BytsPerSec;
+
+    /* First sector of the data region (cluster #2) */
+    fat16_ins->FirstDataSector =
+        fat16_ins->Bpb.BPB_RsvdSecCnt
+        + (fat16_ins->Bpb.BPB_NumFATS * fat16_ins->Bpb.BPB_FATSz16) + RootDirSectors;
+
+    fat16_ins->FatOffset =
+        fat16_ins->Bpb.BPB_RsvdSecCnt * fat16_ins->Bpb.BPB_BytsPerSec;
+    fat16_ins->FatSize = fat16_ins->Bpb.BPB_BytsPerSec * fat16_ins->Bpb.BPB_FATSz16;
+    fat16_ins->RootOffset =
+        fat16_ins->FatOffset + fat16_ins->FatSize * fat16_ins->Bpb.BPB_NumFATS;
+    fat16_ins->ClusterSize =
+        fat16_ins->Bpb.BPB_BytsPerSec * fat16_ins->Bpb.BPB_SecPerClus;
+    fat16_ins->DataOffset =
+        fat16_ins->RootOffset + fat16_ins->Bpb.BPB_RootEntCnt * BYTES_PER_DIR;
+
+    return fat16_ins;
+}
+```
+
+同时还需要修改 `Makefile`, 添加下面的项
+```makefile
+backup: simple_fat16_part1.o simple_fat16_part2.o simple_fat16_backup.o
+	$(CC) $(CFLAGS) -o simple_fat16 $^ $(LDFLAGS) $(LDLIBS)
+simple_fat16_backup.o: simple_fat16_backup.c fat16.h backup.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+```
+
+### 测试
+为了反转镜像文件的某一个 bit, 可以在挂载前修改镜像文件, 为此, 编写了下面的小程序, 可以修改特定镜像文件对应扇区对应字节的某一 bit. 用法如下 (注意参数全部从 0 开始计算)
+```
+Usage: 
+  bit_flip --help
+    Show this help message.
+  bit_flip
+    Filp a random bit of random img.
+  bit_flip [img #] [sector #] [byte #] [bit #]
+    Filp the bit # of the sector #, byte # of img #.
+      img #: 0 for origin img, 1 for backup img 1 and 2 for backup img 2.
+```
+程序代码如下
+```c
+#include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#define IMG_SIZE         31457280
+#define BYTES_PER_SECTOR 512
+#define SECTOR_NUM       (IMG_SIZE / BYTES_PER_SECTOR)
+
+const char *filename[3] = {"fat16.img", "fat16.img.bak", "fat16.img.bak2"};
+
+int main(int argc, char *argv[])
+{
+    long img_num  = 0;
+    long sec_num  = 0;
+    long byte_num = 0;
+    long bit_num  = 0;
+
+    if (argc == 1) {
+        printf("A random bit of random img will be flipped. Continue? (y/n) ");
+        char c = getchar();
+        if (c != 'y' && c != 'Y') {
+            return 0;
+        }
+        srand(time(NULL));
+        img_num  = rand() % 3;
+        sec_num  = rand() % SECTOR_NUM;
+        byte_num = rand() % BYTES_PER_SECTOR;
+        bit_num  = rand() % 8;
+    } else if (strcmp(argv[1], "--help") == 0) {
+        printf("Usage: \n");
+        printf("  bit_flip --help\n");
+        printf("    Show this help message.\n");
+        printf("  bit_flip\n");
+        printf("    Filp a random bit of random img.\n");
+        printf("  bit_flip [img #] [sector #] [byte #] [bit #]\n");
+        printf("    Filp the bit # of the sector #, byte # of img #.\n");
+        printf("      img #: 0 for origin img, 1 for backup img 1 and 2 for backup "
+               "img 2.\n");
+        return 0;
+    } else if (argc == 5) {
+        img_num  = strtol(argv[1], NULL, 10);
+        sec_num  = strtol(argv[2], NULL, 10);
+        byte_num = strtol(argv[3], NULL, 10);
+        bit_num  = strtol(argv[4], NULL, 10);
+    } else {
+        printf("Invalid arguments.\n");
+        return 0;
+    }
+
+    if (img_num < 0 || img_num > 2 || sec_num < 0 || sec_num >= SECTOR_NUM
+        || byte_num < 0 || byte_num >= BYTES_PER_SECTOR || bit_num < 0
+        || bit_num >= 8)
+    {
+        printf("Invalid arguments.\n");
+        return 0;
+    }
+
+    printf("Flipping bit %ld of sector %ld, byte %ld of img %s.\n", bit_num, sec_num,
+           byte_num, filename[img_num]);
+
+    FILE *img_fd = fopen(filename[img_num], "rb+");
+    long  offset = sec_num * BYTES_PER_SECTOR + byte_num;
+
+    fseek(img_fd, offset, SEEK_SET);
+    uint8_t byte = fgetc(img_fd);
+    byte         ^= (1 << bit_num);
+    fseek(img_fd, offset, SEEK_SET);
+    fputc(byte, img_fd);
+    fclose(img_fd);
+}
+```
+同时编写了对应的脚本实现自动测试, 测试流程如下
+
+1. 拷贝两份镜像文件备份
+2. 检查镜像文件和备份的 MD5 校验码
+3. 使用 `bit_filp` 反转 bit
+4. 检查反转后的镜像文件和备份的 MD5 校验码
+5. 使用没有三备份容错机制的文件系统挂载镜像, 可以查看被修改的部分
+6. 使用三备份容错机制的文件系统挂载镜像, 重新查看被修改的部分, 注意观察输出
+7. 重新检查镜像文件和备份的 MD5 校验码, 结束测试
+
+脚本如下
+
+```sh
+#!/usr/bin/bash
+gcc -O2 -o bit_flip bit_flip.c
+
+echo ""
+echo "Initializing backup file..."
+cp fat16.img fat16.img.bak
+cp fat16.img fat16.img.bak2
+echo ""
+
+echo "Origin MD5 sum:"
+md5sum fat16.img
+md5sum fat16.img.bak
+md5sum fat16.img.bak2
+echo ""
+
+echo "Calling ./bit_flip"
+echo ""
+if [[ $# -eq 0 ]]; then
+    ./bit_flip
+elif [[ $# -eq 1 ]]; then
+    ./bit_flip $1
+    exit 0
+elif [[ $# -eq 4 ]]; then
+    ./bit_flip $1 $2 $3 $4
+else
+    echo "Invalid arguments"
+    exit 1
+fi
+echo ""
+
+echo ""
+echo "New MD5 sum:"
+md5sum fat16.img
+md5sum fat16.img.bak
+md5sum fat16.img.bak2
+echo ""
+
+echo ""
+while true; do
+    read -p "Continue Mounting Image WITHOUT Backup Check? (Y/n)" yn
+    case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer y(es) or n(o).";;
+    esac
+done
+
+make default;
+./simple_fat16 -s -d ./fat_dir
+echo ""
+
+while true; do
+    read -p "Continue Mounting Image WITH Backup Check? (Y/n)" yn
+    case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer y(es) or n(o).";;
+    esac
+done
+
+make backup;
+./simple_fat16 -s -d ./fat_dir
+
+echo ""
+
+echo "Recheck MD5 sum:"
+md5sum fat16.img
+md5sum fat16.img.bak
+md5sum fat16.img.bak2
+```
+
+比如第 161 个扇区的第 13 个字节的第 6 位属于 `/log.c` 的第 1 行的第 13 个字符 `r`, 反转后变为 `R`. (全部从 1 开始计数) 对该 bit 进行测试, 输出如下
+```plaintext
+$ ./backup.sh 0 160 12 5        
+
+Initializing backup file...
+
+Origin MD5 sum:
+5e4f28aa93856f5b8aadb76c952f31d0  fat16.img
+5e4f28aa93856f5b8aadb76c952f31d0  fat16.img.bak
+5e4f28aa93856f5b8aadb76c952f31d0  fat16.img.bak2
+
+Calling ./bit_flip
+
+Flipping bit 5 of sector 160, byte 12 of img fat16.img.
+
+
+New MD5 sum:
+fa41da0c5fd9058e230a612eaf9d8e08  fat16.img
+5e4f28aa93856f5b8aadb76c952f31d0  fat16.img.bak
+5e4f28aa93856f5b8aadb76c952f31d0  fat16.img.bak2
+
+
+Continue Mounting Image WITHOUT Backup Check? (Y/n)Y
+...
+
+Continue Mounting Image WITH Backup Check? (Y/n)Y
+...
+
+ERROR: Found uncompatible data at sector 160, byte 12, bit 5
+        Correct bit 1, origin bit 0, backup bit 1 & 1
+
+...
+
+Recheck MD5 sum:
+5e4f28aa93856f5b8aadb76c952f31d0  fat16.img
+5e4f28aa93856f5b8aadb76c952f31d0  fat16.img.bak
+5e4f28aa93856f5b8aadb76c952f31d0  fat16.img.bak2
+```
+
+其中在另一个终端中的输入输出如下
+```plaintext
+$ cat fat_dir/log.c
+#include <erRno.h>  # 2nd 'r' -> `R`
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "log.h"
+
+#define LOGNAME "mount_fat16.log"
+
+
+static FILE *logfile;
+
+void log_open()
+{
+  logfile = fopen(LOGNAME, "w");
+
+  if (logfile == NULL) {
+    perror("[ERRO] Could not open log file.");
+    exit(EXIT_FAILURE);
+  }
+
+  // Set logfile to line buffering
+  setvbuf(logfile, NULL, _IONBF, 0);
+}
+
+void log_msg(const char *format, ...)
+{
+  va_list ap;
+  va_start(ap, format);
+  vfprintf(logfile, format, ap);
+}
+$ fusermount -uz ./fat_dir
+$ cat fat_dir/log.c
+#include <errno.h>  # recovered
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "log.h"
+
+#define LOGNAME "mount_fat16.log"
+
+
+static FILE *logfile;
+
+void log_open()
+{
+  logfile = fopen(LOGNAME, "w");
+
+  if (logfile == NULL) {
+    perror("[ERRO] Could not open log file.");
+    exit(EXIT_FAILURE);
+  }
+
+  // Set logfile to line buffering
+  setvbuf(logfile, NULL, _IONBF, 0);
+}
+
+void log_msg(const char *format, ...)
+{
+  va_list ap;
+  va_start(ap, format);
+  vfprintf(logfile, format, ap);
+}
+$ fusermount -uz ./fat_dir
+```
+
+## 实现文件系统的日志机制
+具体的实现可见 [`log.h`](./log.h) 和 [`log.c`](./simple_fat16_log.c).
+
+日志系统的主要难点在于要求线程安全, 需要使用课堂上讲的 Reader-Writer Problem 的解决方案对镜像文件加锁, 并对每一个文件操作都加锁, 需要添加的函数有
+
+- `void log_open();`
+- `void log_printf(const char *format, ...);`
+- `void down(mutex *m);`
+- `void up(mutex *m);`
+
+需要重载的函数有:  
+
+- `pre_init_fat16()`
+- `sector_read()`
+- `sector_write()`
+- `fat16_readdir()`
+- `fat16_read()`
+- `fat16_mknod()`
+- `fat16_unlink()`
+- `fat16_mkdir()`
+- `fat16_rmdir()`
+- `fat16_write()`
+- `fat16_truncate()`
+
+需要添加的全局变量有 
+
+- `const char *log_filename`
+- `FILE *log_fd`
+- `mutex file_operations_mutex`
+- `mutex file_read_write_mutex`
+- `mutex reader_count_mutex`
+- `mutex log_mutex`
+- `int reader_count`
+
+其中对文件操作的修改主要是在函数开头占用 `file_operations_mutex` 并对日志输出 `[BEGIN] ...`, 在返回时输出可能的错误信息和 `[END] ...`, 并释放 `file_operations_mutex`, 后面就不再阐述这一部分.
+
+首先是日志操作
+```c
+void log_open()
+{
+    log_fd = fopen(log_filename, "a");
+
+    if (log_fd == NULL) {
+        perror("[ERRO] Could not open log file.");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set log_fd to line buffering
+    setvbuf(log_fd, NULL, _IONBF, 0);
+}
+
+void log_printf(const char *format, ...)
+{
+    down(&log_mutex);
+
+    va_list args;
+    va_start(args, format);
+    vfprintf(log_fd, format, args);
+    va_end(args);
+    fflush(log_fd);
+
+    up(&log_mutex);
+}
+```
+
+然后是对锁的 PV 操作, 如下
+```c
+void down(mutex *m)
+{
+    while (*m == 0)
+        ;
+    *m = 0;
+}
+
+void up(mutex *m)
+{
+    *m = 1;
+}
+```
+
+最后是初始化和扇区读写, 具体的线程安全解决方案可以搜索 Reader-Writer Problem.
+```c
+FAT16 *pre_init_fat16(const char *imageFilePath)
+{
+    down(&file_operations_mutex);
+    /* open log file */
+    log_open();
+    log_printf("[BEGIN] Mounting FAT16 image file %s.\n", imageFilePath);
+
+    /* Opening the FAT16 image file */
+    FILE *fd = fopen(imageFilePath, "rb+");
+
+    if (fd == NULL) {
+        fprintf(stderr, "Missing FAT16 image file!\n");
+        log_printf("[ERROR] Missing FAT16 image file.\n");
+        up(&file_operations_mutex);
+        exit(EXIT_FAILURE);
+    }
+
+    FAT16 *fat16_ins = malloc(sizeof(FAT16));
+
+    fat16_ins->fd = fd;
+
+    /* Reads the BPB */
+    sector_read(fat16_ins->fd, 0, &fat16_ins->Bpb);
+
+    /* First sector of the root directory */
+    fat16_ins->FirstRootDirSecNum =
+        fat16_ins->Bpb.BPB_RsvdSecCnt
+        + (fat16_ins->Bpb.BPB_FATSz16 * fat16_ins->Bpb.BPB_NumFATS);
+
+    /* Number of sectors in the root directory */
+    DWORD RootDirSectors =
+        ((fat16_ins->Bpb.BPB_RootEntCnt * 32) + (fat16_ins->Bpb.BPB_BytsPerSec - 1))
+        / fat16_ins->Bpb.BPB_BytsPerSec;
+
+    /* First sector of the data region (cluster #2) */
+    fat16_ins->FirstDataSector =
+        fat16_ins->Bpb.BPB_RsvdSecCnt
+        + (fat16_ins->Bpb.BPB_NumFATS * fat16_ins->Bpb.BPB_FATSz16) + RootDirSectors;
+
+    fat16_ins->FatOffset =
+        fat16_ins->Bpb.BPB_RsvdSecCnt * fat16_ins->Bpb.BPB_BytsPerSec;
+    fat16_ins->FatSize = fat16_ins->Bpb.BPB_BytsPerSec * fat16_ins->Bpb.BPB_FATSz16;
+    fat16_ins->RootOffset =
+        fat16_ins->FatOffset + fat16_ins->FatSize * fat16_ins->Bpb.BPB_NumFATS;
+    fat16_ins->ClusterSize =
+        fat16_ins->Bpb.BPB_BytsPerSec * fat16_ins->Bpb.BPB_SecPerClus;
+    fat16_ins->DataOffset =
+        fat16_ins->RootOffset + fat16_ins->Bpb.BPB_RootEntCnt * BYTES_PER_DIR;
+
+    log_printf("[END] Mounting FAT16 image file %s succeeded.\n", imageFilePath);
+    up(&file_operations_mutex);
+    return fat16_ins;
+}
+
+void sector_read(FILE *fd, unsigned int secnum, void *buffer)
+{
+    down(&reader_count_mutex);
+    if (++reader_count == 1)
+        down(&file_read_write_mutex);
+    up(&reader_count_mutex);
+
+    fseek(fd, BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fread(buffer, BYTES_PER_SECTOR, 1, fd);
+
+    down(&reader_count_mutex);
+    if (--reader_count == 0)
+        up(&file_read_write_mutex);
+    up(&reader_count_mutex);
+}
+
+void sector_write(FILE *fd, unsigned int secnum, const void *buffer)
+{
+    down(&file_read_write_mutex);
+
+    fseek(fd, BYTES_PER_SECTOR * secnum, SEEK_SET);
+    fwrite(buffer, BYTES_PER_SECTOR, 1, fd);
+    fflush(fd);
+
+    up(&file_read_write_mutex);
+}
+```
+
+以及对 Makefile 的修改
+```makefile
+log: simple_fat16_part1.o simple_fat16_part2.o simple_fat16_log.o
+	$(CC) $(CFLAGS) -o simple_fat16 $^ $(LDFLAGS) $(LDLIBS)
+simple_fat16_log.o: simple_fat16_log.c fat16.h log.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+```
+
+下面是一个日志的例子, 注意若使用 zsh 会不断地调用 `readdir` 所以这里使用 bash.
+```plaintext
+[BEGIN] Mounting FAT16 image file fat16.img.
+[END] Mounting FAT16 image file fat16.img succeeded.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /dir1.
+[END] Readdir succeeded for path /dir1.
+[BEGIN] Readdir called for path /dir1/dir2.
+[END] Readdir succeeded for path /dir1/dir2.
+[BEGIN] Readdir called for path /dir1/dir2/dir3.
+[END] Readdir succeeded for path /dir1/dir2/dir3.
+[BEGIN] Read called for path /log.c, size 4096, offset 0.
+[END] Read succeeded for path /log.c, 518 bytes read.
+[BEGIN] Readdir called for path /dir1/dir2/dir3.
+[END] Readdir succeeded for path /dir1/dir2/dir3.
+[BEGIN] Read called for path /dir1/dir2/dir3/test.c, size 4096, offset 0.
+[END] Read succeeded for path /dir1/dir2/dir3/test.c, 518 bytes read.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /dir1.
+[END] Readdir succeeded for path /dir1.
+[BEGIN] Read called for path /bigtab~1.pdf, size 16384, offset 0.
+[END] Read succeeded for path /bigtab~1.pdf, 16384 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 32768, offset 16384.
+[END] Read succeeded for path /bigtab~1.pdf, 32768 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 4096, offset 217088.
+[END] Read succeeded for path /bigtab~1.pdf, 4096 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 4096, offset 221184.
+[END] Read succeeded for path /bigtab~1.pdf, 31 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 4096, offset 102400.
+[END] Read succeeded for path /bigtab~1.pdf, 4096 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 16384, offset 106496.
+[END] Read succeeded for path /bigtab~1.pdf, 16384 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 32768, offset 122880.
+[END] Read succeeded for path /bigtab~1.pdf, 32768 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 4096, offset 196608.
+[END] Read succeeded for path /bigtab~1.pdf, 4096 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 16384, offset 200704.
+[END] Read succeeded for path /bigtab~1.pdf, 16384 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 40960, offset 155648.
+[END] Read succeeded for path /bigtab~1.pdf, 40960 bytes read.
+[BEGIN] Read called for path /bigtab~1.pdf, size 53248, offset 49152.
+[END] Read succeeded for path /bigtab~1.pdf, 53248 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 16384, offset 0.
+[END] Read succeeded for path /hamlet~1.pdf, 16384 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 32768, offset 16384.
+[END] Read succeeded for path /hamlet~1.pdf, 32768 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 4096, offset 1118208.
+[END] Read succeeded for path /hamlet~1.pdf, 2178 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 8192, offset 1089536.
+[END] Read succeeded for path /hamlet~1.pdf, 8192 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 16384, offset 1097728.
+[END] Read succeeded for path /hamlet~1.pdf, 16384 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 4096, offset 1114112.
+[END] Read succeeded for path /hamlet~1.pdf, 4096 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 4096, offset 978944.
+[END] Read succeeded for path /hamlet~1.pdf, 4096 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 4096, offset 974848.
+[END] Read succeeded for path /hamlet~1.pdf, 4096 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 4096, offset 929792.
+[END] Read succeeded for path /hamlet~1.pdf, 4096 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 4096, offset 53248.
+[END] Read succeeded for path /hamlet~1.pdf, 4096 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 16384, offset 57344.
+[END] Read succeeded for path /hamlet~1.pdf, 16384 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 32768, offset 73728.
+[END] Read succeeded for path /hamlet~1.pdf, 32768 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 16384, offset 933888.
+[END] Read succeeded for path /hamlet~1.pdf, 16384 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 24576, offset 950272.
+[END] Read succeeded for path /hamlet~1.pdf, 24576 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 65536, offset 983040.
+[END] Read succeeded for path /hamlet~1.pdf, 65536 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 40960, offset 1048576.
+[END] Read succeeded for path /hamlet~1.pdf, 40960 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 4096, offset 49152.
+[END] Read succeeded for path /hamlet~1.pdf, 4096 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 8192, offset 106496.
+[END] Read succeeded for path /hamlet~1.pdf, 8192 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 131072, offset 114688.
+[END] Read succeeded for path /hamlet~1.pdf, 131072 bytes read.
+[BEGIN] Read called for path /hamlet~1.pdf, size 90112, offset 245760.
+[END] Read succeeded for path /hamlet~1.pdf, 90112 bytes read.
+[BEGIN] Mknod called for path /test.txt.
+[END] Mknod succeeded for path /test.txt.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Mknod called for path /dir1/dir2/test.txt.
+[END] Mknod succeeded for path /dir1/dir2/test.txt.
+[BEGIN] Unlink called for path /test.txt.
+[END] Unlink succeeded for path /test.txt.
+[BEGIN] Unlink called for path /dir1/dir2/test.txt.
+[END] Unlink succeeded for path /dir1/dir2/test.txt.
+[BEGIN] Readdir called for path /.
+[END] Readdir succeeded for path /.
+[BEGIN] Readdir called for path /dir1.
+[END] Readdir succeeded for path /dir1.
+[BEGIN] Readdir called for path /dir1/dir2.
+[END] Readdir succeeded for path /dir1/dir2.
+[BEGIN] Readdir called for path /dir1/dir2/dir3.
+[END] Readdir succeeded for path /dir1/dir2/dir3.
+[BEGIN] Rmdir called for path /dir1.
+[ERROR] Directory /dir1 is not empty.
+[END] Rmdir failed for path /dir1.
+[BEGIN] Readdir called for path /dir1.
+[END] Readdir succeeded for path /dir1.
+[BEGIN] Readdir called for path /dir1.
+[END] Readdir succeeded for path /dir1.
+[BEGIN] Readdir called for path /dir1/dir2.
+[END] Readdir succeeded for path /dir1/dir2.
+[BEGIN] Readdir called for path /dir1/dir2.
+[END] Readdir succeeded for path /dir1/dir2.
+[BEGIN] Readdir called for path /dir1/dir2/dir3.
+[END] Readdir succeeded for path /dir1/dir2/dir3.
+[BEGIN] Readdir called for path /dir1/dir2/dir3.
+[END] Readdir succeeded for path /dir1/dir2/dir3.
+[BEGIN] Unlink called for path /dir1/dir2/dir3/test.c.
+[END] Unlink succeeded for path /dir1/dir2/dir3/test.c.
+[BEGIN] Rmdir called for path /dir1/dir2/dir3.
+[END] Rmdir succeeded for path /dir1/dir2/dir3.
+[BEGIN] Rmdir called for path /dir1/dir2.
+[END] Rmdir succeeded for path /dir1/dir2.
+[BEGIN] Rmdir called for path /dir1.
+[END] Rmdir succeeded for path /dir1.
+[BEGIN] mkdir called for path /dir.
+[END] Mkdir succeeded for path /dir.
+[BEGIN] Readdir called for path /dir.
+[END] Readdir succeeded for path /dir.
+[BEGIN] mkdir called for path /dir/dir.
+[END] Mkdir succeeded for path /dir/dir.
+[BEGIN] Rmdir called for path /dir.
+[ERROR] Directory /dir is not empty.
+[END] Rmdir failed for path /dir.
+[BEGIN] Rmdir called for path /dir/dir.
+[END] Rmdir succeeded for path /dir/dir.
+[BEGIN] Rmdir called for path /dir.
+[END] Rmdir succeeded for path /dir.
+[BEGIN] Mknod called for path /test.txt.
+[END] Mknod succeeded for path /test.txt.
+[BEGIN] Write called for path /test.txt, size 4, offset 0 and data 123
+.
+[END] Write succeeded for path /test.txt.
+[BEGIN] Read called for path /test.txt, size 4096, offset 0.
+[END] Read succeeded for path /test.txt, 5 bytes read.
+[BEGIN] Write called for path /test.txt, size 13, offset 4 and data hello world!
+.
+[END] Write succeeded for path /test.txt.
+[BEGIN] Read called for path /test.txt, size 4096, offset 0.
+[END] Read succeeded for path /test.txt, 18 bytes read.
+[BEGIN] Truncate called for path /test.txt, size 0.
+[END] Truncate succeeded for path /test.txt.
+[BEGIN] Read called for path /test.txt, size 4096, offset 0.
+[END] Read succeeded for path /test.txt, 1 bytes read.
 ```
