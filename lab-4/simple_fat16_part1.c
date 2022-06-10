@@ -1219,12 +1219,14 @@ int free_cluster(FAT16 *fat16_ins, int ClusterNum)
     WORD fat_1_offset   = clus_offset % fat16_ins->Bpb.BPB_BytsPerSec;
     WORD fat_2_offset   = clus_offset % fat16_ins->Bpb.BPB_BytsPerSec;
     // clang-format on
+    WORD empty = 0x0000;
+
     sector_read(fd, fat_1_sec_num, sector_buffer);
-    sector_buffer[fat_1_offset] = 0x00;
+    memcpy(sector_buffer + fat_1_offset, &empty, 2 * sizeof(BYTE));
     sector_write(fd, fat_1_sec_num, sector_buffer);
 
     sector_read(fd, fat_2_sec_num, sector_buffer);
-    sector_buffer[fat_2_offset] = 0x00;
+    memcpy(sector_buffer + fat_2_offset, &empty, 2 * sizeof(BYTE));
     sector_write(fd, fat_2_sec_num, sector_buffer);
     /*** END ***/
 
