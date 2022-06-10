@@ -471,11 +471,15 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
             int is_empty   = (Root.DIR_Name[0] == 0x00);
             int is_deleted = (Root.DIR_Name[0] == 0xE5);
             int is_lfn     = (Root.DIR_Attr == 0x0F);
-            if (is_empty || is_deleted) {
+            if (is_empty) {
                 sectorNum = fat16_ins->FirstRootDirSecNum + RootDirCnt - 1;
                 offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
                 findFlag  = 1;
                 break;
+            } else if (is_deleted) {
+                sectorNum = fat16_ins->FirstRootDirSecNum + RootDirCnt - 1;
+                offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
+                findFlag  = 1;
             } else if (!is_lfn) {
                 if (strncmp((char *)Root.DIR_Name, paths[pathDepth - 1], 11) == 0) {
                     findFlag = 0;
@@ -525,11 +529,15 @@ int fat16_mknod(const char *path, mode_t mode, dev_t devNum)
             int is_empty   = (Dir.DIR_Name[0] == 0x00);
             int is_deleted = (Dir.DIR_Name[0] == 0xE5);
             int is_lfn     = (Dir.DIR_Attr == 0x0F);
-            if (is_empty || is_deleted) {
+            if (is_empty) {
                 sectorNum = FirstSectorofCluster + DirSecCnt - 1;
                 offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
                 findFlag  = 1;
                 break;
+            } else if (is_deleted) {
+                sectorNum = FirstSectorofCluster + DirSecCnt - 1;
+                offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
+                findFlag  = 1;
             } else if (!is_lfn) {
                 if (strncmp((char *)Dir.DIR_Name, paths[pathDepth - 1], 11) == 0) {
                     findFlag = 0;
@@ -779,11 +787,15 @@ int fat16_mkdir(const char *path, mode_t mode)
             int isDeleted = (root.DIR_Name[0] == 0xe5);
             int isLFN     = (root.DIR_Attr == 0x0f);
 
-            if (!isEmpty || !isDeleted) {
+            if (isEmpty) {
                 sectorNum = fat16_ins->FirstRootDirSecNum + rootDirCnt - 1;
                 offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
                 findFlag  = 1;
                 break;
+            } else if (isDeleted) {
+                sectorNum = fat16_ins->FirstRootDirSecNum + rootDirCnt - 1;
+                offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
+                findFlag  = 1;
             } else if (!isLFN) {
                 if (strncmp((char *)root.DIR_Name, paths[pathDepth - 1], 11) == 0) {
                     findFlag = 0;
@@ -823,11 +835,15 @@ int fat16_mkdir(const char *path, mode_t mode)
             int isDeleted = (dir.DIR_Name[0] == 0xe5);
             int isLFN     = (dir.DIR_Attr == 0x0f);
 
-            if (!isEmpty || !isDeleted) {
+            if (isEmpty) {
                 sectorNum = firstSectorOfCluster + rootDirCnt - 1;
                 offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
                 findFlag  = 1;
                 break;
+            } else if (isDeleted) {
+                sectorNum = firstSectorOfCluster + rootDirCnt - 1;
+                offset    = ((i - 1) * BYTES_PER_DIR) % BYTES_PER_SECTOR;
+                findFlag  = 1;
             } else if (!isLFN) {
                 if (strncmp((char *)dir.DIR_Name, paths[pathDepth - 1], 11) == 0) {
                     findFlag = 0;
