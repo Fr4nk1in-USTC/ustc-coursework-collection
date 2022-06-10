@@ -1211,7 +1211,7 @@ int free_cluster(FAT16 *fat16_ins, int ClusterNum)
      **/
     /*** BEGIN ***/
     // clang-format off
-    WORD  clus_offset    = (WORD)ClusterNum * 2;
+    WORD  clus_offset   = (WORD)ClusterNum * 2;
     DWORD fat_1_sec_num = fat16_ins->Bpb.BPB_RsvdSecCnt 
                         + clus_offset / fat16_ins->Bpb.BPB_BytsPerSec;
     DWORD fat_2_sec_num = fat16_ins->Bpb.BPB_RsvdSecCnt + fat16_ins->Bpb.BPB_FATSz16
