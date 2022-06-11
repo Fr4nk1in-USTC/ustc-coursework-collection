@@ -18,10 +18,10 @@ FILE       *backup_fd[2];
 const char *log_filename = "mount_fat16.log";
 FILE       *log_fd;
 
-mutex file_operations_mutex = 1;
-mutex file_read_write_mutex = 1;
-mutex reader_count_mutex    = 1;
-mutex log_mutex             = 1;
+mutex file_operations_mutex = PTHREAD_MUTEX_INITIALIZER;
+mutex file_read_write_mutex = PTHREAD_MUTEX_INITIALIZER;
+mutex reader_count_mutex    = PTHREAD_MUTEX_INITIALIZER;
+mutex log_mutex             = PTHREAD_MUTEX_INITIALIZER;
 
 int reader_count = 0;
 
@@ -53,15 +53,14 @@ void log_printf(const char *format, ...)
 
 void down(mutex *m)
 {
-    while (*m == 0)
-        ;
-    *m = 0;
+    pthread_mutex_lock(m);
 }
 
 void up(mutex *m)
 {
-    *m = 1;
+    pthread_mutex_unlock(m);
 }
+
 
 FAT16 *pre_init_fat16(const char *imageFilePath)
 {

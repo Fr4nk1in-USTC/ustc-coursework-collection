@@ -1,9 +1,9 @@
-#include <stdio.h>
+#include <pthread.h>
 
 extern const char *log_filename;
 extern FILE       *log_fd;
 
-typedef int mutex;
+typedef pthread_mutex_t mutex;
 
 extern mutex file_operations_mutex;
 extern mutex file_read_write_mutex;
