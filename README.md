@@ -17,5 +17,3 @@
 # 综合实验 Lab 6
 实现了 RV32I 中除 FENCE, CSR 与环境调用和断点指令外的全部 37 条指令支持, 实现 2-bit 分支预测. 数据通路如下
 ![datapath](assets/dp_cpu.svg)
-
-> 短期内不会考虑走体系结构方向惹 (bushi)
