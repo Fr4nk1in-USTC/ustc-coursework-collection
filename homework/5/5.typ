@@ -1,6 +1,6 @@
 #import "homework.typ": *
 
-#show: homework.with(number: 4)
+#show: homework.with(number: 5)
 
 #set enum(numbering: "a.")
 
