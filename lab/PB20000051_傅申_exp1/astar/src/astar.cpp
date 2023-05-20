@@ -1,32 +1,27 @@
 #include <algorithm>
+#include <cmath>
+#include <cstdio>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <numeric>
 #include <queue>
 #include <set>
 #include <stdexcept>
-#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
-using std::accumulate;
 using std::endl;
 using std::greater;
 using std::ifstream;
 using std::invalid_argument;
 using std::istream;
 using std::make_shared;
-using std::max;
-using std::min;
 using std::ofstream;
 using std::ostream;
-using std::pair;
 using std::priority_queue;
 using std::reverse;
-using std::set;
 using std::shared_ptr;
 using std::unordered_set;
 using std::vector;
@@ -97,97 +92,141 @@ class action
     }
 };
 
+bool operator==(const action &a1, const action &a2)
+{
+    return a1.x == a2.x and a1.y == a2.y and a1.shape == a2.shape;
+}
+
+bool is_effective_action(const grid_t &g, const action &a)
+{
+    int x_1 = a.x + ((a.shape < 2) ? -1 : 1);
+    int y_1 = a.y + ((a.shape == 1 or a.shape == 2) ? -1 : 1);
+
+    return (g[a.x][a.y] or g[x_1][a.y] or g[a.x][y_1]);
+}
+
+void take_action(grid_t &g, const action &a)
+{
+    int x_1 = a.x + ((a.shape < 2) ? -1 : 1);
+    int y_1 = a.y + ((a.shape == 1 or a.shape == 2) ? -1 : 1);
+
+    g[a.x][a.y] = !g[a.x][a.y];
+    g[x_1][a.y] = !g[x_1][a.y];
+    g[a.x][y_1] = !g[a.x][y_1];
+}
+
+value_t heuristic(const grid_t &g)
+{
+    /* TODO: This function is not consistent */
+    width_t                  size = g.size();
+    vector<vector<unsigned>> dist(size, vector<unsigned>(size, 0));
+    /* Iterate over the grid to find all 1s with other 1s surrounded and
+     * mark it */
+    for (width_t i = 0; i < size - 1; ++i) {
+        for (width_t j = 0; j < size - 1; ++j) {
+            unsigned count =
+                g[i][j] + g[i + 1][j] + g[i][j + 1] + g[i + 1][j + 1];
+            if (count >= 3) {
+                dist[i][j]         |= 3;
+                dist[i + 1][j]     |= 3;
+                dist[i][j + 1]     |= 3;
+                dist[i + 1][j + 1] |= 3;
+            } else if (count == 2) {
+                dist[i][j]         |= 2;
+                dist[i + 1][j]     |= 2;
+                dist[i][j + 1]     |= 2;
+                dist[i + 1][j + 1] |= 2;
+            }
+        }
+    }
+    /* Count the number of 1s, 2s and 3s */
+    float counts[3] = {0, 0, 0};
+    for (width_t i = 0; i < size; ++i) {
+        for (width_t j = 0; j < size; ++j) {
+            if (g[i][j] and dist[i][j])
+                ++counts[dist[i][j] - 1];
+            else if (g[i][j])
+                ++counts[0];
+        }
+    }
+
+    return ceil(counts[0] + counts[1] / 2 + counts[2] / 3);
+}
+
 class node
 {
   public:
     shared_ptr<node> parent;       // parent node
     action           from_parent;  // action from parent
-    grid_t           grid;         // lock grid
     value_t          g;            // steps from the root node
     value_t          h;            // heuristic value
     value_t          f;            // f = g + h
 
     // constructor for root node
-    node(const grid_t &g_): parent(nullptr), grid(g_), g(0)
-    {
-        h = heuristic();
-        f = h;
-    }
+    node(const grid_t &g_, const value_t h_):
+        parent(nullptr),
+        g(0),
+        h(h_),
+        f(h_)
+    {}
 
     // constructor for non-root node
-    node(const shared_ptr<node> &p, const action &a):
+    node(const shared_ptr<node> &p, const action &a, const value_t h_):
         parent(p),
         from_parent(a),
-        g(p->g + 1)
+        g(p->g + 1),
+        h(h_),
+        f(p->g + 1 + h)
+    {}
+
+    grid_t get_grid(const grid_t &root) const
     {
-        int x_offset = (a.shape < 2) ? -1 : 1;
-        int y_offset = (a.shape == 1 or a.shape == 2) ? -1 : 1;
-        // copy grid and flip
-        grid                      = p->grid;
-        grid[a.x][a.y]            = !grid[a.x][a.y];
-        grid[a.x + x_offset][a.y] = !grid[a.x + x_offset][a.y];
-        grid[a.x][a.y + y_offset] = !grid[a.x][a.y + y_offset];
+        if (parent == nullptr) {
+            return root;
+        }
 
-        h = heuristic();
-        f = h + g;
-    }
+        grid_t g = root;
 
-    bool is_effective_action(const action &a) const
-    {
-        int x_offset = (a.shape < 2) ? -1 : 1;
-        int y_offset = (a.shape == 1 or a.shape == 2) ? -1 : 1;
+        take_action(g, from_parent);
+        auto p = parent;
 
-        return grid[a.x][a.y] or grid[a.x + x_offset][a.y]
-            or grid[a.x][a.y + y_offset];
+        while (p->parent != nullptr) {
+            take_action(g, p->from_parent);
+            p = p->parent;
+        }
+
+        return g;
     }
 
     friend ostream &operator<<(ostream &os, const node &n)
     {
-        os << "grid:" << endl << n.grid;
         os << "g: " << n.g << endl;
         os << "h: " << n.h << endl;
         os << "f: " << n.f;
         return os;
     }
-
-  private:
-    value_t heuristic() const
-    {
-        value_t count = 0;
-        for (auto &row : grid) {
-            count = accumulate(row.begin(), row.end(), count);
-        }
-
-        switch (count) {
-        case 2:
-            return 2;
-        case 1:
-            return 3;
-        case 0:
-            return 0;
-        default:
-            return count / 3 + count % 3;
-        }
-    }
 };
 
 bool operator>(const shared_ptr<node> &lhs, const shared_ptr<node> &rhs)
 {
-    return lhs->f > rhs->f or (lhs->f == rhs->f and lhs->g > rhs->g);
+    return lhs->f > rhs->f or (lhs->f == rhs->f and lhs->g < rhs->g);
 }
 
 bool operator<(const shared_ptr<node> &lhs, const shared_ptr<node> &rhs)
 {
-    return lhs->f < rhs->f or (lhs->f == rhs->f and lhs->g < rhs->g);
+    return lhs->f < rhs->f or (lhs->f == rhs->f and lhs->g > rhs->g);
 }
 
+/*
 class sma_node: public node
 {
   public:
-    set<shared_ptr<node>>    children;
-    vector<action>::iterator action_it;
+    shared_ptr<sma_node>      parent;
+    set<shared_ptr<sma_node>> children;
+    vector<action>::iterator  action_it;
+    queue<action>             removed;
 
-    sma_node(const grid_t &g_, vector<action>::iterator &next):
+    sma_node(const grid_t &g_, vector<action>::iterator next):
         node(g_),
         action_it(next)
     {}
@@ -198,46 +237,77 @@ class sma_node: public node
         action_it(it + 1)
     {}
 };
+*/
 
 /* Priority queue with fixed capacity, used for SMA* */
 /*
-template<typename T, typename compare = std::less<T>> class fixed_size_pq
+template<typename T, typename compare = std::greater<T>> class fixed_size_pq
 {
   public:
     fixed_size_pq(): max_size(0) {}
 
     fixed_size_pq(size_t max_size_): max_size(max_size_) {}
 
-    optional<T> push(const T &item)
+    bool push(const T &item)
     {
-        if (queue.size() < max_size) {
-            queue.push_back(item);
-            std::push_heap(queue.begin(), queue.end(), cmp);
-            return std::nullopt;
+        if (full()) {
+            return false;
         }
-
-        auto min = std::min_element(queue.begin(), queue.end(), cmp);
-        if (cmp(item, *min)) {
-            return std::nullopt;
-        } else {
-            auto min_value = *min;
-            *min           = item;
-            std::make_heap(queue.begin(), queue.end(), cmp);
-            return min_value;
-        }
+        queue.push_back(item);
+        std::push_heap(queue.begin(), queue.end(), cmp);
+        return true;
     }
 
-    optional<T> pop()
+    bool pop()
     {
         if (queue.empty()) {
-            return std::nullopt;
+            return false;
         }
 
         std::pop_heap(queue.begin(), queue.end(), cmp);
         auto back = queue.back();
         queue.pop_back();
-        return back;
+        return true;
     }
+
+    T pop_max()
+    {
+        auto min   = std::min_element(queue.begin(), queue.end(), cmp);
+        auto index = std::distance(queue.begin(), min);
+        auto item  = *min;
+        std::swap(queue[index], queue.back());
+        queue.pop_back();
+        while (index > 0) {
+            auto parent = (index - 1) / 2;
+            if (!cmp(queue[index], queue[parent])) {
+                std::swap(queue[index], queue[parent]);
+                index = parent;
+            } else {
+                break;
+            }
+        }
+        return item;
+    }
+
+    bool have(const T &item) const
+    {
+        return std::find(queue.begin(), queue.end(), item) != queue.end();
+    }
+
+    bool have_all(const set<T> &s) const
+    {
+        size_t count = 0;
+        for (auto &item : queue) {
+            if (s.find(item) != s.end()) {
+                count++;
+            }
+        }
+        return count == s.size();
+    }
+
+    void refresh() { std::make_heap(queue.begin(), queue.end(), cmp); }
+
+    bool full() const { return queue.size() == max_size; }
 
     bool empty() const { return queue.empty(); }
 
@@ -304,11 +374,10 @@ class solver
             ida_star();
             break;
         case RBFS:
-            rbfs(make_shared<node>(grid), max_depth);
-            ;
+            /* rbfs(make_shared<node>(grid), max_depth); */
             break;
         case SMA_star:
-            sma_star();
+            /* sma_star(); */
             break;
         }
     }
@@ -326,7 +395,7 @@ class solver
         os << "size: " << s.size << endl;
         os << "grid: " << endl << s.grid;
         os << "max_depth: " << s.max_depth << endl;
-        os << "inital heuristic: " << node(s.grid).h << endl;
+        os << "inital heuristic: " << heuristic(s.grid) << endl;
         os << "type: ";
         switch (s.type) {
         case A_star:
@@ -345,10 +414,12 @@ class solver
         return os;
     }
 
+  protected:
+    grid_t grid;
+
   private:
     method_t type = A_star;
     width_t  size;
-    grid_t   grid;
     // valid actions in the grid
     vector<action> actions;
     // steps to take in a semi-optimal heuristic solution, used for IDA*
@@ -444,10 +515,10 @@ class solver
         for (width_t i = 0; i < size - 2; i++) {
             for (width_t j = 0; j < size - 2; j++) {
                 if (copy[i][j]) {
-                    value_t count = copy[i + 0][j + 0] + copy[i + 0][j + 1]
-                                  + copy[i + 0][j + 2] + copy[i + 1][j + 0]
-                                  + copy[i + 1][j + 1] + copy[i + 1][j + 2]
-                                  + copy[i + 2][j + 0] + copy[i + 2][j + 1];
+                    unsigned count = copy[i + 0][j + 0] + copy[i + 0][j + 1]
+                                   + copy[i + 0][j + 2] + copy[i + 1][j + 0]
+                                   + copy[i + 1][j + 1] + copy[i + 1][j + 2]
+                                   + copy[i + 2][j + 0] + copy[i + 2][j + 1];
                     copy[i + 0][j + 0] = copy[i + 0][j + 1] = false;
                     copy[i + 0][j + 2] = copy[i + 1][j + 0] = false;
                     copy[i + 1][j + 1] = copy[i + 1][j + 2] = false;
@@ -458,9 +529,9 @@ class solver
         }
         // Third, handle the un-dealed cells. We use a 3x2 window instead.
         /// Deal with the bottom-right 2x2 window first
-        value_t step_in_2x2_window[] = {0, 3, 2};
-        value_t count = copy[size - 1][size - 1] + copy[size - 1][size - 2]
-                      + copy[size - 2][size - 1] + copy[size - 2][size - 2];
+        unsigned step_in_2x2_window[] = {0, 3, 2};
+        unsigned count = copy[size - 1][size - 1] + copy[size - 1][size - 2]
+                       + copy[size - 2][size - 1] + copy[size - 2][size - 2];
         copy[size - 1][size - 1] = copy[size - 1][size - 2] = false;
         copy[size - 2][size - 1] = copy[size - 2][size - 2] = false;
         steps += step_in_2x2_window[count];
@@ -468,9 +539,9 @@ class solver
         for (width_t i = 0; i < size - 2; i++) {
             // Right edge
             if (copy[i][size - 1] or copy[i][size - 2]) {
-                value_t count = copy[i + 0][size - 1] + copy[i + 0][size - 2]
-                              + copy[i + 1][size - 1] + copy[i + 1][size - 2]
-                              + copy[i + 2][size - 1] + copy[i + 2][size - 2];
+                unsigned count = copy[i + 0][size - 1] + copy[i + 0][size - 2]
+                               + copy[i + 1][size - 1] + copy[i + 1][size - 2]
+                               + copy[i + 2][size - 1] + copy[i + 2][size - 2];
                 copy[i + 0][size - 1] = copy[i + 0][size - 2] = false;
                 copy[i + 1][size - 1] = copy[i + 1][size - 2] = false;
                 copy[i + 2][size - 1] = copy[i + 2][size - 2] = false;
@@ -478,9 +549,9 @@ class solver
             }
             // Bottom edge
             if (copy[size - 1][i] or copy[size - 2][i]) {
-                value_t count = copy[size - 1][i + 0] + copy[size - 1][i + 1]
-                              + copy[size - 1][i + 2] + copy[size - 2][i + 0]
-                              + copy[size - 2][i + 1] + copy[size - 2][i + 2];
+                unsigned count = copy[size - 1][i + 0] + copy[size - 1][i + 1]
+                               + copy[size - 1][i + 2] + copy[size - 2][i + 0]
+                               + copy[size - 2][i + 1] + copy[size - 2][i + 2];
                 copy[size - 1][i + 0] = copy[size - 1][i + 1] = false;
                 copy[size - 1][i + 2] = copy[size - 2][i + 0] = false;
                 copy[size - 2][i + 1] = copy[size - 2][i + 2] = false;
@@ -505,37 +576,50 @@ class solver
 
     void a_star()
     {
-        auto root = make_shared<node>(grid);
+        auto root = make_shared<node>(grid, heuristic(grid));
 
         priority_queue<shared_ptr<node>, vector<shared_ptr<node>>,
                        greater<shared_ptr<node>>>
             frontier;
         frontier.push(root);
 
-        unordered_set<grid_t> explored;
+        unordered_set<grid_t> explored = {grid};
+
+        size_t num_visited = 0;
 
         while (not frontier.empty()) {
             auto current = frontier.top();
             frontier.pop();
+
+            /* std::cout << "Frontier size: " << frontier.size() */
+            /*           << ", Node visited: " << ++num_visited */
+            /*           << ", Tree size: " << explored.size() */
+            /*           << ", Current f: " << current->f << ", h: " <<
+             * current->h */
+            /*           << ", g: " << current->g << std::endl; */
 
             if (current->h == 0) {
                 set_solution(current);
                 return;
             }
 
+            grid_t current_grid = current->get_grid(grid);
             for (const auto &a : actions) {
-                if (current->is_effective_action(a)) {
-                    auto child = make_shared<node>(current, a);
+                if (is_effective_action(current_grid, a)) {
+                    auto child_grid = current_grid;
+                    take_action(child_grid, a);
+                    auto child =
+                        make_shared<node>(current, a, heuristic(child_grid));
 
                     if (child->f > max_depth) {
                         continue;
                     }
 
-                    if (explored.find(child->grid) != explored.end()) {
+                    if (explored.find(child_grid) != explored.end()) {
                         continue;
                     }
 
-                    explored.emplace(child->grid);
+                    explored.insert(child_grid);
                     frontier.push(child);
                 }
             }
@@ -547,7 +631,7 @@ class solver
 
     void ida_star()
     {
-        shared_ptr<node> root = make_shared<node>(grid);
+        shared_ptr<node> root = make_shared<node>(grid, heuristic(grid));
 
         value_t limit = root->h;
 
@@ -559,7 +643,8 @@ class solver
                 frontier;
             frontier.push(root);
 
-            unordered_set<grid_t> explored;
+            unordered_set<grid_t> explored = {grid};
+
             while (not frontier.empty()) {
                 auto current = frontier.top();
                 frontier.pop();
@@ -569,30 +654,36 @@ class solver
                     return;
                 }
 
+                grid_t current_grid = current->get_grid(grid);
                 for (const auto &a : actions) {
-                    if (current->is_effective_action(a)) {
-                        auto child = make_shared<node>(current, a);
+                    if (is_effective_action(current_grid, a)) {
+                        auto child_grid = current_grid;
+                        take_action(child_grid, a);
+
+                        auto child = make_shared<node>(current, a,
+                                                       heuristic(child_grid));
+
                         if (child->f > limit) {
-                            next_limit = min(next_limit, child->f);
                             continue;
                         }
 
-                        if (explored.find(child->grid) != explored.end()) {
+                        if (explored.find(child_grid) != explored.end()) {
                             continue;
                         }
 
-                        explored.insert(child->grid);
+                        explored.insert(child_grid);
                         frontier.push(child);
                     }
                 }
             }
-            limit = next_limit;
+            limit = (unsigned)next_limit + 1;
         }
 
         // This should never be reached
         return;
     }
 
+    /*
     pair<bool, value_t> rbfs(const shared_ptr<node> &n, value_t limit)
     {
         if (n->h == 0) {
@@ -640,11 +731,70 @@ class solver
             }
         }
     }
+    */
 
-    void sma_star() {}
+    /*
+    void sma_star()
+    {
+        auto root     = make_shared<sma_node>(grid, actions.begin());
+        auto frontier = fixed_size_pq<shared_ptr<sma_node>>(SMA_QUEUE_SIZE);
+        frontier.push(root);
+        while (!frontier.empty()) {
+            auto current = frontier.top();
+            frontier.pop();
+
+            if (current->h == 0) {
+                set_solution(current);
+                return;
+            }
+
+            auto child = next_child(current);
+            while (child != nullptr
+                   and (child->f > max_depth or child->duplicate()))
+            {
+                child = next_child(current);
+            }
+            if (child == nullptr) {
+                value_t min_f = max_depth;
+                for (const auto &c : current->children) {
+                    min_f = min(min_f, c->f);
+                }
+                if (min_f > current->f) {
+                    current->f  = min_f;
+                    auto parent = current->parent;
+                    while (parent != nullptr) {
+                        if (parent->action_it != actions.end()
+                            or parent->f >= min_f)
+                        {
+                            break;
+                        }
+                        parent->f = current->f;
+                        parent    = parent->parent;
+                    }
+                    frontier.refresh();
+                }
+                if (!frontier.have_all(current->children)) {
+                    frontier.push(current);
+                }
+                continue;
+            }
+            current->children.emplace(child);
+            child->f = max(current->f, child->f);
+            while (frontier.full()) {
+                auto max_node = frontier.pop_max();
+                auto parent   = max_node->parent;
+                parent->children.erase(max_node);
+                parent->removed.emplace(max_node->from_parent);
+                if (!frontier.have(parent)) {
+                    frontier.push(parent);
+                }
+            }
+            frontier.push(child);
+        }
+    }
 
     // Caution: remember to push the child to `p`
-    shared_ptr<sma_node> sma_next_child(shared_ptr<sma_node> &p)
+    shared_ptr<sma_node> next_child(shared_ptr<sma_node> &p)
     {
         for (; p->action_it != actions.end(); p->action_it++) {
             if (p->is_effective_action(*(p->action_it))) {
@@ -654,13 +804,18 @@ class solver
                 return child;
             }
         }
-        return nullptr;
+        if (p->removed.empty())
+            return nullptr;
+        auto child = make_shared<sma_node>(p, p->removed.back(), actions.end());
+        p->removed.pop();
+        return child;
     }
+    */
 };
 
 int main(int argc, char *argv[])
 {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
         ifstream input(inputs[i]);
 
         solver s = solver().from_file(input).set_type(A_star);
