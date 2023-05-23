@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <chrono>
-#include <cstdlib>
 #include <iostream>
 #include <omp.h>
 #include <random>
@@ -20,13 +19,14 @@ using std::uniform_int_distribution;
 using ns = std::chrono::nanoseconds;
 auto now = std::chrono::high_resolution_clock::now;
 
-#define DEFAULT_THREADS 3
+const size_t DEFAULT_THREADS = 3;
 
-#define UPPER_BOUND 1000000
-#define LOWER_BOUND 0
+const int UPPER_BOUND = 1000000;
+const int LOWER_BOUND = 0;
 
-int default_array[] = {15, 46, 48, 93, 39, 6,  72, 91, 14, 36, 69, 40, 89, 61,
-                       97, 12, 21, 54, 53, 97, 84, 58, 32, 27, 33, 72, 20};
+const int DEFAULT_ARRAY[] = {15, 46, 48, 93, 39, 6,  72, 91, 14,
+                             36, 69, 40, 89, 61, 97, 12, 21, 54,
+                             53, 97, 84, 58, 32, 27, 33, 72, 20};
 
 /* Parallel Sorting by Regular Sampling (PSRS)
  *   - `array`:   The array to be sorted,
@@ -63,7 +63,7 @@ void psrs(int array[], unsigned int size, unsigned int threads)
     omp_set_num_threads(threads);
 #pragma omp parallel
     {
-        // Uniform partition
+        /* 1: Uniform partition */
         int  id       = omp_get_thread_num();
         int *subarray = array + id * size_per_thread;
         int  subsize  = size_per_thread;
@@ -72,10 +72,10 @@ void psrs(int array[], unsigned int size, unsigned int threads)
             subsize = size - id * size_per_thread;
         }
 
-        // Local sorting
+        /* 2: Local sorting */
         sort(subarray, subarray + subsize);
 
-        // Sample selection
+        /* 3: Regular sampling */
         for (int i = 0; i < threads; i++) {
             samples[id * threads + i] = subarray[subsize * i / threads];
         }
@@ -83,16 +83,16 @@ void psrs(int array[], unsigned int size, unsigned int threads)
 #pragma omp barrier
 #pragma omp master
         {
-            // Sample sorting on master thread
+            /* 4: Sample sorting */
             sort(samples, samples + threads * threads);
-            // Pivot selection
+            /* 5: Pivot selection */
             for (int i = 1; i < threads; i++) {
                 pivots[i - 1] = samples[i * threads];
             }
         }
 
 #pragma omp barrier
-        // Splitting and global swapping
+        /* 6: Partition */
         unsigned int index = 0;
         fill(split_sizes[id], split_sizes[id] + threads, 0);
         for (int i = 0; i < subsize; i++) {
@@ -102,6 +102,7 @@ void psrs(int array[], unsigned int size, unsigned int threads)
         }
 
 #pragma omp barrier
+        /* 7: Total exchange */
         // Calculating new subarray and subsize
         subsize_after_swap[id] = 0;
         for (int i = 0; i < threads; i++) {
@@ -114,7 +115,7 @@ void psrs(int array[], unsigned int size, unsigned int threads)
             subarray += subsize_after_swap[i];
         }
 
-        // Local merging
+        /* 8: Local merging */
         int left_indices[threads];
         fill(left_indices, left_indices + threads, 0);
         for (int i = 0; i < subsize; i++) {
@@ -160,12 +161,12 @@ int main(int argc, char *argv[])
     int  threads = DEFAULT_THREADS;
     int  size    = 27;
     int *array   = new int[size];
-    copy(default_array, default_array + size, array);
+    copy(DEFAULT_ARRAY, DEFAULT_ARRAY + size, array);
 
     if (argc > 1) {
         threads = atoi(argv[1]);
 #ifdef DEBUG
-        cout << "Set thread number to " << threads << "." << endl;
+        cout << "[Debug] Set thread number to " << threads << "." << endl;
 #endif
     }
 
@@ -174,7 +175,7 @@ int main(int argc, char *argv[])
         size  = atoi(argv[2]);
         array = generate_random_array(size);
 #ifdef DEBUG
-        cout << "Set array size to " << size << "." << endl;
+        cout << "[Debug] Set array size to " << size << "." << endl;
 #endif
     }
 
@@ -183,22 +184,28 @@ int main(int argc, char *argv[])
 
     auto psrs_start = now();
     psrs(array, size, threads);
-    auto psrs_end  = now();
-    ns   psrs_time = psrs_end - psrs_start;
+    auto  psrs_end  = now();
+    ns    psrs_ns   = psrs_end - psrs_start;
+    float psrs_time = psrs_ns.count() / 1e6;
 
     auto std_start = now();
     sort(array_copy, array_copy + size);
-    auto std_end  = now();
-    ns   std_time = std_end - std_start;
+    auto  std_end  = now();
+    ns    std_ns   = std_end - std_start;
+    float std_time = std_ns.count() / 1e6;
 
-    cout << "PSRS result is "
-         << (equal(array, array + size, array_copy) ? "correct" : "wrong")
-         << "." << endl
-         << "PSRS time:      " << psrs_time.count() << " ns" << endl
-         << "std::sort time: " << std_time.count() << " ns" << endl;
+    float speedup = std_time / psrs_time;
+
+    if (!equal(array, array + size, array_copy)) {
+        cout << "[Error] PSRS result is wrong." << endl;
+    }
+
+    cout << "[Info] Time used by psrs():      " << psrs_time << " ms" << endl
+         << "[Info] Time used by std::sort(): " << std_time << " ms" << endl
+         << "[Info] Speedup: " << speedup << endl;
 
 #ifdef DEBUG
-    cout << "PSRS result: ";
+    cout << "[Debug] PSRS result: ";
     for (int i = 0; i < size; i++) {
         cout << array[i] << " ";
     }

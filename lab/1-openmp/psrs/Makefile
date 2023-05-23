@@ -1,5 +1,5 @@
-CXX = g++
-CXXFLAGS = -fopenmp
+CXX = clang++
+CXXFLAGS = -Ofast -fopenmp
 DEBUG = -g -D DEBUG
 
 all: psrs
@@ -8,9 +8,9 @@ psrs: psrs.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 debug: psrs.cpp
-	$(CXX) $(CXXFLAGS) $(DEBUG) -o psrs $^
+	$(CXX) $(CXXFLAGS) $(DEBUG) -o $@ $^
 
 clean:
-	rm -f psrs
+	rm -f psrs debug
 
 .PHONY: all clean
