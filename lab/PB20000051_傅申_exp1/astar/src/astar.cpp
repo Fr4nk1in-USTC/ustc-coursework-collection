@@ -18,6 +18,7 @@ using std::ifstream;
 using std::invalid_argument;
 using std::istream;
 using std::make_shared;
+using std::min;
 using std::ofstream;
 using std::ostream;
 using std::priority_queue;
@@ -28,7 +29,7 @@ using std::vector;
 
 using width_t = unsigned short;
 using grid_t  = vector<vector<bool>>;
-using value_t = unsigned;
+using value_t = unsigned short;
 
 const char *inputs[] = {"../input/input0.txt", "../input/input1.txt",
                         "../input/input2.txt", "../input/input3.txt",
@@ -41,6 +42,8 @@ const char *outputs[] = {"../output/output0.txt", "../output/output1.txt",
                          "../output/output4.txt", "../output/output5.txt",
                          "../output/output6.txt", "../output/output7.txt",
                          "../output/output8.txt", "../output/output9.txt"};
+
+const int bound[] = {5, 4, 5, 7, 7, 7, 11, 14, 16, 23};
 
 template<> class std::hash<grid_t>
 {
@@ -349,7 +352,7 @@ class solver
 
         init_actions();
 
-        max_depth = upper_bound();
+        max_children = 0xFFFF;
 
         if (size < 2) {
             throw invalid_argument("The input grid is too small");
@@ -358,9 +361,27 @@ class solver
         return *this;
     }
 
+    solver set_bound()
+    {
+        max_depth = upper_bound();
+        return *this;
+    }
+
+    solver set_bound(int bound_)
+    {
+        max_depth = bound_;
+        return *this;
+    }
+
     solver set_type(method_t type_)
     {
         type = type_;
+        return *this;
+    }
+
+    solver set_expand_num(size_t num)
+    {
+        max_children = num;
         return *this;
     }
 
@@ -422,6 +443,8 @@ class solver
     width_t  size;
     // valid actions in the grid
     vector<action> actions;
+    // max number of children to expand in a node
+    size_t max_children = 4;
     // steps to take in a semi-optimal heuristic solution, used for IDA*
     value_t max_depth;
     // optimal path
@@ -585,8 +608,6 @@ class solver
 
         unordered_set<grid_t> explored = {grid};
 
-        size_t num_visited = 0;
-
         while (not frontier.empty()) {
             auto current = frontier.top();
             frontier.pop();
@@ -599,11 +620,13 @@ class solver
             /*           << ", g: " << current->g << std::endl; */
 
             if (current->h == 0) {
+                std::cout << "Solution found!" << std::endl;
                 set_solution(current);
                 return;
             }
 
-            grid_t current_grid = current->get_grid(grid);
+            grid_t                   current_grid = current->get_grid(grid);
+            vector<shared_ptr<node>> children;
             for (const auto &a : actions) {
                 if (is_effective_action(current_grid, a)) {
                     auto child_grid = current_grid;
@@ -619,8 +642,19 @@ class solver
                         continue;
                     }
 
-                    explored.insert(child_grid);
-                    frontier.push(child);
+                    children.push_back(child);
+                }
+            }
+
+            std::sort(children.begin(), children.end());
+            size_t index = 0;
+            for (const auto &child : children) {
+                auto child_grid = current_grid;
+                take_action(child_grid, child->from_parent);
+                explored.insert(child_grid);
+                frontier.push(child);
+                if (++index == max_children) {
+                    break;
                 }
             }
         }
@@ -635,8 +669,8 @@ class solver
 
         value_t limit = root->h;
 
-        while (limit <= max_depth) {
-            value_t next_limit = max_depth;
+        while (true) {
+            value_t next_limit = 0xFFFF;
 
             priority_queue<shared_ptr<node>, vector<shared_ptr<node>>,
                            greater<shared_ptr<node>>>
@@ -645,9 +679,19 @@ class solver
 
             unordered_set<grid_t> explored = {grid};
 
+            size_t num_visited = 0;
+
             while (not frontier.empty()) {
                 auto current = frontier.top();
                 frontier.pop();
+
+                std::cout << "Limit: " << limit
+                          << ", Frontier size: " << frontier.size()
+                          << ", Node visited: " << ++num_visited
+                          << ", Tree size: " << explored.size()
+                          << ", Current f: " << current->f
+                          << ", h: " << current->h << ", g: " << current->g
+                          << std::endl;
 
                 if (current->h == 0) {
                     set_solution(current);
@@ -664,6 +708,7 @@ class solver
                                                        heuristic(child_grid));
 
                         if (child->f > limit) {
+                            next_limit = min(child->f, next_limit);
                             continue;
                         }
 
@@ -676,7 +721,7 @@ class solver
                     }
                 }
             }
-            limit = (unsigned)next_limit + 1;
+            limit = next_limit;
         }
 
         // This should never be reached
@@ -815,10 +860,19 @@ class solver
 
 int main(int argc, char *argv[])
 {
-    for (int i = 0; i < 7; i++) {
+    for (int i = 9; i < 10; i++) {
         ifstream input(inputs[i]);
 
-        solver s = solver().from_file(input).set_type(A_star);
+        solver s = solver()
+                       .from_file(input)
+                       .set_bound(bound[i])
+                       .set_type(A_star)
+                       .set_expand_num(2);
+
+        if (i == 8) {
+            s.set_expand_num(3);
+        }
+
         s.solve();
 
         ofstream output(outputs[i]);
