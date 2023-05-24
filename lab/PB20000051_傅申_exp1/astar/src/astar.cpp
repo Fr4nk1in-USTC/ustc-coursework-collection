@@ -131,7 +131,6 @@ void take_action(grid_t &g, const action &a)
 
 value_t heuristic(const grid_t &g)
 {
-    /* TODO: This function is not consistent */
     width_t                  size = g.size();
     vector<vector<unsigned>> dist(size, vector<unsigned>(size, 0));
     /* Iterate over the grid to find all 1s with other 1s surrounded and
@@ -164,7 +163,7 @@ value_t heuristic(const grid_t &g)
         }
     }
 
-    return ceil(counts[0] + counts[1] / 2 + counts[2] / 3);
+    return ceil(counts[0] + 7 * counts[1] / 15 + counts[2] / 3);
 }
 
 class node
