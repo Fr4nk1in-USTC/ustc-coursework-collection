@@ -58,6 +58,17 @@ template<> class std::hash<grid_t>
     }
 };
 
+vector<bool> plainify(const grid_t &grid)
+{
+    size_t       size = grid.size();
+    vector<bool> plain(size * size);
+    for (size_t i = 0; i < size; ++i) {
+        for (size_t j = 0; j < size; ++j)
+            plain[i * size + j] = grid[i][j];
+    }
+    return plain;
+}
+
 ostream &operator<<(ostream &os, const grid_t &grid)
 {
     for (auto &row : grid) {
@@ -220,116 +231,9 @@ bool operator<(const shared_ptr<node> &lhs, const shared_ptr<node> &rhs)
     return lhs->f < rhs->f or (lhs->f == rhs->f and lhs->g > rhs->g);
 }
 
-/*
-class sma_node: public node
-{
-  public:
-    shared_ptr<sma_node>      parent;
-    set<shared_ptr<sma_node>> children;
-    vector<action>::iterator  action_it;
-    queue<action>             removed;
-
-    sma_node(const grid_t &g_, vector<action>::iterator next):
-        node(g_),
-        action_it(next)
-    {}
-
-    sma_node(shared_ptr<sma_node> &p, const action &a,
-             const vector<action>::iterator &it):
-        node(p, *it),
-        action_it(it + 1)
-    {}
-};
-*/
-
-/* Priority queue with fixed capacity, used for SMA* */
-/*
-template<typename T, typename compare = std::greater<T>> class fixed_size_pq
-{
-  public:
-    fixed_size_pq(): max_size(0) {}
-
-    fixed_size_pq(size_t max_size_): max_size(max_size_) {}
-
-    bool push(const T &item)
-    {
-        if (full()) {
-            return false;
-        }
-        queue.push_back(item);
-        std::push_heap(queue.begin(), queue.end(), cmp);
-        return true;
-    }
-
-    bool pop()
-    {
-        if (queue.empty()) {
-            return false;
-        }
-
-        std::pop_heap(queue.begin(), queue.end(), cmp);
-        auto back = queue.back();
-        queue.pop_back();
-        return true;
-    }
-
-    T pop_max()
-    {
-        auto min   = std::min_element(queue.begin(), queue.end(), cmp);
-        auto index = std::distance(queue.begin(), min);
-        auto item  = *min;
-        std::swap(queue[index], queue.back());
-        queue.pop_back();
-        while (index > 0) {
-            auto parent = (index - 1) / 2;
-            if (!cmp(queue[index], queue[parent])) {
-                std::swap(queue[index], queue[parent]);
-                index = parent;
-            } else {
-                break;
-            }
-        }
-        return item;
-    }
-
-    bool have(const T &item) const
-    {
-        return std::find(queue.begin(), queue.end(), item) != queue.end();
-    }
-
-    bool have_all(const set<T> &s) const
-    {
-        size_t count = 0;
-        for (auto &item : queue) {
-            if (s.find(item) != s.end()) {
-                count++;
-            }
-        }
-        return count == s.size();
-    }
-
-    void refresh() { std::make_heap(queue.begin(), queue.end(), cmp); }
-
-    bool full() const { return queue.size() == max_size; }
-
-    bool empty() const { return queue.empty(); }
-
-    size_t size() const { return queue.size(); }
-
-    const T &top() const { return queue.front(); }
-
-  private:
-    vector<T> queue;
-    size_t    max_size;
-    compare   cmp;
-};
-*/
-
 enum method_t {
     A_star,
     IDA_star,
-    RBFS,
-    SMA_star,
 };
 
 class solver
@@ -394,12 +298,6 @@ class solver
         case IDA_star:
             ida_star();
             break;
-        case RBFS:
-            /* rbfs(make_shared<node>(grid), max_depth); */
-            break;
-        case SMA_star:
-            /* sma_star(); */
-            break;
         }
     }
 
@@ -424,12 +322,6 @@ class solver
             break;
         case IDA_star:
             os << "IDA*";
-            break;
-        case RBFS:
-            os << "RBFS";
-            break;
-        case SMA_star:
-            os << "SMA*";
             break;
         }
         return os;
@@ -606,18 +498,19 @@ class solver
             frontier;
         frontier.push(root);
 
-        unordered_set<grid_t> explored = {grid};
+        size_t num_visited = 0;
+
+        unordered_set<vector<bool>> explored = {plainify(grid)};
 
         while (not frontier.empty()) {
             auto current = frontier.top();
             frontier.pop();
 
-            /* std::cout << "Frontier size: " << frontier.size() */
-            /*           << ", Node visited: " << ++num_visited */
-            /*           << ", Tree size: " << explored.size() */
-            /*           << ", Current f: " << current->f << ", h: " <<
-             * current->h */
-            /*           << ", g: " << current->g << std::endl; */
+            std::cout << "Frontier size: " << frontier.size()
+                      << ", Node visited: " << ++num_visited
+                      << ", Tree size: " << explored.size()
+                      << ", Current f: " << current->f << ", h: " << current->h
+                      << ", g: " << current->g << std::endl;
 
             if (current->h == 0) {
                 std::cout << "Solution found!" << std::endl;
@@ -633,28 +526,18 @@ class solver
                     take_action(child_grid, a);
                     auto child =
                         make_shared<node>(current, a, heuristic(child_grid));
+                    auto plain_child_grid = plainify(child_grid);
 
                     if (child->f > max_depth) {
                         continue;
                     }
 
-                    if (explored.find(child_grid) != explored.end()) {
+                    if (explored.find(plain_child_grid) != explored.end()) {
                         continue;
                     }
 
-                    children.push_back(child);
-                }
-            }
-
-            std::sort(children.begin(), children.end());
-            size_t index = 0;
-            for (const auto &child : children) {
-                auto child_grid = current_grid;
-                take_action(child_grid, child->from_parent);
-                explored.insert(child_grid);
-                frontier.push(child);
-                if (++index == max_children) {
-                    break;
+                    frontier.push(child);
+                    explored.insert(plain_child_grid);
                 }
             }
         }
@@ -860,7 +743,7 @@ class solver
 
 int main(int argc, char *argv[])
 {
-    for (int i = 9; i < 10; i++) {
+    for (int i = 8; i < 9; i++) {
         ifstream input(inputs[i]);
 
         solver s = solver()
