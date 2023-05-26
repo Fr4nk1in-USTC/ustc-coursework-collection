@@ -67,7 +67,7 @@ class action
 
     friend ostream &operator<<(ostream &os, const action &a)
     {
-        os << a.x << ',' << a.y << ',' << a.shape;
+        os << a.x << ',' << a.y << ',' << a.shape + 1;
         return os;
     }
 };
