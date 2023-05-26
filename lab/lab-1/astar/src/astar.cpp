@@ -5,7 +5,6 @@
 #include <iostream>
 #include <memory>
 #include <queue>
-#include <set>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
@@ -49,10 +48,10 @@ const char *OUTPUTS[] = {"../output/output0.txt", "../output/output1.txt",
 /** Class representing an L-flip action.
  * The shape of the L-flip action is a value between 0 and 3, each value
  * corresponds to a different L-shape:
- * - 0: (x, y), (x - 1, y), (x, y + 1) | └-shape
- * - 1: (x, y), (x - 1, y), (x, y - 1) | ┘-shape
- * - 2: (x, y), (x + 1, y), (x, y - 1) | ┐-shape
- * - 3: (x, y), (x + 1, y), (x, y + 1) | ┌-shape
+ * - 1: (x, y), (x - 1, y), (x, y + 1) | └-shape
+ * - 2: (x, y), (x - 1, y), (x, y - 1) | ┘-shape
+ * - 3: (x, y), (x + 1, y), (x, y - 1) | ┐-shape
+ * - 4: (x, y), (x + 1, y), (x, y + 1) | ┌-shape
  */
 class action
 {
@@ -67,7 +66,7 @@ class action
 
     friend ostream &operator<<(ostream &os, const action &a)
     {
-        os << a.x << ',' << a.y << ',' << a.shape + 1;
+        os << a.x << ',' << a.y << ',' << a.shape;
         return os;
     }
 };
@@ -184,7 +183,7 @@ class solver
             frontier;
         frontier.push(root);
 
-        unordered_set<grid_t> explored = {grid};
+        unordered_set<grid_t> explored;
 
         while (not frontier.empty()) {
             auto current = frontier.top();
@@ -195,12 +194,13 @@ class solver
                 return;
             }
 
+            explored.insert(current->grid);
+
             for (const auto &[g, a] : get_childrens(current->grid)) {
                 auto child =
                     make_shared<node>(current, a, g, heuristic(g, size));
 
                 if (explored.find(g) == explored.end()) {  // not explored
-                    explored.insert(child->grid);
                     frontier.push(child);
                 }
             }
@@ -216,8 +216,8 @@ class solver
         auto   take_action = [&g](const action &a, ushort size) {
             ushort x   = a.x * size;
             ushort y   = a.y;
-            ushort x_1 = x + ((a.shape < 2) ? -size : size);
-            ushort y_1 = y + ((a.shape == 1 or a.shape == 2) ? -1 : 1);
+            ushort x_1 = x + ((a.shape < 3) ? -size : size);
+            ushort y_1 = y + ((a.shape == 2 or a.shape == 3) ? -1 : 1);
 
             g[x + y]   = !g[x + y];
             g[x_1 + y] = !g[x_1 + y];
@@ -239,10 +239,10 @@ class solver
         }
     }
 
-  protected:
-    grid_t grid;
+    vector<action> get_path() { return path; }
 
   private:
+    grid_t         grid;
     ushort         size;
     vector<action> path;  // optimal path
 
@@ -300,7 +300,7 @@ class solver
                                         -1, 1,  1,  1,  1, -1};
         static int8_t arm_y_offset[] = {-1, 1,  -1, 1,  1, -1,
                                         1,  -1, 1,  -1, 1, -1};
-        static ushort shapes[]       = {2, 0, 1, 0, 3, 1, 0, 2, 3, 2, 3, 1};
+        static ushort shapes[]       = {3, 1, 2, 1, 4, 2, 1, 3, 4, 3, 4, 2};
 
         auto gen = [&actions_to_grids, &g, x, y, this](ushort i) {
             ushort pos_x = x + pos_x_offset[i];
