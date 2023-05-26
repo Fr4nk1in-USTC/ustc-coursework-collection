@@ -3,11 +3,11 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <queue>
 #include <set>
 #include <stdexcept>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -21,11 +21,11 @@ using std::ifstream;
 using std::invalid_argument;
 using std::istream;
 using std::make_shared;
-using std::map;
 using std::ofstream;
 using std::ostream;
 using std::priority_queue;
 using std::shared_ptr;
+using std::unordered_map;
 using std::unordered_set;
 using std::vector;
 
@@ -33,8 +33,6 @@ const size_t MAX_SIZE = 12;
 
 using grid_t = bitset<MAX_SIZE * MAX_SIZE>;
 using ushort = unsigned short;
-
-/* const ushort BOUNDS[] = {5, 4, 5, 7, 7, 7, 11, 14, 16, 23}; */
 
 const char *INPUTS[] = {"../input/input0.txt", "../input/input1.txt",
                         "../input/input2.txt", "../input/input3.txt",
@@ -73,24 +71,6 @@ class action
         return os;
     }
 };
-
-bool operator<(const action &lhs, const action &rhs)
-{
-    return lhs.x < rhs.x or (lhs.x == rhs.x and lhs.y < rhs.y)
-        or (lhs.x == rhs.x and lhs.y == rhs.y and lhs.shape < rhs.shape);
-}
-
-void take_action(grid_t &g, const action &a, ushort size)
-{
-    ushort x   = a.x * size;
-    ushort y   = a.y;
-    ushort x_1 = x + ((a.shape < 2) ? -size : size);
-    ushort y_1 = y + ((a.shape == 1 or a.shape == 2) ? -1 : 1);
-
-    g[x + y]   = !g[x + y];
-    g[x_1 + y] = !g[x_1 + y];
-    g[x + y_1] = !g[x + y_1];
-}
 
 ushort heuristic(const grid_t &g, ushort size)
 {
@@ -166,20 +146,7 @@ class node
         f(p->g + 1 + h_),
         h(h_)
     {}
-
-    friend ostream &operator<<(ostream &os, const node &n)
-    {
-        os << "g: " << n.g << endl;
-        os << "h: " << n.h << endl;
-        os << "f: " << n.g + n.h;
-        return os;
-    }
 };
-
-bool operator>(const shared_ptr<node> &lhs, const shared_ptr<node> &rhs)
-{
-    return lhs->f > rhs->f or (lhs->f == rhs->f and lhs->g < rhs->g);
-}
 
 bool operator<(const shared_ptr<node> &lhs, const shared_ptr<node> &rhs)
 {
@@ -210,8 +177,58 @@ class solver
 
     void solve()
     {
-        a_star();
+        auto root = make_shared<node>(grid, heuristic(grid, size));
+
+        priority_queue<shared_ptr<node>, vector<shared_ptr<node>>,
+                       greater<shared_ptr<node>>>
+            frontier;
+        frontier.push(root);
+
+        unordered_set<grid_t> explored = {grid};
+
+        while (not frontier.empty()) {
+            auto current = frontier.top();
+            frontier.pop();
+
+            if (current->h == 0) {
+                set_solution(current);
+                return;
+            }
+
+            for (const auto &[g, a] : get_childrens(current->grid)) {
+                auto child =
+                    make_shared<node>(current, a, g, heuristic(g, size));
+
+                if (explored.find(g) == explored.end()) {  // not explored
+                    explored.insert(child->grid);
+                    frontier.push(child);
+                }
+            }
+        }
+
+        // This should never be reached
         return;
+    }
+
+    bool validate()
+    {
+        grid_t g           = grid;
+        auto   take_action = [&g](const action &a, ushort size) {
+            ushort x   = a.x * size;
+            ushort y   = a.y;
+            ushort x_1 = x + ((a.shape < 2) ? -size : size);
+            ushort y_1 = y + ((a.shape == 1 or a.shape == 2) ? -1 : 1);
+
+            g[x + y]   = !g[x + y];
+            g[x_1 + y] = !g[x_1 + y];
+            g[x + y_1] = !g[x + y_1];
+        };
+
+        for (auto &a : path) {
+            take_action(a, size);
+        }
+
+        return g.count() == 0;
     }
 
     void path_to(ostream &file)
@@ -222,23 +239,14 @@ class solver
         }
     }
 
-    friend ostream &operator<<(ostream &os, const solver &s)
-    {
-        os << "size: " << s.size << endl;
-        os << "grid: " << endl << s.grid;
-        os << "inital heuristic: " << heuristic(s.grid, s.size) << endl;
-        return os;
-    }
-
   protected:
     grid_t grid;
 
   private:
-    ushort size;
-    // optimal path
-    vector<action> path;
+    ushort         size;
+    vector<action> path;  // optimal path
 
-    map<action, grid_t> get_actions_to_grids(grid_t &g)
+    unordered_map<grid_t, action> get_childrens(grid_t &g)
     {
         ushort first_one_index;
         for (ushort i = 0; i < size * size; ++i) {
@@ -262,7 +270,7 @@ class solver
         // | 0 # # | 0 0 # | 0 # 0 | 0 # 0 | # 0 0 | # # 0 |
         // +-------+-------+-------+-------+-------+-------+
 
-        map<action, grid_t> actions_to_grids;
+        unordered_map<grid_t, action> actions_to_grids;
 
         ushort valid_mask = 0x00f;  // One bit represents three actions
 
@@ -311,7 +319,7 @@ class solver
             new_g.flip(arm_x + pos_y);
             new_g.flip(pos_x + arm_y);
 
-            actions_to_grids[a] = new_g;
+            actions_to_grids[new_g] = a;
         };
 
         if (valid_mask & 0x0001) {
@@ -343,47 +351,14 @@ class solver
 
     void set_solution(const shared_ptr<node> &goal)
     {
+        path.resize(goal->g);
+        ushort           index   = 0;
         shared_ptr<node> current = goal;
         // reconstruct the path, order does not matter
         while (current->parent != nullptr) {
-            path.push_back(current->from_parent);
-            current = current->parent;
+            path[index++] = current->from_parent;
+            current       = current->parent;
         }
-    }
-
-    void a_star()
-    {
-        auto root = make_shared<node>(grid, heuristic(grid, size));
-
-        priority_queue<shared_ptr<node>, vector<shared_ptr<node>>,
-                       greater<shared_ptr<node>>>
-            frontier;
-        frontier.push(root);
-
-        unordered_set<grid_t> explored = {grid};
-
-        while (not frontier.empty()) {
-            auto current = frontier.top();
-            frontier.pop();
-
-            if (current->h == 0) {
-                set_solution(current);
-                return;
-            }
-
-            for (const auto &[a, g] : get_actions_to_grids(current->grid)) {
-                auto child =
-                    make_shared<node>(current, a, g, heuristic(g, size));
-
-                if (explored.find(g) == explored.end()) {  // not explored
-                    explored.insert(child->grid);
-                    frontier.push(child);
-                }
-            }
-        }
-
-        // This should never be reached
-        return;
     }
 };
 
@@ -400,7 +375,8 @@ int main(int argc, char *argv[])
         ns   duration = end - start;
 
         std::cout << "Time taken for " << INPUTS[i] << ": "
-                  << duration.count() / 1e6 << " ms" << endl;
+                  << duration.count() / 1e6 << " ms, "
+                  << "solution valid: " << s.validate() << endl;
 
         ofstream output(OUTPUTS[i]);
         s.path_to(output);
