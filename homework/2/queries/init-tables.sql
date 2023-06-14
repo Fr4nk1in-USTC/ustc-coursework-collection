@@ -1,0 +1,112 @@
+-- Student
+insert into Student values ('PB20000001', '张三', 'M', '2003-01-31');
+insert into Student values ('PB20000002', '李四', 'M', '2002-08-02');
+insert into Student values ('PB20000003', '王五', 'F', '2009-06-13');
+insert into Student values ('PB20000004', '赵六', 'M', '2004-02-24');
+insert into Student values ('PB20000108', '曾华', 'M', '2007-09-01');
+insert into Student values ('PB20000105', '匡明', 'M', '2005-10-02');
+insert into Student values ('PB20000107', '王丽', 'F', '2006-01-23');
+insert into Student values ('PB20000101', '李军', 'M', '2006-02-20');
+insert into Student values ('PB20000109', '王芳', 'F', '2005-02-10');
+insert into Student values ('PB20000103', '陆君', 'M', '2004-06-03');
+-- Course
+insert into Course values ( '3-105',     '计算机导论', 0, 2);
+insert into Course values ( '3-108',       '数字电路', 1, 2);
+insert into Course values ( '3-115', '计算机组成原理', 0, 3);
+insert into Course values ( '3-125', '计算机体系结构', 1, 3);
+insert into Course values ( '3-245',       '操作系统', 0, 4);
+insert into Course values ( '3-326',       '编译原理', 0, 4);
+insert into Course values ( '3-066',       '数据结构', 0, 3);
+insert into Course values ( '3-076',       '算法导论', 0, 3);
+insert into Course values ('19-888',       '高等数学', 0, 6);
+insert into Course values ('19-325',         '概率论', 1, 2);
+insert into Course values ('19-335',       '随机过程', 1, 2);
+insert into Course values ('12-108',   '生活中的化学', 3, 1);
+insert into Course values ( '9-012',   '科学计算基础', 2, 2);
+insert into Course values ('21-100',       '科技写作', 2, 2);
+insert into Course values ('21-102',       '演讲技术', 2, 2);
+-- SC
+insert into SC values ('PB20000001',  '3-105',   90, 1);
+insert into SC values ('PB20000001',  '3-115',   78, 3);
+insert into SC values ('PB20000001',  '3-245',   82, 3);
+insert into SC values ('PB20000001',  '3-066',   71, 2);
+insert into SC values ('PB20000001',  '3-076', null, 4);
+insert into SC values ('PB20000001',  '3-326', null, 4);
+insert into SC values ('PB20000001', '19-888',   64, 1);
+insert into SC values ('PB20000001', '19-325',   78, 2);
+insert into SC values ('PB20000001', '21-100', null, 4);
+insert into SC values ('PB20000001', '21-102', null, 4);
+
+insert into SC values ('PB20000002',  '3-105',   58, 1);
+insert into SC values ('PB20000002',  '3-105',   72, 2);
+insert into SC values ('PB20000002',  '3-108',   43, 2);
+insert into SC values ('PB20000002',  '3-108',   59, 3);
+insert into SC values ('PB20000002',  '3-115',   92, 3);
+insert into SC values ('PB20000002',  '3-125',   85, 3);
+insert into SC values ('PB20000002',  '3-245',   90, 3);
+insert into SC values ('PB20000002',  '3-326',   96, 4);
+insert into SC values ('PB20000002', '19-888',   76, 1);
+insert into SC values ('PB20000002', '19-325',   79, 2);
+insert into SC values ('PB20000002', '19-335',   84, 2);
+insert into SC values ('PB20000002', '12-108',   91, 1);
+insert into SC values ('PB20000002',  '9-012',   92, 2);
+insert into SC values ('PB20000002', '21-100',   90, 4);
+insert into SC values ('PB20000002', '21-102',   95, 4);
+
+insert into SC values ('PB20000003',  '3-105',   72, 1);
+insert into SC values ('PB20000003',  '3-108',   82, 2);
+insert into SC values ('PB20000003',  '3-115',   78, 3);
+insert into SC values ('PB20000003',  '3-125',   68, 3);
+insert into SC values ('PB20000003',  '3-245',   87, 3);
+insert into SC values ('PB20000003',  '3-326',   76, 4);
+insert into SC values ('PB20000003', '19-888',   86, 1);
+insert into SC values ('PB20000003', '19-325',   71, 2);
+insert into SC values ('PB20000003', '19-335',   81, 2);
+insert into SC values ('PB20000003', '12-108',   73, 1);
+insert into SC values ('PB20000003',  '9-012',   89, 2);
+insert into SC values ('PB20000003', '21-100',   87, 4);
+insert into SC values ('PB20000003', '21-102',   85, 4);
+
+insert into SC values ('PB20000004',  '3-105',   95, 1);
+insert into SC values ('PB20000004',  '3-108',   94, 2);
+insert into SC values ('PB20000004',  '3-115',   98, 3);
+insert into SC values ('PB20000004',  '3-125',   95, 3);
+insert into SC values ('PB20000004',  '3-245',   94, 3);
+insert into SC values ('PB20000004',  '3-326',   97, 4);
+insert into SC values ('PB20000004', '19-888',   93, 1);
+insert into SC values ('PB20000004', '19-325',   91, 2);
+insert into SC values ('PB20000004', '19-335',   95, 2);
+insert into SC values ('PB20000004', '12-108',   92, 1);
+insert into SC values ('PB20000004',  '9-012',   96, 2);
+insert into SC values ('PB20000004', '21-100',   98, 4);
+insert into SC values ('PB20000004', '21-102',   96, 4);
+
+
+
+insert into SC values ('PB20000108',  '3-105',   71, 1);
+insert into SC values ('PB20000108',  '3-108',   68, 2);
+insert into SC values ('PB20000108',  '3-115',   66, 3);
+insert into SC values ('PB20000108',  '3-125',   69, 3);
+insert into SC values ('PB20000108',  '3-245',   67, 3);
+insert into SC values ('PB20000108',  '3-326',   72, 4);
+insert into SC values ('PB20000108', '19-888',   79, 1);
+insert into SC values ('PB20000108', '19-325',   70, 2);
+insert into SC values ('PB20000108', '19-335',   78, 2);
+insert into SC values ('PB20000108', '12-108',   75, 1);
+insert into SC values ('PB20000108',  '9-012',   73, 2);
+insert into SC values ('PB20000108', '21-100',   80, 4);
+insert into SC values ('PB20000108', '21-102',   77, 4);
+
+insert into SC values ('PB20000109',  '3-105',   77, 1);
+insert into SC values ('PB20000109',  '3-108',   74, 2);
+insert into SC values ('PB20000109',  '3-115',   79, 3);
+insert into SC values ('PB20000109',  '3-125',   76, 3);
+insert into SC values ('PB20000109',  '3-245',   78, 3);
+insert into SC values ('PB20000109',  '3-326',   81, 4);
+insert into SC values ('PB20000109', '19-888',   85, 1);
+insert into SC values ('PB20000109', '19-325',   80, 2);
+insert into SC values ('PB20000109', '19-335',   84, 2);
+insert into SC values ('PB20000109', '12-108',   82, 1);
+insert into SC values ('PB20000109',  '9-012',   83, 2);
+insert into SC values ('PB20000109', '21-100',   88, 4);
+insert into SC values ('PB20000109', '21-102',   86, 4);

@@ -1,0 +1,58 @@
+\documentclass{homework}
+
+\newcommand{\hwnum}{1}
+
+\begin{document}
+\maketitle
+
+\question
+不能放松要求. 若外码引用非候选码, 可能存在多个码值与一个外码值相对应, 这可能会影
+响数据的更新, 从而破坏数据的完整性和一致性.
+
+\question
+不能. 假设有一个关系表示班级内学生的信息. 我们希望确保每个班级中最多有 60 个学
+生. 这个约束条件无法通过三类完整性来表示.
+
+
+
+\question
+\begin{arabicparts}
+    \questionpart{}
+    $\pi_{\text{J\#}, \text{jname}}
+        \left(
+        \sigma_{\text{city} = \text{`Hefei'}}\left(J\right)
+        \right)$
+    \questionpart{}
+    $\pi_{\text{S\#}, \text{sname}}
+        \left(
+        \sigma_{\text{city} = \text{`Hefei'}}\left(S\right)
+        \right)$
+    \questionpart{}
+    $\pi_{\text{P\#}, \text{pname}, \text{QTY}}
+        \left(
+        \sigma_{\text{J\#} = \text{`J01'}}\left(SPJ\bowtie P\right)
+        \right)$
+    \questionpart{}
+    $\gamma_{\text{S\#}, \text{sname},
+            \operatorname{SUM}(\text{QTY}) \to \text{QTY\_SUM}}
+        \left(SPJ \bowtie S \right)$
+    \questionpart{}
+    $\pi_{\text{S\#}, \text{sname}}
+        \left(
+        \sigma_{\text{P\_CNT} > 5}
+        \left(
+            \gamma_{\text{S\#}, \text{sname},
+                    \operatorname{COUNT}(\text{P\#}) \to \text{P\_CNT}}
+            \left(
+                \sigma_{\text{J\#} = \text{`J01'}}\left(SPJ \bowtie S \right)
+                \right)
+            \right)
+        \right)
+    $
+    \questionpart{}
+    $S \gets \pi_{\text{S\#}, \text{`Legend'} \to \text{sname}, \text{status},
+            \text{city}}
+        \left(\sigma_{\text{S\#} = \text{`S01'}}\left(S\right)\right)
+        \cup \sigma_{\text{S\#} = \text{`S01'}} \left(S\right)$
+\end{arabicparts}
+\end{document}

@@ -1,0 +1,159 @@
+\documentclass{standalone}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.multipart, calc, arrows}
+
+\begin{document}
+\begin{tikzpicture}[
+        null/.style = {rectangle, draw = none, fill = none},
+        pointers/.style = {
+                minimum height = 0.5cm,
+                rectangle split,
+                rectangle split parts = 4,
+                rectangle split horizontal,
+                rectangle split empty part width = 0.0485cm,
+                rectangle split part align = center,
+                draw,
+                fill = none,
+            },
+        node/.style = {
+                minimum height = 0.5cm,
+                text width = 0.35cm,
+                text centered,
+                rectangle split,
+                rectangle split parts = 3,
+                rectangle split horizontal,
+                rectangle split empty part width = 0.2cm,
+                rectangle split part align = center,
+                draw,
+                fill = none,
+            },
+        edge from parent/.style = {},
+        level 1/.style = {
+                sibling distance = 7.5cm,
+                level distance = 3cm
+            },
+        level 2/.style = {
+                sibling distance = 2.5cm,
+            },
+        level 3/.style = {
+                sibling distance = 40,
+            }
+    ]
+    \node[node] (0) { 13 \nodepart{two} 37 }
+    child {
+            node[node] (1) { 7 \nodepart{two} \nodepart{three} }
+            child {
+                    node[node] (11) {2 \nodepart{two} 3 \nodepart{three} 5}
+                }
+            child {
+                    node[node] (12) {7 \nodepart{two} 11}
+                }
+        }
+    child {
+            node[node] (2) { 17 \nodepart{two} 23 \nodepart{three} 31 }
+            child {
+                    node[node] (21) {13 \nodepart{two} 16}
+                }
+            child {
+                    node[node] (22) {17 \nodepart{two} 19}
+                }
+            child {
+                    node[node] (23) {23 \nodepart{two} 29}
+                }
+            child {
+                    node[node] (24) {31 \nodepart{two} 35}
+                }
+        }
+    child {
+            node[node] (3) { 43 }
+            child {
+                    node[node] (31) {37 \nodepart{two} 41}
+                }
+            child {
+                    node[node] (32) {43 \nodepart{two} 47}
+                }
+        }
+    ;
+
+    \node[pointers, below of=0, node distance=0.5cm] (p0) {};
+    \node[pointers, below of=1, node distance=0.5cm] (p1) {};
+    \node[pointers, below of=2, node distance=0.5cm] (p2) {};
+    \node[pointers, below of=3, node distance=0.5cm] (p3) {};
+
+    \node[pointers, below of=11, node distance=0.5cm] (p11) {};
+    \node[pointers, below of=12, node distance=0.5cm] (p12) {};
+    \node[pointers, draw=none, below of=p11] (p11') {};
+    \node[pointers, draw=none, below of=p12] (p12') {};
+
+
+    \node[pointers, below of=21, node distance=0.5cm] (p21) {};
+    \node[pointers, below of=22, node distance=0.5cm] (p22) {};
+    \node[pointers, below of=23, node distance=0.5cm] (p23) {};
+    \node[pointers, below of=24, node distance=0.5cm] (p24) {};
+    \node[pointers, draw=none, below of=p21] (p21') {};
+    \node[pointers, draw=none, below of=p22] (p22') {};
+    \node[pointers, draw=none, below of=p23] (p23') {};
+    \node[pointers, draw=none, below of=p24] (p24') {};
+
+    \node[pointers, below of=31, node distance=0.5cm] (p31) {};
+    \node[pointers, below of=32, node distance=0.5cm] (p32) {};
+    \node[pointers, draw=none, below of=p31] (p31') {};
+    \node[pointers, draw=none, below of=p32] (p32') {};
+
+    \path[->, -stealth]
+    (p0.one south)   edge[out = -90, in = 90] (1)
+    (p0.two south)   edge[out = -90, in = 90] (2)
+    (p0.three south) edge[out = -90, in = 90] (3)
+
+    (p1.one south)   edge[out = -90, in = 90] (11)
+    (p1.two south)   edge[out = -90, in = 90] (12)
+
+    (p2.one south)   edge[out = -90, in = 90] (21)
+    (p2.two south)   edge[out = -90, in = 90] (22)
+    (p2.three south) edge[out = -90, in = 90] (23)
+    (p2.four  south) edge[out = -90, in = 90] (24)
+
+    (p3.one south)   edge[out = -90, in = 90] (31)
+    (p3.two south)   edge[out = -90, in = 90] (32)
+
+    (p11.one   south) edge (p11'.one   south)
+    (p11.two   south) edge (p11'.two   south)
+    (p11.three south) edge (p11'.three south)
+
+    (p12.one   south) edge (p12'.one   south)
+    (p12.two   south) edge (p12'.two   south)
+    (p12.three south) edge (p12'.three south)
+
+    (p21.one   south) edge (p21'.one   south)
+    (p21.two   south) edge (p21'.two   south)
+
+    (p22.one   south) edge (p22'.one   south)
+    (p22.two   south) edge (p22'.two   south)
+
+    (p23.one   south) edge (p23'.one   south)
+    (p23.two   south) edge (p23'.two   south)
+
+    (p24.one   south) edge (p24'.one   south)
+    (p24.two   south) edge (p24'.two   south)
+
+    (p31.one   south) edge (p31'.one   south)
+    (p31.two   south) edge (p31'.two   south)
+
+    (p32.one   south) edge (p32'.one   south)
+    (p32.two   south) edge (p32'.two   south)
+    ;
+
+
+    \path[->, -stealth, dashed]
+    (p11.four east) edge (p12)
+    (p12.four east) edge (p21)
+    (p21.four east) edge (p22)
+    (p22.four east) edge (p23)
+    (p23.four east) edge (p24)
+    (p24.four east) edge (p31)
+    (p31.four east) edge (p32)
+    ;
+\end{tikzpicture}
+\end{document}
+
