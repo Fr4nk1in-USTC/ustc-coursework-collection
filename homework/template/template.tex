@@ -1,0 +1,60 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{算法基础}    % Replace (Course Name) with the course name.
+\hwnum{0}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{}
+\solutionname{解:}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 2.54cm,
+    bottom = 2.54cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+
+\begin{document}
+\problemchap{2}
+\problempart{1}
+\begin{problem}
+问题描述
+\end{problem}
+
+\begin{solution}
+    解答
+\end{solution}
+
+\problempart{2}
+\begin{problem}
+问题描述
+\end{problem}
+
+\begin{solution}
+    如下
+
+    \begin{algo}
+        \caption{INSERTION-SORT($A$)}
+        \label{algo:insertion-sort}
+        \For{$j = 2$ \textbf{to} $A.length$}{
+            $key = A[j]$\;
+            \tcp{Insert $A[j]$ into the sorted sequence $A[1..j-1]$.}
+            $i = j - 1$\;
+            \While{$i > 0$ and $A[i] > key$}{
+                $A[i+1] = A[i]$\;
+                $i = i - 1$\;
+            }
+            $A[i+1] = key$\;
+        }
+    \end{algo}
+\end{solution}
+\end{document}

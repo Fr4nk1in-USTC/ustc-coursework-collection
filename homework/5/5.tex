@@ -1,0 +1,96 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{算法基础}    % Replace (Course Name) with the course name.
+\hwnum{5}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{}
+\solutionname{解:}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 2.54cm,
+    bottom = 2.54cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+
+\begin{document}
+%%%% Problem 15.1-2 %%%%
+\problemchap{15}
+\problempart{1}
+\problemnumber{2}
+\begin{problem}
+举反例证明下面的 ``贪心'' 策略不能保证总是得到最优切割方案. 定义长度为 $i$ 的钢
+条的\textbf{密度}为 $p_{i} / i$, 即每英寸的价值. 贪心策略将长度为 $n$ 的钢条切割
+下长度为 $i$ $(1\leqslant i\leqslant n)$ 的一段, 其密度最高. 接下来继续使用相同
+的策略切割长度为 $n - i$ 的剩余部分.
+\end{problem}
+\begin{solution}
+    假设 $n = 5$, 长度为 1 \textasciitilde{} 5 的钢条的密度依次为: 1, 2, 2, 8,
+    7. 则按照贪心策略会将钢条切割为长度为 1 和 4 的两部分, 总价值为 $1\times 1 +
+        4 \times 8 = 33$; 而最优的切割方案为不切割, 总价值为 $5 \times 7 = 35$. 所以
+    贪心策略不能保证总是得到最优的切割方案.
+\end{solution}
+
+%%%% Problem 15.2-3 %%%%
+\problempart{2}
+\problemnumber{3}
+\begin{problem}
+用代入法证明递归公式 \hyperref[eq:15.2.3.1]{(15.6)} 的结果为 $\Omega(2^{n})$.
+\begin{equation}
+    \label{eq:15.2.3.1}
+    P(n) = \begin{cases}
+        1                                               & n = 1         \\
+        \displaystyle \sum_{k = 1}^{n - 1} P(k)P(n - k) & n \geqslant 2
+    \end{cases}
+    \tag{15.6}
+\end{equation}
+\end{problem}
+\begin{solution}
+    恰当选择常数 $c \geqslant 1$, 有 $P(n)\geqslant c \cdot 2^{n}$. 假定此上界对
+    所有正数 $m < n$ 都成立, 将此代入递归式, 有
+    \begin{equation}
+        \begin{aligned}
+            P(n)
+             & = \sum_{k = 1}^{n - 1} P(k)P(n - k) \\
+             & \geqslant c^{2} (n - 1) 2^{n}       \\
+             & \geqslant c \cdot 2^{n}
+        \end{aligned}
+    \end{equation}
+    所以递归公式的结果为 $\Omega(2^{n})$.
+\end{solution}
+
+%%%% Problem 15.2-4 %%%%
+\problempart{2}
+\problemnumber{4}
+\begin{problem}
+对输入链长度为 $n$ 的矩阵链乘问题, 描述其字问题图: 它包含多少个顶点? 包含多少条
+边? 这些边分别连接哪些顶点?
+\end{problem}
+\begin{solution}
+    字问题图的顶点都能用 $v_{i, j}$ ($i \leqslant j$) 表示, 共 $n(n + 1)/2$ 个,
+    其中
+    \begin{itemize}
+        \item 若 $i = j$, 则顶点 $v_{i, j}$ 没有任何出边.
+        \item 若 $i < j$, 则对所有的 $i \leqslant k < j$, $v_{i, j}$ 都有两条出
+              边分别指向 $v_{i, k}$ 和 $v_{k + 1, j}$.
+    \end{itemize}
+    则边数为
+    \begin{equation}
+        \sum_{i = 1}^{n}\sum_{j = i + 1}^{n} 2 (j - i)
+        = \sum_{i = 1}^{n} (n - i)(n - i + 1)
+        = \sum_{i = 1}^{n} \left( i^{2} - i\right)
+        = \frac{ n(n+1)(2n+1) }{ 6 } - \frac{ n(n+1) }{ 2 }
+        = \frac{ (n - 1)n(n + 1) }{ 3 }
+    \end{equation}
+\end{solution}
+\end{document}

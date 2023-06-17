@@ -1,0 +1,218 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{算法基础}    % Replace (Course Name) with the course name.
+\hwnum{4}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{}
+\solutionname{解:}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 2.54cm,
+    bottom = 2.54cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+
+\begin{document}
+
+%%%% Problem 8.2-4 %%%% 
+\problemchap{8}
+\problempart{2}
+\problemnumber{4}
+
+\begin{problem}
+设计一个算法, 它能够对于任何给定的介于 0 和 $k$ 之间的 $n$ 个整数先进行预处理,
+然后在 $O(1)$ 时间内回答输入的 $n$ 个整数中有多少个落在区间 $[a .. b]$ 内. 你设
+计的算法的预处理时间应为 $\Theta(n + k)$.
+\end{problem}
+\begin{solution}
+    预处理算法如下算法~\ref{algo:8.2-4.1}, 回答算法如下算法~\ref{algo:8.2-4.2}.
+    \begin{algo}
+        \caption{PREPROCESS\.($A$, $k$)}
+        \label{algo:8.2-4.1}
+        let $C[0 .. k]$ be a new array\;
+        \For{$i = 0$ \textbf{to} $k$} {
+            $C[i] = 0$\;
+        }
+        \For{$j = 1$ \textbf{to} $A.length$} {
+            $C[A[j]] = C[A[j]] + 1$\;
+        }
+        \For{$i = 1$ \textbf{to} $k$} {
+            $C[i] = C[i] + C[i - 1]$\;
+        }
+        \Return{$C$}\;
+    \end{algo}
+    \begin{algo}
+        \caption{ANSWER\.($A$, $k$, $a$, $b$)}
+        \label{algo:8.2-4.2}
+        $C$ = PREPROCESS\.($A$, $k$)\tcp*{预处理: $\Theta(n + k)$}
+        \Return{$C[b] - C[a - 1]$}\tcp*{回答: $O(1)$}
+    \end{algo}
+
+\end{solution}
+
+%%%% Problem 8.3-4 %%%%
+\problempart{3}
+\problemnumber{4}
+
+\begin{problem}
+说明如何在 $O(n)$ 时间内, 对 0 到 $n^{3} - 1$ 区间内的 $n$ 个整数进行排序.
+\end{problem}
+\begin{solution}
+    首先将这 $n$ 个整数转换为 $n$-进制数, 这需要 $O(n)$ 时间, 转换后每个整数至多
+    有 3 位, 对它们基数排序, 使用稳定排序方法为计数排序, 每次都需要 $\Theta(n)$
+    的时间, 共 3 次, 因此排序时间为 $O(n)$, 总共需要 $O(n)$ 的时间.
+\end{solution}
+
+%%%% Problem 8.4-2 %%%%
+\problempart{4}
+\problemnumber{2}
+
+\begin{problem}
+解释为什么桶排序在最坏情况下运行时间是 $\Theta \left( n^{2}\right)$? 我们应该如
+何修改算法, 使其在保持平均情况为线性时间代价的同时, 最坏情况时间代价为
+$O(n\lg n)$?
+\end{problem}
+\begin{solution}
+    在最坏情况下, 所有的 $n$ 个元素都被放进同一个桶中, 再进行插入排序. 因为插入
+    排序的时间复杂度为 $\Theta \left( n^{2}\right)$, 因此桶排序在最坏情况下运行
+    时间为 $\Theta \left( n^{2}\right)$.
+
+    可以将插入排序换为同样对链表操作友好的归并排序, 这样最坏情况时间代价就减小到
+    了 $O(n\lg n)$.
+\end{solution}
+
+%%%% Problem 9.1-1 %%%%
+\problemchap{9}
+\problempart{1}
+\problemnumber{1}
+
+\begin{problem}
+证明: 最坏情况下, 找到 $n$ 个元素中第二小的元素需要 $n + \lceil \lg n \rceil -2$
+次比较.
+\end{problem}
+\begin{solution}
+    首先以这 $n$ 个元素为叶结点自底向上构建一棵二叉树, 每个非叶结点为其两个子结
+    点的较小值, 最后树的根结点就是整个数组的最小值. 这一部分需要的比较次数就是二
+    叉树非叶结点数, 即 $n - 1$.
+
+    然后考虑与最小值比较过的数值, 它们在二叉树中表现为根结点到对应叶节点路径上面
+    所有结点的兄弟结点, 共有 $h = \lceil \lg n \rceil$ 个, 找出它们中的最小值,
+    这就是 $n$ 个元素中第二小的元素, 需要 $\lceil \lg n\rceil - 1$ 次比较, 因此
+    总共需要 $n + \lceil\lg n\rceil - 2$ 次比较. 对应的算法如下, 使用堆中的
+    {\sc Parent} 操作:
+
+    \begin{algo}
+        \caption{SECOND-MIN\.($A$)}
+        \label{algo:9.1-1}
+        $n = A.length$\;
+        let $T[1..2n+1]$ be a new array\;
+        let $S[1..2n-1]$ be a new array\;
+        $T[2n] = T[2n+1]= +\infty$\;
+        \For{$i = 1$ \textbf{to} $n$} {
+            $T[n + i - 1] = A[i]$\;
+            $S[n + i - 1] = 2n$ \tcp*{所有叶节点的两个孩子都是无穷大}
+        }
+        \tcp{建树, 总共 $n - 1$ 次比较}
+        \For{$i = 2n - 1$ \textbf{downto} $3$ \textbf{by} $2$} {
+            \eIf{$T[i] < T[i - 1]$} {
+                $T[\operatorname{PARENT}(i)] = T[i]$\;
+                $S[\operatorname{PARENT}(i)] = i$\;
+            }{
+                $T[\operatorname{PARENT}(i)] = T[i - 1]$\;
+                $S[\operatorname{PARENT}(i)] = i - 1$\;
+            }
+        }
+        \tcp{查找次小值, 共 $\lceil\lg n\rceil - 1$ 次比较}
+        $idx = S[1]$\;
+        $sec\text{-}min = T[\operatorname{BROTHER}(idx)]$\;
+        \For{$j = 1$ \textbf{to} $\lceil \lg n\rceil - 1$}{
+            $idx = S[idx]$\;
+            \If{$T[\operatorname{BROTHER}(idx)]$ < $sec\text{-}min$}{
+                $sec\text{-}min = T[\operatorname{BROTHER}(idx)]$\;
+            }
+        }
+        \Return $sec\text{-}min$\;
+    \end{algo}
+    其中 $\operatorname{BROTHER}(k)$ 返回 $4\lfloor k / 2\rfloor + 1 - k$.
+\end{solution}
+
+%%%% Problem 9.2-3 %%%%
+\problempart{2}
+\problemnumber{3}
+
+\begin{problem}
+给出 {\sc Randomized-Select} 的一个基于循环的版本.
+\end{problem}
+\begin{solution}
+    如下
+    \begin{algo}
+        \caption{LOOP-RANDOMIZED-SELECT\.($A$, $i$)}
+        $p = 1$\;
+        $r = A.length$\;
+        \While{$p < r$} {
+            $q = \operatorname{RANDOMIZED-PARTITION}(A, p, r)$\;
+            $k = q - p + 1$\;
+            \If{$i = k$}{
+                \Return{$A[q]$}\;
+            }
+            \eIf{$i < k$}{
+                $r = q - 1$\;
+            }{
+                $p = q + 1$\;
+                $i = i - k$\;}
+        }
+        \Return{$A[p]$}
+    \end{algo}
+
+\end{solution}
+
+%%%% Problem 9.3-6 %%%%
+\problempart{3}
+\problemnumber{6}
+
+\begin{problem}
+对一个包含 $n$ 个元素的集合来说, {\bf $k$ 分位数}是指能把有序集合分为 $k$ 个等大
+小集合的第 $k - 1$ 个顺序统计量. 给出一个能找出某一集合的 $k$ 分位数的
+$O(n\lg k)$ 时间的算法.
+\end{problem}
+\begin{solution}
+    采用分治思想, 先寻找第 $k / 2$ 个分位数, 并将数组分为两半再递归寻找其他分位
+    数. 假设集合大小为 $k$ 的整数倍减一, 算法如下:
+    \begin{algo}
+        \caption{K-QUANTITLES\.($A$, k)}
+        \label{algo:9.3-6}
+        let $Q[1 .. k-1]$ be a new array\;
+        $size = \dfrac{ A.length + 1 }{ k }$\;
+        $\operatorname{K-QUANTITLES-REC}(A, 1, A.length, 1, k - 1, size, Q)$\;
+        \Return $Q$
+    \end{algo}
+    \begin{algo}
+        \caption{$\operatorname{K-QUANTITLES-REC}(A, p, r, qp, qr, size, Q)$}
+        \label{algo:9.3-6-rec}
+        \If{$qp > qr$} {
+            \Return\;
+        }
+        $qmid = \left\lfloor \dfrac{ qp + qr }{ 2 }\right\rfloor$\;
+        $rank = qmid \cdot size$\;
+        $Q[qmid] = \operatorname{SELECT}(A, p, r, rank)$\;
+        $\operatorname{K-QUANTITLES-REC}(A, p, rank - 1, qp, qmid - 1, size, Q)$\;
+        $\operatorname{K-QUANTITLES-REC}(A, rank + 1, r, qmid + 1, qr, size, Q)$\;
+        \Return\;
+    \end{algo}
+    递归子算法的递归式为 $T(k) = T(\lfloor k / 2\rfloor) + T(\lfloor (k - 1)
+        / 2\rfloor) + O(k \cdot size)$, 可以解出
+    $T(k) = O(k \cdot size\lg k) = O(n\lg k)$, 而主算法的其他部分运行时间为
+    $O(1)$, 因此总的运行时间为 $O(n\lg k)$.
+\end{solution}
+\end{document}

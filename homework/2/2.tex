@@ -1,0 +1,581 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{算法基础}    % Replace (Course Name) with the course name.
+\hwnum{2}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{}
+\solutionname{解:}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 2.54cm,
+    bottom = 2.54cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+\usepackage{tikz}
+
+\allowdisplaybreaks[4]
+
+\begin{document}
+\problemchap{4}
+\problempart{1}
+\problemnumber{4}
+\begin{problem}
+假定修改最大子数组问题的定义, 允许结果为空子数组, 其和为 0. 你应该如何修改现有算
+法, 使它们能允许空子数组为最终结果?
+\end{problem}
+
+\begin{solution}
+    在 {\sc Find-Maximum-Subarray} 过程中, 如果需要返回的子数组和为负, 则改为返
+    回空子数组.
+\end{solution}
+
+\begin{problem}
+使用如下思想为最大子数组问题设计一个非递归的, 线性时间的算法. 从数组的左边开始,
+从左至右处理, 记录到目前为止以及处理过的最大子数组. 若已知 $A[1..j]$ 的最大子数
+组, 基于如下性质将解扩展为 $A[1..j + 1]$ 的最大子数组: $A[1..j + 1]$ 的最大子数
+组要么是 $A[1..j]$ 的最大子数组, 要么是某个子数组 $A[i..j + 1] (1 \leqslant i
+    \leqslant j + 1)$. 在已知 $A[1..j]$ 的最大子数组的情况下, 可以在线性时间内找
+出形如 $A[i..j + 1]$ 的最大子数组.
+\end{problem}
+
+\begin{solution}
+    如下
+
+    \begin{algo}
+        \caption{LINEAR-TIME-MAX-SUBARRAY(A)}
+        \label{algo:linear-time-max-subarray}
+        $max\text{-}sum = -\infty$\;
+        $max\text{-}tail\text{-}sum = 0$\;
+        $tail\text{-}left = 1$\;
+        \For{$j = 1$ \textbf{to} $A.length$}{
+            $max\text{-}tail\text{-}sum = max\text{-}tail\text{-}sum + A[j]$\;
+            \If{$max\text{-}tail\text{-}sum > max\text{-}sum$}{
+                $max\text{-}sum = max\text{-}tail\text{-}sum$\;
+                $max\text{-}left = tail\text{-}left$\;
+                $max\text{-}right = j$\;
+            }
+            \If{$max\text{-}tail\text{-}sum < 0$}{
+                $max\text{-}tail\text{-}sum = 0$\;
+                $tail\text{-}left = j + 1$\;
+            }
+        }
+        \Return $max\text{-}left, max\text{-}right, max\text{-}sum$\;
+    \end{algo}
+\end{solution}
+
+%%%% Problem 4.3-3 %%%%
+\problempart{3}
+\problemnumber{3}
+\begin{problem}
+我们看到 $T(n) = 2T \left( \left\lfloor \frac{ n }{ 2 } \right\rfloor\right) +
+    n$ 的解为 $O(n\lg n)$. 证明 $\Omega(n\lg n)$ 也是这个递归式的解. 从而得出结
+论: 解为 $\Theta(n\lg n)$.
+\end{problem}
+
+\begin{solution}
+    恰当选择常数 $ \frac{ 1 }{ 3 } \geqslant c > 0$, 有
+    $T(n) \geqslant cn\lg n$. 假定此上界对所有正数 $m < n$ 都成立, 特别对于
+    $m = \left\lfloor \frac{n}{2} \right\rfloor$, 有
+    $T \left( \left\lfloor \frac{ n }{ 2 } \right\rfloor\right) \geqslant
+        c\left\lfloor \frac{ n }{ 2 } \right\rfloor \lg
+        \left( \left\lfloor \frac{ n }{ 2 } \right\rfloor\right)$, 将此代入递归
+    式, 有
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & \geqslant 2 \left(
+            c \left\lfloor \frac{ n }{ 2 } \right\rfloor \lg
+            \left( \left\lfloor \frac{ n }{ 2 } \right\rfloor\right)
+            \right) + n
+            \geqslant c (n - 1) \lg \frac{ n - 1 }{ 2 } + n           \\
+             & = c (n - 1)
+            \left( \lg n - 1 - \lg \frac{ n }{ n - 1 }\right) + n     \\
+             & = cn
+            \left( \lg n - 1 - \lg \frac{ n }{ n - 1 } + \frac{ 1 }{ c }\right)
+            - c \left( \lg \left( n - 1\right) - 1\right)             \\
+             & \geqslant cn \left( \lg n - 2 + \frac{ 1 }{ c } -
+            \frac{ \lg (n - 1) - 1 }{ n } \right)                     \\
+             & \geqslant cn \left( \lg n - 3 + \frac{ 1 }{ c }\right) \\
+             & \geqslant cn\lg n
+        \end{aligned}
+    \end{equation}
+    因此 $\Omega (n\lg n)$ 也是这个递归式的解. 得到解为 $\Theta(n \lg n)$.
+
+\end{solution}
+
+%%%% Problem 4.3-5 %%%%
+\problemnumber{5}
+\begin{problem}
+证明: 归并排序的 ``严格'' 递归式~\hyperref[eq:4.3-5.1]{(4.3)} 的解为 $\Theta(n
+    \lg n)$.
+\begin{equation}
+    \label{eq:4.3-5.1}
+    T(n) =
+    \begin{cases}
+        \Theta(1) & \text{若}\ n = 1 \\
+        T \left( \left\lceil \dfrac{n}{2} \right\rceil \right) + T \left(
+        \left\lfloor \dfrac{n}{2} \right\rfloor \right) + \Theta(n)
+                  & \text{若}\ n > 1
+    \end{cases}
+\end{equation}
+\end{problem}
+\begin{solution}
+    不妨令递归式中的 $\Theta(n)$ 满足 $d_{1}n \leqslant \Theta(n)
+        \leqslant d_{2}n$.
+
+    先证明 $O(n\lg n)$ 是这个递归式的解. 恰当选择常数
+    $c \geqslant \frac{ 3 }{ 2 }d_{2}$, 有$T(n) \leqslant cn\lg n$. 假定此上界对
+    所有正数 $m < n$ 都成立, 将此代入递归式, 若 $n$ 为偶数, 有
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & = 2T \left( \frac{ n }{ 2 }\right) + \Theta(n) \\
+             & \leqslant cn\lg \frac{ n }{ 2 } + d_{2}n       \\
+             & = cn\lg n + \left( d_{2} - c\right)n           \\
+             & \leqslant cn\lg n
+        \end{aligned}
+    \end{equation}
+    若 $n$ 为奇数 (显然 $n \geqslant 3$), 有
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & = T \left( \frac{ n - 1 }{ 2 }\right) +
+            T \left( \frac{ n + 1 }{ 2 }\right) + \Theta(n)                \\
+             & \leqslant c \frac{ n - 1 }{ 2 } \lg \frac{ n - 1 }{ 2 } +
+            c \frac{ n + 1 }{ 2 } \lg \frac{ n + 1 }{ 2 } + d_{2} n        \\
+             & = \frac{ cn }{ 2 } \lg \frac{ n^{2} - 1 }{ 4 } +
+            \frac{ c }{ 2 }\lg \frac{ n + 1 }{ n - 1 } + d_{2}n            \\
+             & \leqslant cn \lg n + c \frac{ 2 }{ n - 1 } - cn + d_{2}n    \\
+             & = cn \lg n + d_{2} n - c \frac{ (n - 2)(n + 1) }{ (n - 1) } \\
+             & \leqslant cn \lg n - d_{2}n \left( \frac{ 3 }{ 2 } \cdot
+            \frac{ (n - 2)(n + 1) }{ (n - 1)n } - 1\right)                 \\
+             & \leqslant cn \lg n
+        \end{aligned}
+    \end{equation}
+    其中当 $n \geqslant 3$ 时,
+    $\dfrac{ (n - 2)(n + 1) }{ (n - 1)n } \geqslant \dfrac{ 3 }{ 2 }$.
+
+    再证明 $\Omega(n\lg n)$ 是这个递归式的解. 恰当选择常数
+    $0 < c \leqslant \frac{ 16 }{ 17 }d_{1}$, 有 $T(n) \geqslant cn\lg n$. 假定
+    此下界对所有正数 $m < n$ 都成立, 将此代入递归式, 若 $n$ 为偶数, 有
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & = 2T \left( \frac{ n }{ 2 }\right) + \Theta(n) \\
+             & \geqslant cn\lg \frac{ n }{ 2 } + d_{1}n       \\
+             & = cn\lg n + \left( d_{1} - c\right)n           \\
+             & \geqslant cn\lg n
+        \end{aligned}
+    \end{equation}
+    若 $n$ 为奇数 (显然 $n \geqslant 3$), 有
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & = T \left( \frac{ n - 1 }{ 2 }\right) +
+            T \left( \frac{ n + 1 }{ 2 }\right) + \Theta(n)              \\
+             & \geqslant c \frac{ n - 1 }{ 2 } \lg \frac{ n - 1 }{ 2 } +
+            c \frac{ n + 1 }{ 2 } \lg \frac{ n + 1 }{ 2 } + d_{1} n      \\
+             & = \frac{ cn }{ 2 } \lg \frac{ n^{2} - 1 }{ 4 } +
+            \frac{ c }{ 2 }\lg \frac{ n + 1 }{ n - 1 } + d_{1}n          \\
+             & \geqslant \frac{ cn }{ 2 }
+            \left( \lg n^{2} - \lg \frac{ n^{2} }{ n^{2} - 1 } \right) -
+            cn + d_{1}n                                                  \\
+             & \geqslant cn\lg n -
+            cn \left( 1 + \frac{ 1 }{ 2 \left( n^{2} - 1\right) }\right) +
+            d_{1}n                                                       \\
+             & \geqslant cn\lg n
+        \end{aligned}
+    \end{equation}
+    其中当 $n \geqslant 3$ 时, $\dfrac{ 1 }{ 2 \left( n^{2} - 1\right) }
+        \leqslant \dfrac{ 1 }{ 16 }$, 所以有最后一步的大于等于.
+
+    综上所述, $O(n\lg n)$ 和 $\Omega(n\lg n)$ 都是递归式的解, 因此递归式的解为
+    $\Theta(n\lg n)$
+\end{solution}
+
+%%%% Problem 4.3-7 %%%%
+\problemnumber{7}
+\begin{problem}
+使用 4.5 节中的主方法, 可以证明 $T(n) = 4T \left( \frac{ n }{ 3 }\right) + n$ 的
+的解为 $T(n) = \Theta \left( n^{\log_{3} 4}\right)$. 说明基于假设 $T(n)
+    \leqslant c n^{\log_{3} 4}$ 的代入法不能证明这一结论. 然后说明如何通过减去一
+个低阶项完成代入法证明.
+\end{problem}
+\begin{solution}
+    基于假设 $T(n) \leqslant c n^{\log_{3} 4}$, 假定此上界对所有 $m < n$ 都成立,
+    代入递归式, 得到
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & \leqslant 4c {\left( \frac{ n }{ 3 }\right)}^{\log_{3} 4} + n \\
+             & = cn^{\log_{3} 4} \cdot \frac{ 4 }{ 3^{\log_{3} 4} } + n      \\
+             & = cn^{\log_{3} 4} + n
+        \end{aligned}
+    \end{equation}
+    其中除了第一部是基于假设的直接放缩, 其他两步都是严格相等, 但是最后得到的结果
+    为 $cn^{\log_{3} 4} + n > cn^{\log_{3} 4}$, 因此基于该假设无法证明该结论.
+
+    不妨假设 $T(n) \leqslant cn^{\log_{3} 4} - 3n$, 只要 $c$ 取的足够大就能满足
+    基本情况. 假定此上界对所有正数 $m < n$ 都成立, 代入递归式, 得到
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & \leqslant 4
+            \left( c {\left( \frac{ n }{ 3 }\right)}^{\log_{3} 4} - n\right)
+            + n                           \\
+             & = cn^{\log_{3} 4} - 4n + n \\
+             & = cn^{\log_{3} 4} - 3n
+        \end{aligned}
+    \end{equation}
+    因为 $cn^{\log_{3} 4} - 3n = O \left( n^{\log_{3} 4}\right)$, 所以
+    $O \left( n^{\log_{3} 4}\right)$ 为递归式的解.
+
+    再假设 $T(n) \geqslant cn^{\log_{3} 4}$. 假定此下界对所有正数 $m < n$ 都成
+    立, 代入递归式, 得到
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & \geqslant 4c {\left( \frac{ n }{ 3 }\right)}^{\log_{3} 4} + n \\
+             & = cn^{\log_{3} 4} \cdot \frac{ 4 }{ 3^{\log_{3} 4} } + n      \\
+             & = cn^{\log_{3} 4} + n                                         \\
+             & \geqslant cn^{\log_{3} 4}
+        \end{aligned}
+    \end{equation}
+    因此 $\Omega \left( n^{\log_{3} 4}\right)$ 是递归式的解.
+
+    综上所述, $\Theta \left( n^{\log_{3} 4}\right)$ 是递归式的解.
+\end{solution}
+
+%%%% Problem 4.4-3 %%%%
+\problempart{4}
+\problemnumber{3}
+\begin{problem}
+对递归式 $T(n) = 4 T \left( \frac{ n }{ 2 } + 2\right) + n$, 利用递归树确定一个
+好的渐进上界, 用代入法进行验证.
+\end{problem}
+\begin{solution}
+    递归树的深度约为 $\lg n$, 深度为 $i$ 的层共有 $4^{i}$ 个结点, 每个结点代价约
+    为 $\frac{ n }{ 2^{i} }$. 求和得到总代价约为 $2 n^{2}$, 因此假设渐进上界为
+    $O \left( n^{2}\right)$. 使用代入法, 恰当选择常数 $c \geqslant 1$,
+    有 $T(n) \leqslant c \left( n^{2} - 9n\right)$. 假定此上界对所有正数
+    $m < n$ 都成立, 代入递归式, 得到
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & \leqslant 4 c \left( {\left( \frac{ n }{ 2 } + 2\right)}^{2}
+            - 9 \left( \frac{ n }{ 2 } + 2\right)\right) + n                \\
+             & = c \left( n^{2} - 10n - 56\right) + n                       \\
+             & = c \left( n^{2} - 9n\right) - (c - 1) n - 56c               \\
+             & \leqslant c \left( n^{2} - 9n\right)
+        \end{aligned}
+    \end{equation}
+    因为 $n^{2} - 9n = O \left( n^{2}\right)$, 所以 $O \left( n^{2}\right)$ 是
+    渐进上界.
+\end{solution}
+
+%%%% Problem 4.4-5 %%%%
+\problemnumber{5}
+\begin{problem}
+对递归式 $T(n) = T(n - 1) + T \left( \frac{ n }{ 2 }\right) + n$, 利用递归树确定
+一个好的渐进上界, 用代入法进行验证.
+\end{problem}
+\begin{solution}
+    递归树有一部分类似于 $T(n) = 2T(n - 1) + n$ 的递归树, 但是有另一部分类似于
+    $T(n) = 2 \left( \frac{ n }{ 2 }\right) + n$ 的递归树. 前者的总代价是指数级
+    别的 $O \left( 2^{n}\right)$, 所以不难得到解的一个渐进上界为
+    $O \left( 2^{n}\right)$.
+
+    使用代入法, 恰当选择常数 $c \geqslant 1$, 有 $T(n) \leqslant c 2^{n} - 3$.
+    假定此上界对所有正数 $m < n$ 都成立, 代入递归式, 得到
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & \leqslant c 2^{n - 1} - 3 + c 2^{ \frac{ n }{ 2 } } - 3 + n \\
+             & = c \left( 2^{n - 1} + 2^{ \frac{ n }{ 2 } }\right) - 3 +
+            (n - 3)                                                        \\
+             &
+            \begin{cases}
+                \leqslant \displaystyle
+                c \left( 2^{n - 1} + 2^{ \frac{ n }{ 2 } }\right) - 3
+                    & 0 < n \leqslant 3 \\
+                \leqslant \displaystyle
+                c 2^{n - 1} + \left( c 2^{ \frac{ n }{ 2 } } + n\right) - 3
+                \leqslant c \left( 2^{n - 1} + 2^{ \frac{ n }{ 2 } + 1}\right)
+                - 3 & n \geqslant 4
+            \end{cases}
+            \\
+             & \leqslant c 2^{n} - 3
+        \end{aligned}
+    \end{equation}
+    因为 $c 2^{n} - 3 = O \left( 2^{n}\right)$, 所以 $O \left( 2^{n}\right)$ 是
+    $T(n)$ 的递归上界.
+\end{solution}
+
+%%%% Problem 4.4-7 %%%%
+\problemnumber{7}
+\begin{problem}
+对递归式 $T(n) = 4T \left( \left\lfloor \frac{ n }{ 2 }\right\rfloor\right)+ cn$
+($c$ 为常数), 画出递归树, 并给出其解的一个渐进确界. 用代入法进行验证.
+\end{problem}
+\begin{solution}
+    递归树如下图~\ref{fig:recursion-tree-4.4-7}所示.
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[
+                level 1/.style={sibling distance=3.6cm},
+                level 2/.style={sibling distance=9mm},
+                level 3/.style={sibling distance=2mm},
+                ending/.style={edge from parent/.style={dashed,draw}},
+                addup/.style={->,-latex,very thick,densely dotted,draw}
+            ]
+            \node (r1){$cn$}
+            child {
+                    node{$c \left\lfloor \frac{ n }{ 2 } \right\rfloor$}
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node (l) {}
+                                    child [grow=left, level distance=5mm] {node (b) {} edge from parent[draw = none]
+                                            child [grow=up, level distance=1.5cm] {node () {} edge from parent[draw = none]
+                                                    child [grow=up] {node () {} edge from parent[draw = none]
+                                                            child [grow=up] {node (t) {} edge from parent[draw = none]
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                }
+            child {
+                    node{$c \left\lfloor \frac{ n }{ 2 } \right\rfloor$}
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                }
+            child {
+                    node{$c \left\lfloor \frac{ n }{ 2 } \right\rfloor$}
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                }
+            child {
+                    node (r2) {$c \left\lfloor \frac{ n }{ 2 } \right\rfloor$}
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node{$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                        }
+                    child{
+                            node (r3) {$c \left\lfloor \frac{ n }{ 4 } \right\rfloor$}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node {}}
+                            child[ending] {node (r) {}
+                                    child [grow=right, level distance=1cm] {node (rb) {$\vdots$} edge from parent[draw = none]
+                                            child [grow=up, level distance=1.5cm] {node (s3) {$4cn$} edge from parent[draw = none]
+                                                    child [grow=up] {node (s2) {$2cn$} edge from parent[draw = none]
+                                                            child [grow=up] {node (s1) {$cn$} edge from parent[draw = none]
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                };
+            \node[below of=rb, anchor=east] {总计: $O \left( n^{2}\right)$};
+            \path (l) -- (r) node [midway] {$\vdots$};
+            \path (r1) edge[addup] (s1);
+            \path (r2) edge[addup] (s2);
+            \path (r3) edge[addup] (s3);
+            \draw[<->, >=latex] (b) edge node[left] {$\lg n$} (t);
+        \end{tikzpicture}
+        \caption{题中递归式对应的递归树}
+        \label{fig:recursion-tree-4.4-7}
+    \end{figure}
+    得到渐进确界为 $\Theta \left( n^{2}\right)$, 下面用代入法证明.
+
+    先证明 $T(n) = O \left( n^{2}\right)$. 恰当选择常数 $d > c$, 有
+    $T(n) \leqslant dn^{2} - cn$. 假定此上界对所有正数 $m < n$ 都成立, 将其代入
+    递归式得到
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & \leqslant 4 d{\left\lfloor \frac{ n }{ 2 }\right\rfloor}^{2} -
+            4c \left\lfloor \frac{ n }{ 2 }\right\rfloor + cn                 \\
+             & \leqslant 4 d{\left( \frac{ n }{ 2 }\right)}^{2} - cn          \\
+             & = dn^{2} - cn
+        \end{aligned}
+    \end{equation}
+
+    再证明 $T(n) = \Omega \left( n^{2}\right)$. 恰当选择常数
+    $\frac{ c }{ 5 } \geqslant d > 0$, 有
+    $T(n) \geqslant d \left( n^{2} + 4n\right)$. 假定此下界对所有正数 $m < n$
+    都成立, 将其代入递归式得到
+    \begin{equation}
+        \begin{aligned}
+            T(n)
+             & \geqslant 4d \left(
+            {\left\lfloor \frac{ n }{ 2 }\right\rfloor}^{2} +
+            4 \left\lfloor \frac{ n }{ 2 }\right\rfloor \right) + cn  \\
+             & \geqslant 4d {\left( \frac{ n - 1 }{ 2 }\right)}^{2} +
+            8d(n - 1) + cn                                            \\
+             & = d \left( n^{2} +4n\right) + 2dn + cn - 7d            \\
+             & \geqslant d \left( n^{2} +4n\right) + cn - 5d          \\
+             & \geqslant d \left( n^{2} + 4n\right)
+        \end{aligned}
+    \end{equation}
+\end{solution}
+
+%%%% Problem 4.5-2 %%%%
+\problempart{5}
+\problemnumber{2}
+\begin{problem}
+Caesar 教授项设计一个渐进快于 Strassen 算法的矩阵相乘算法. 他的算法使用分治方法,
+将每个矩阵分解为 $\frac{ n }{ 4 } \times \frac{ n }{ 4 }$ 的子矩阵, 分解和合并步
+骤共花费 $\Theta \left( n^{2}\right)$ 时间. 他需要确定, 他的算法需要创建多少个子
+问题, 才能击败 Strassen 算法. 如果他的算法创建 $a$ 个子问题, 则描述运行时间
+$T(n)$ 的递归式为 $T(n) = aT \left( \frac{ n }{ 4 }\right) + \Theta(n^{2})$.
+Caesar 教授的算法如果要渐进快于 Strassen 算法, $a$ 的最大整数值应是多少?
+\end{problem}
+\begin{solution}
+    当 $a$ 取最大值时, 递归式显然适用于主方法的情况一, 递归式的解为
+    \begin{equation}
+        T(n) = \Theta \left( n^{ \frac{ 1 }{ 2 }\lg n} \right) < \Theta
+        \left( n^{\lg 7}\right)
+    \end{equation}
+    解得 $a < 49$, 最大值整数值为 48.
+
+    当 $a$ 为 48 时, 对于常数 $\varepsilon = \frac{ 1 }{ 2 }\lg 48 - 2 > 0$, 有
+    $f(n) = \Theta\left( n^{2}\right) =
+        \Theta \left( n^{\log_{4} 48 - \varepsilon}\right)$, 满足主方法情况一的
+    条件.
+\end{solution}
+
+%%%% Problem 4.5-4 %%%%
+\problemnumber{4}
+\begin{problem}
+主方法能应用于递归式 $T(n) = 4T \left( \frac{ n }{ 2 }\right) + n^{2}\lg n$ 吗?
+请说明为什么可以或者为什么不可以. 给出这个递归式的一个渐进上界.
+\end{problem}
+\begin{solution}
+    可以应用 (如果是顾老师 PPT 上的主方法). 递归式满足 $f(n) = \Theta
+        \left( n^{\log_{2} 4}\lg^{1} n \right)$, 由主方法情况二可得
+    $T(n) = \Theta \left( n^{2}\lg^{2} n\right)$.
+\end{solution}
+
+% \begin{algo}
+%     \caption{INSERTION-SORT($A$)}
+%     \label{algo:insertion-sort}
+%     \For{$j = 2$ \textbf{to} $A.length$}{
+%         $key = A[j]$\;
+%         \tcp{Insert $A[j]$ into the sorted sequence $A[1..j-1]$.}
+%         $i = j - 1$\;
+%         \While{$i > 0$ and $A[i] > key$}{
+%             $A[i+1] = A[i]$\;
+%             $i = i - 1$\;
+%         }
+%         $A[i+1] = key$\;
+%     }
+% \end{algo}
+
+\end{document}
