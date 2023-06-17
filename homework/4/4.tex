@@ -1,0 +1,258 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{编译原理和技术}    % Replace (Course Name) with the course name.
+\hwnum{4}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{习题}
+\solutionname{解:}
+\problemchap{3}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 1.84cm,
+    bottom = 1.84cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+\usepackage{multirow}
+
+\begin{document}
+%%%% Problem 4 (b) %%%%
+\problemnumber{4}
+\begin{problem}
+文法
+\begin{equation}
+    R \to R \text{ `|' } R \mid R R \mid R* \mid (R) \mid a \mid b
+\end{equation}
+产生字母表 $\{a, b\}$ 上所有不含 $\varepsilon$ 的正规式. 注意, 第一条竖线加了引
+号, 它是正规式的或运算符, 而不是文法产生式右部各选择之间的分割符, 另外 $*$
+在这是一个普通的终结符. 该文法是二义的.
+\begin{parts}
+    \setcounter{enumi}{1}
+    \part\label{prob:4.b}
+    为该文法写一个等价的非二义文法. 它给予算符 $*$, 连接和 $\mid$ 的优先级
+    和结合性同 2.2 节中定义的一致.
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:4.b} 如下
+    \begin{align}
+        R & \to R \text{ `|' } S \mid S   \\
+        S & \to ST \mid T                 \\
+        T & \to T* \mid (R) \mid a \mid b
+    \end{align}
+\end{solution}
+
+%%%% Problem 10 %%%%
+\problemnumber{10}
+\begin{problem}
+构造下面文法的 LL\.(1) 分析表.
+\begin{equation}
+    \begin{aligned}
+        D & \to TL                                \\
+        T & \to \textbf{int} \mid \textbf{real}   \\
+        L & \to \textbf{id } R                    \\
+        R & \to \textbf{, id } R \mid \varepsilon
+    \end{aligned}
+\end{equation}
+\end{problem}
+\begin{solution}
+    各个非终结符的开始符号集合和后继符号集合为
+    \begin{equation}
+        \begin{aligned}
+            FIRST(D)  & = FIRST(T) = \{\textbf{int}, \textbf{real}\} \\
+            FIRST(L)  & = \{\textbf{id}\}                            \\
+            FIRST(R)  & = \{\textbf{,} , \varepsilon\}               \\
+            FOLLOW(D) & = FOLLOW(L) = FOLLOW(R) = \{\$\}             \\
+            FOLLOW(T) & = FIRST(L) = \{\textbf{id}\}                 \\
+        \end{aligned}
+    \end{equation}
+    构造出 LL\.(1) 分析表如下
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|ccccc}
+            \hline
+            \multirow{2}{*}{非终结符} & \multicolumn{5}{c}{输入符号}                                                                                                                                                                            \\ \cline{2-6}
+                                      & \multicolumn{1}{c|}{\textbf{int}}         & \multicolumn{1}{c|}{\textbf{real}}         & \multicolumn{1}{c|}{\textbf{id}}         & \multicolumn{1}{c|}{\textbf{,}}               & \$                  \\ \hline
+            $D$                       & \multicolumn{1}{c|}{$D \to TL$}           & \multicolumn{1}{c|}{$D \to TL$}            & \multicolumn{1}{c|}{}                    & \multicolumn{1}{c|}{}                         &                     \\ \hline
+            $T$                       & \multicolumn{1}{c|}{$T \to \textbf{int}$} & \multicolumn{1}{c|}{$T \to \textbf{real}$} & \multicolumn{1}{c|}{}                    & \multicolumn{1}{c|}{}                         &                     \\ \hline
+            $L$                       & \multicolumn{1}{c|}{}                     & \multicolumn{1}{c|}{}                      & \multicolumn{1}{c|}{$L \to \textbf{id}$} & \multicolumn{1}{c|}{}                         &                     \\ \hline
+            $R$                       & \multicolumn{1}{c|}{}                     & \multicolumn{1}{c|}{}                      & \multicolumn{1}{c|}{}                    & \multicolumn{1}{c|}{$R \to \textbf{, id } R$} & $R \to \varepsilon$ \\ \hline
+        \end{tabular}
+    \end{table}
+\end{solution}
+
+%%%% Problem 12 %%%%
+\problemnumber{12}
+\begin{problem}
+下面的文法是否为 LL\.(1) 文法, 说明理由.
+\begin{equation}
+    \begin{aligned}
+        S & \to AB \mid PQx         \\
+        A & \to xy                  \\
+        B & \to bc                  \\
+        P & \to dP \mid \varepsilon \\
+        Q & \to aQ \mid \varepsilon
+    \end{aligned}
+\end{equation}
+\end{problem}
+\begin{solution}
+    该文法不是 LL\.(1) 文法. 理由如下:
+
+    因为 $x\in FIRST(A)$, 所以 $x\in FIRST(AB)$. 而对于 $PQx$, 因为
+    $\varepsilon\in FIRST(P)$, $\varepsilon\in FIRST(Q)$, 所以 $x\in FIRST(PQ)$,
+    因此有 $x\in FIRST(AB) \cap FIRST(PQx) \implies FIRST(AB) \cap FIRST(PQx)
+        \neq \varnothing$, 故该文法不是 LL\.(1) 的.
+\end{solution}
+
+%%%% Problem 19 (b) %%%%
+\problemnumber{19}
+\begin{problem}
+考虑下面的文法:
+\begin{equation}
+    \label{eq:19.1}
+    \begin{aligned}
+        E & \to E + T \mid T      \\
+        T & \to T F \mid F        \\
+        F & \to F * \mid a \mid b
+    \end{aligned}
+\end{equation}
+\begin{parts}
+    \setcounter{enumi}{1}
+    \part\label{prob:19.b}
+    构造 LALR 分析表.
+\end{parts}
+\end{problem}
+\begin{solution}
+    拓广文法如下
+    \begin{equation}
+        \begin{aligned}
+            E' & \to E                 \\
+            E  & \to E + T \mid T      \\
+            T  & \to T F \mid F        \\
+            F  & \to F * \mid a \mid b
+        \end{aligned}
+    \end{equation}
+    首先构造 LR\.(1) 项目集规范族如下, 其中项目集标号前的箭头代表了它们在 DFA 之
+    中的转换关系.
+    \begin{equation}
+        \begin{aligned}
+            I_{0}:                      & E' \to \cdot E, \$                  & I_{0}\xrightarrow{T} I_{2}:                      & E \to T., + / \$                    \\
+                                        & E \to \cdot E + T, + / \$           &                                                  & T \to T \cdot F, + / a / b / \$     \\
+                                        & E \to \cdot T, + / \$               &                                                  & F \to \cdot F *, + / * / a / b / \$ \\
+                                        & T \to \cdot T F, + / a / b / \$     &                                                  & F \to \cdot a, + / * / a / b / \$   \\
+                                        & T \to \cdot F, + / a / b / \$       &                                                  & F \to \cdot b, + / * / a / b / \$   \\
+                                        & F \to \cdot F *, + / * / a / b / \$ & I_{0}, I_{6}\xrightarrow{F} I_{3}:               & T \to F \cdot, + / a / b / \$       \\
+                                        & F \to \cdot a, + / * / a / b / \$   &                                                  & F \to F \cdot *, + / * / a / b / \$ \\
+                                        & F \to \cdot b, + / * / a / b / \$   & I_{0}, I_{2}, I_{6}, I_{9}\xrightarrow{a} I_{4}: & F \to a \cdot, + / * / a / b / \$   \\
+            I_{0}\xrightarrow{E} I_{1}: & E' \to E \cdot, \$                  & I_{0}, I_{2}, I_{6}, I_{9}\xrightarrow{b} I_{5}: & F \to b \cdot, + / * / a / b / \$   \\
+                                        & E \to E \cdot + T, + / \$
+        \end{aligned}
+    \end{equation}
+    \begin{equation}
+        \begin{aligned}
+            I_{1}\xrightarrow{+} I_{6}:        & E \to E + \cdot T, + / \$           & I_{3}, I_{7}\xrightarrow{*} I_{8}: & F \to F* \cdot, + / * / a / b / \$    \\
+                                               & T \to \cdot T F, + / a / b / \$     & I_{6}\xrightarrow{T} I_{9}:        & E \to E + T \cdot, + / * / a / b / \$ \\
+                                               & T \to \cdot F, + / a / b / \$       &                                    & T \to T \cdot F, + / a / b / \$       \\
+                                               & F \to \cdot F *, + / * / a / b / \$ &                                    & F \to \cdot F *, + / * / a / b / \$   \\
+                                               & F \to \cdot a, + / * / a / b / \$   &                                    & F \to \cdot b, + / * / a / b / \$     \\
+                                               & F \to \cdot a, + / * / a / b / \$   &                                    & F \to \cdot b, + / * / a / b / \$     \\
+            I_{2}, I_{9}\xrightarrow{F} I_{7}: & T \to TF \cdot, + / a / b / \$                                                                                   \\
+                                               & F \to F \cdot *, + / * / a / b / \$
+        \end{aligned}
+    \end{equation}
+    可以看出 LR\.(1) 项目规范族中没有同心的项目集, 因此可直接构造 LALR 分析表.
+    先对产生式编号如下
+    \begin{equation}
+        \begin{aligned}
+            (1) & E \to E + T & \qquad  (5) & F \to F * \\
+            (2) & E \to T     & \qquad  (6) & F \to a   \\
+            (3) & T \to T F   & \qquad  (7) & F \to b   \\
+            (4) & T \to F     & \qquad
+        \end{aligned}
+    \end{equation}
+    构造出 LALR 分析表如下
+    \begin{table}[ht]
+        \centering
+        \caption{由文法~\ref{eq:19.1} 构造的 LALR 分析表.}
+        \label{tab:19.1}
+        \begin{tabular}{c|ccccc|ccc}
+            \hline
+            \multirow{2}{*}{状态} & \multicolumn{5}{c|}{动作} & \multicolumn{3}{c}{转移}                                         \\ \cline{2-9}
+                                  & $a$                       & $b$                      & +    & *    & \$    & $E$ & $T$ & $F$ \\ \hline
+            0                     & $s4$                      & $s5$                     &      &      &       & 1   & 2   & 3   \\ \hline
+            1                     &                           &                          & $s6$ &      & $acc$ &     &     &     \\ \hline
+            2                     & $s4$                      & $s5$                     & $r2$ &      & $r2$  &     &     & 7   \\ \hline
+            3                     & $r4$                      & $r4$                     & $r4$ & $s8$ & $r4$  &     &     &     \\ \hline
+            4                     & $r6$                      & $r6$                     & $r6$ & $r6$ & $r6$  &     &     &     \\ \hline
+            5                     & $r7$                      & $r7$                     & $r7$ & $r7$ & $r7$  &     &     &     \\ \hline
+            6                     & $s4$                      & $s5$                     &      &      &       &     & 9   & 3   \\ \hline
+            7                     & $r3$                      & $r3$                     & $r3$ & $s8$ & $r3$  &     &     &     \\ \hline
+            8                     & $r5$                      & $r5$                     & $r5$ & $r5$ & $r5$  &     &     &     \\ \hline
+            9                     & $s4$                      & $s5$                     & $r1$ &      & $r1$  &     &     & 7   \\ \hline
+        \end{tabular}
+    \end{table}
+\end{solution}
+\end{solution}
+
+%%%% Problem 27 (b) %%%%
+\problemnumber{27}
+\begin{problem}
+文法 $G$ 的产生式如下
+\begin{equation}
+    \begin{aligned}
+        S & \to I \mid R            \\
+        I & \to d \mid  Id          \\
+        R & \to WpF                 \\
+        W & \to Wd \mid \varepsilon \\
+        F & \to Fd \mid d
+    \end{aligned}
+\end{equation}
+\begin{parts}
+    \setcounter{enumi}{1}
+    \part\label{prob:27.b}
+    该文法是 LR\.(1) 文法吗? 为什么?
+\end{parts}
+\end{problem}
+\begin{solution}
+    拓广文法为
+    \begin{equation}
+        \begin{aligned}
+            S' & \to S                   \\
+            S  & \to I \mid R            \\
+            I  & \to d \mid  Id          \\
+            R  & \to WpF                 \\
+            W  & \to Wd \mid \varepsilon \\
+            F  & \to Fd \mid d
+        \end{aligned}
+    \end{equation}
+    可以构造出 $I_{0}$ 如下
+    \begin{equation}
+        \begin{aligned}
+            S' & \to \cdot S, \$       \\
+            S  & \to \cdot I, \$       \\
+            S  & \to \cdot R, \$       \\
+            I  & \to \cdot d, d / \$   \\
+            I  & \to \cdot I d, d / \$ \\
+            R  & \to \cdot W p F, \$   \\
+            W  & \to \cdot WpF, p / d  \\
+            W  & \to \cdot , p / d     \\
+        \end{aligned}
+    \end{equation}
+    只关注这两个项目: $[I \to \cdot d, d]$ 和 $[W \to \cdot, d]$. 在分析器还未读
+    入符号, 面临 $d$ 的情况下, 前者表明分析器可以移进 $d$; 后者表明分析器可以按
+    $W\to \varepsilon$ 进行规约. 因此出现了移进--规约冲突, 所以文法不是 LR\.(1)
+    的.
+\end{solution}
+
+
+\end{document}

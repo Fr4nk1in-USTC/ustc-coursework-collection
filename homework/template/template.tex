@@ -1,0 +1,53 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{编译原理和技术}    % Replace (Course Name) with the course name.
+\hwnum{0}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{习题}
+\solutionname{解:}
+\problemchap{0}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 2.54cm,
+    bottom = 2.54cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+
+\begin{document}
+
+\begin{problem}
+问题描述
+\end{problem}
+
+\begin{solution}
+    解答
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q1) {$q_1$};
+            \node[state, accepting, right of=q1] (q2) {$q_2$};
+            \node[state, right of=q2] (q3) {$q_3$};
+            \draw
+            (q1) edge[loop above] node{0} (q1)
+            (q1) edge[above] node{1} (q2)
+            (q2) edge[loop above] node{1} (q2)
+            (q2) edge[bend left, above] node{0} (q3)
+            (q3) edge[bend left, below] node{0, 1} (q2);
+        \end{tikzpicture}
+        \caption{Example Nodes}
+        \label{fig:nodes}
+    \end{figure}
+\end{solution}
+
+\end{document}

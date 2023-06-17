@@ -1,0 +1,183 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{编译原理和技术}    % Replace (Course Name) with the course name.
+\hwnum{5}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{习题}
+\solutionname{解:}
+\problemchap{4}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 2.54cm,
+    bottom = 2.54cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+\usepackage{booktabs}
+
+\begin{document}
+%%%% Problem 4.3 %%%%
+\problemnumber{3}
+\begin{problem}
+\label{prob:4.3}
+为文法
+\begin{equation}
+    \begin{aligned}
+        S & \to (L) \mid a  \\
+        L & \to L, S \mid S
+    \end{aligned}
+\end{equation}
+\begin{parts}
+    \part\label{prob:4.3.a} 写一个语法制导定义, 它输出括号的对数.
+    \part\label{prob:4.3.b} 写一个语法制导定义, 它输出括号嵌套的最大深度.
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:4.3.a} 拓广文法, 加上新的开始符号 $S'$ 以及产生式 $S' \to S$, 得到
+    输出括号对数的语法制导定义如下:
+    \begin{table}[htbp]
+        \centering
+        \caption{输出括号对数的语法制导定义}
+        \begin{tabular}{ll}
+            \toprule
+            产生式         & 语义规则                  \\ \midrule
+            $S' \to S$     & print($S.num$)            \\
+            $S \to (L)$    & $S.num = L.num + 1$       \\
+            $S \to a$      & $S.num = 0$               \\
+            $L \to L_1, S$ & $L.num = L_1.num + S.num$ \\
+            $L \to S$      & $L.num = S.num$           \\ \bottomrule
+        \end{tabular}
+    \end{table}
+
+    \ref{prob:4.3.b} 沿用~\ref{prob:4.3.a} 中的拓广文法, 得到输出括号嵌套最大深
+    度的语法制导定义如下:
+    \begin{table}[htbp]
+        \centering
+        \caption{输出括号嵌套最大深度的语法制导定义}
+        \begin{tabular}{ll}
+            \toprule
+            产生式         & 语义规则                                        \\ \midrule
+            $S' \to S$     & print($S.max$)                                  \\
+            $S \to (L)$    & $S.max = L.max + 1$                             \\
+            $S \to a$      & $S.max = 0$                                     \\
+            $L \to L_1, S$ & $L.max = L_{1}.max > S.max ? L_{1}.max : S.max$ \\
+            $L \to S$      & $L.max = S.max$                                 \\ \bottomrule
+        \end{tabular}
+    \end{table}
+\end{solution}
+
+%%%% Problem 4.9 (b) %%%%
+\problemnumber{9}
+\begin{problem}
+用 $S$ 的综合属性 $val$ 给出下面文法中 $S$ 产生二进制数的值. 例如, 输入 101.101
+时, $S.val = 5.625$.
+\begin{equation}
+    \begin{aligned}
+        S & \to L.L \mid L \\
+        L & \to LB \mid B  \\
+        B & \to 0 \mid 1
+    \end{aligned}
+\end{equation}
+\begin{parts}
+    \setcounter{enumi}{1}
+    \part\label{prob:4.9.b} 用 $L$ 属性定义决定 $S.val$. 在该定义中, $B$ 的唯一
+    综合属性是 $c$ (还需要继承属性), 它给出由 $B$ 产生的位对最终值的贡献. 例如,
+    101.101 的最前一位和最后一位对值 5.625 的贡献分别是 4 和 0.125.
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:4.9.b} 首先将文法修改为如下等价的文法:
+    \begin{equation}
+        \begin{aligned}
+            S & \to L.R \mid L \\
+            L & \to LB \mid B  \\
+            R & \to BR \mid B  \\
+            B & \to 0 \mid 1
+        \end{aligned}
+    \end{equation}
+    求 $S$ 产生的二进制数的值的语法制导定义如下, 其中 $i$ 是继承属性:
+    \begin{table}[htbp]
+        \centering
+        \caption{求 $S$ 产生的二进制数的值的语法制导定义}
+        \begin{tabular}{ll}
+            \toprule
+            产生式         & 语义规则                                                               \\ \midrule
+            $S \to L.R$    & $S.val = L.val + R.val \quad L.i = 1 \quad R.i = 1 / 2$                \\
+            $S \to L$      & $S.val = L.val \quad L.i = 1$                                          \\
+            $L \to L_{1}B$ & $L.val = L_{1}.val + B.c \quad L_{1}.i = L.i \times 2 \quad B.i = L.i$ \\
+            $L \to B$      & $L.val = B.c \quad B.i = L.i$                                          \\
+            $R \to BR_{1}$ & $R.val = B.c + R_{1}.val \quad B.i = R.i \quad R_{1}.i = R.i / 2$      \\
+            $R \to B$      & $R.val = B.c \quad B.i = R.i$                                          \\
+            $B \to 0$      & $B.c = 0$                                                              \\
+            $B \to 1$      & $B.c = B.i$                                                            \\ \bottomrule
+        \end{tabular}
+    \end{table}
+\end{solution}
+
+%%%% Problem 4.12 %%%%
+\problemnumber{12}
+\begin{problem}
+文法如下:
+\begin{equation}
+    \begin{aligned}
+        S & \to (L) \mid a  \\
+        L & \to L, S \mid S
+    \end{aligned}
+\end{equation}
+\begin{parts}
+    \part\label{prob:4.12.a} 写一个翻译方案, 它输出每个 $a$ 的嵌套深度. 例如, 对
+    于句子 $(a, (a, a))$, 输出的结果是 1 \ 2 \ 2.
+    \part\label{prob:4.12.b} 写一个翻译方案, 它打印出每个 $a$ 在句子中是第几个字
+    符. 例如, 当句子是 $(a, (a, (a, a), (a)))$ 时, 打印的结果是 2 \ 5 \ 8 \ 10
+    \ 14.
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:4.12.a} 使用\hyperref[prob:4.3]{习题 4.3} 中的拓广文法, $depth$
+    是继承属性, 翻译方案如下
+    \begin{equation}
+        \begin{aligned}
+            S' & \to &  &        &  & \{S.depth = 0;\}                    \\
+               &     &  & S                                               \\
+            S  & \to &  & (      &  & \{L.depth = S.depth + 1;\}          \\
+               &     &  & L)                                              \\
+            S  & \to &  & a      &  & \{\operatorname{print} (S.depth);\} \\
+            L  & \to &  &        &  & \{L_{1}.depth = L.depth;\}          \\
+               &     &  & L_{1}, &  & \{ S.depth = L.depth;\}             \\
+               &     &  & S                                               \\
+            L  & \to &  &        &  & \{S.depth = L.depth;\}              \\
+               &     &  & S
+        \end{aligned}
+    \end{equation}
+
+    \ref{prob:4.12.b} 使用\hyperref[prob:4.3]{习题 4.3} 中的拓广文法, $begin$ 是
+    继承属性, $end$ 是综合属性, 分别表示文法符号在句子中的起始位置和接下来的字符
+    的位置, 翻译方案如下
+    \begin{equation}
+        \begin{aligned}
+            S' & \to &  &        &  & \{S.begin = 1\}                                          \\
+               &     &  & S                                                                    \\
+            S  & \to &  & (      &  & \{L.begin = S.begin + 1;\}                               \\
+               &     &  & L)     &  & \{S.end = L.end + 1;\}                                   \\
+            S  & \to &  & a      &  & \{S.end = S.begin + 1; \operatorname{print} (S.begin);\} \\
+            L  & \to &  &        &  & \{L_{1}.begin = L.begin;\}                               \\
+               &     &  & L_{1}, &  & \{S.begin = L_{1}.end + 1;\}                             \\
+               &     &  & S      &  & \{L.end = L_{1}.end;\}                                   \\
+            L  & \to &  &        &  & \{S.begin = L.begin;\}                                   \\
+               &     &  & S      &  & \{L.end = S.end;\}
+        \end{aligned}
+    \end{equation}
+
+\end{solution}
+
+\end{document}

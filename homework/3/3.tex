@@ -1,0 +1,276 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{编译原理和技术 B}    % Replace (Course Name) with the course name.
+\hwnum{3}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{习题}
+\solutionname{解:}
+\problemchap{3}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 2.54cm,
+    bottom = 2.54cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+\usepackage{multirow}
+
+\begin{document}
+%%%% Problem 17 %%%%
+\problemnumber{17}
+\begin{problem}
+给出接受文法
+\begin{equation}
+    \label{eq:17.1}
+    S \to (L) \mid a \qquad L \to L, S \mid S
+\end{equation}
+的活前缀的一个 DFA\@.
+\end{problem}
+\begin{solution}
+    首先对文法进行拓广, $S'$ 是拓广文法的开始符号:
+    \begin{equation}
+        \begin{aligned}
+            S' & \to S           \\
+            S  & \to (L) \mid a  \\
+            L  & \to L, S \mid S
+        \end{aligned}
+    \end{equation}
+    然后计算文法的 LR (0) 项目集规范族:
+    \begin{equation}
+        \begin{aligned}
+            I_{0} : & S' \to \cdot S    & \qquad & I_{3} : &  & S  \to a \cdot    \\
+                    & S  \to \cdot (L)  & \qquad & I_{4} : &  & S  \to (L \cdot ) \\
+                    & S  \to \cdot a    & \qquad &         &  & L  \to L \cdot, S \\
+            I_{1} : & S' \to S \cdot    & \qquad & I_{5} : &  & L  \to S \cdot    \\
+            I_{2} : & S  \to (\cdot L)  & \qquad & I_{6} : &  & S  \to (L) \cdot  \\
+                    & L  \to \cdot L, S & \qquad & I_{7} : &  & L  \to L, \cdot S \\
+                    & L  \to \cdot S    & \qquad &         &  & S  \to \cdot (L)  \\
+                    & S  \to \cdot (L)  & \qquad &         &  & S  \to \cdot a    \\
+                    & S  \to \cdot a    & \qquad & I_{8} : &  & L  \to L, S \cdot
+        \end{aligned}
+    \end{equation}
+    可以构造出 DFA 如下:
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[node distance=2.1cm]
+            \node[state]             (0) {$I_{0}$};
+            \node[left of=0]         (n) {};
+            \node[state, right of=0] (1) {$I_{1}$};
+            \node[state, below of=1] (2) {$I_{2}$};
+            \node[state, below of=0] (3) {$I_{3}$};
+            \node[state, right of=2] (4) {$I_{4}$};
+            \node[state, right of=1] (5) {$I_{5}$};
+            \node[state, right of=4] (6) {$I_{6}$};
+            \node[state, below of=4] (7) {$I_{7}$};
+            \node[state, right of=7] (8) {$I_{8}$};
+
+            \draw
+            (n) edge node[above] {开始} (0)
+            (0) edge node[above] {$S$} (1)
+            (0) edge node[above] {$($} (2)
+            (0) edge node[left]  {$a$} (3)
+            (2) edge[loop below] node[below] {$($} (2)
+            (2) edge node[above] {$a$} (3)
+            (2) edge node[above] {$L$} (4)
+            (2) edge node[above] {$S$} (5)
+            (4) edge node[above] {$)$} (6)
+            (4) edge node[left]  {$,$} (7)
+            (7) edge node[above] {$S$} (8)
+            (7) edge node[below] {$($} (2)
+            (7) edge[bend left] node[below] {$a$} (3)
+            ;
+        \end{tikzpicture}
+        \caption{接受文法~\ref{eq:17.1} 的活前缀的一个 DFA\@.}
+        \label{fig:17.1}
+    \end{figure}
+\end{solution}
+
+%%%% Problem 19 (a) %%%%
+\problemnumber{19}
+\begin{problem}
+考虑下面的文法:
+\begin{equation}
+    \label{eq:19.1}
+    \begin{aligned}
+        E & \to E + T \mid T      \\
+        T & \to T F \mid F        \\
+        F & \to F * \mid a \mid b
+    \end{aligned}
+\end{equation}
+\begin{parts}
+    \part\label{prob:19.a}
+    为此文法构造 SLR 分析表.
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:19.a} 拓广文法如式~\ref{eq:19.1}, 其 LR (0) 的项目集规范族如
+    式~\ref{eq:19.2}.
+    \begin{equation}
+        \label{eq:19.1}
+        \begin{aligned}
+            E' & \to E                 \\
+            E  & \to E + T \mid T      \\
+            T  & \to T F \mid F        \\
+            F  & \to F * \mid a \mid b
+        \end{aligned}
+    \end{equation}
+    \begin{equation}
+        \label{eq:19.2}
+        \begin{aligned}
+            I_{0} : & E' \to \cdot E     & \qquad  I_{4} : & F  \to a \cdot     \\
+                    & E  \to \cdot E + T & \qquad  I_{5} : & F  \to b \cdot     \\
+                    & E  \to \cdot T     & \qquad  I_{6} : & E  \to E + \cdot T \\
+                    & T  \to \cdot T F   & \qquad          & T  \to \cdot T F   \\
+                    & T  \to \cdot F     & \qquad          & T  \to \cdot F     \\
+                    & F  \to \cdot F *   & \qquad          & F  \to \cdot F *   \\
+                    & F  \to \cdot a     & \qquad          & F  \to \cdot a     \\
+                    & F  \to \cdot b     & \qquad          & F  \to \cdot b     \\
+            I_{1} : & E' \to E \cdot     & \qquad  I_{7} : & T  \to T F \cdot   \\
+                    & E  \to E \cdot + T & \qquad          & F  \to F \cdot *   \\
+            I_{2} : & E  \to T \cdot     & \qquad  I_{8} : & F  \to F * \cdot   \\
+                    & T  \to T \cdot F   & \qquad  I_{9} : & E  \to E + T \cdot \\
+                    & F  \to \cdot F *   & \qquad          & T  \to T \cdot F   \\
+                    & F  \to \cdot a     & \qquad          & F  \to \cdot F *   \\
+                    & F  \to \cdot b     & \qquad          & F  \to \cdot a     \\
+            I_{3} : & T  \to F \cdot     & \qquad          & F  \to \cdot b     \\
+                    & F  \to F \cdot *
+        \end{aligned}
+    \end{equation}
+    给原文法的产生式作编号如式~\ref{eq:19.3}, 非终结符的 $FOLLOW$ 集合如
+    式~\ref{eq:19.4}. 构造出 SLR 分析表如表~\ref{tab:19.1}.
+    \begin{equation}
+        \label{eq:19.3}
+        \begin{aligned}
+            (1) & E \to E + T & \qquad  (5) & F \to F * \\
+            (2) & E \to T     & \qquad  (6) & F \to a   \\
+            (3) & T \to T F   & \qquad  (7) & F \to b   \\
+            (4) & T \to F     & \qquad
+        \end{aligned}
+    \end{equation}
+    \begin{equation}
+        \label{eq:19.4}
+        \begin{aligned}
+            FOLLOW(E) & = FOLLOW(E') = \{+, \$ \} \\
+            FOLLOW(T) & = \{a, b, +, \$\}         \\
+            FOLLOW(F) & = \{a, b, +, *, \$ \}
+        \end{aligned}
+    \end{equation}
+    \vspace*{-2em}
+    \begin{table}[ht]
+        \centering
+        \caption{由文法~\ref{eq:19.1} 构造的 SLR 分析表.}
+        \label{tab:19.1}
+        \begin{tabular}{c|ccccc|ccc}
+            \hline
+            \multirow{2}{*}{状态} & \multicolumn{5}{c|}{动作} & \multicolumn{3}{c}{转移}                                         \\ \cline{2-9}
+                                  & $a$                       & $b$                      & +    & *    & \$    & $E$ & $T$ & $F$ \\ \hline
+            0                     & $s4$                      & $s5$                     &      &      &       & 1   & 2   & 3   \\ \hline
+            1                     &                           &                          & $s6$ &      & $acc$ &     &     &     \\ \hline
+            2                     & $s4$                      & $s5$                     & $r2$ &      & $r2$  &     &     & 7   \\ \hline
+            3                     & $r4$                      & $r4$                     & $r4$ & $s8$ & $r4$  &     &     &     \\ \hline
+            4                     & $r6$                      & $r6$                     & $r6$ & $r6$ & $r6$  &     &     &     \\ \hline
+            5                     & $r7$                      & $r7$                     & $r7$ & $r7$ & $r7$  &     &     &     \\ \hline
+            6                     & $s4$                      & $s5$                     &      &      &       &     & 9   & 3   \\ \hline
+            7                     & $r3$                      & $r3$                     & $r3$ & $s8$ & $r3$  &     &     &     \\ \hline
+            8                     & $r5$                      & $r5$                     & $r5$ & $r5$ & $r5$  &     &     &     \\ \hline
+            9                     & $s4$                      & $s5$                     & $r1$ &      & $r1$  &     &     & 7   \\ \hline
+        \end{tabular}
+    \end{table}
+\end{solution}
+\vspace*{-2em}
+
+%%%% Problem 21 (a) %%%%
+\problemnumber{21}
+\begin{problem}
+\begin{parts}
+    \part\label{prob:21.a}
+    证明下面文法:
+    \begin{equation}
+        \begin{aligned}
+            S & \to AaAb \mid BbBa \\
+            A & \to \varepsilon    \\
+            B & \to \varepsilon
+        \end{aligned}
+    \end{equation}
+    是 LL(1) 文法, 但不是 SLR(1) 文法.
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:21.a} 先证明它是 LL(1) 文法. 首先计算 $FIRST$ 和 $FOLLOW$ 集合:
+    \begin{equation}
+        \begin{aligned}
+            FIRST(S)    & = \{a, b\}        & FOLLOW(S) & = \{\$\}   \\
+            FIRST(A)    & = \{\varepsilon\} & FOLLOW(A) & = \{a, b\} \\
+            FIRST(B)    & = \{\varepsilon\} & FOLLOW(B) & = \{a, b\} \\
+            FIRST(AaAb) & = \{a\}                                    \\
+            FIRST(BbBa) & = \{b\}
+        \end{aligned}
+    \end{equation}
+    因为文法中只有 $S \to AaAb \mid BbBa$ 这个选择, 且 $FIRST(AaAb) \cap FIRST
+        (BbBa) = \varnothing$, $FIRST(AaAb) \cap FOLLOW(S) = \varnothing$,
+    $FIRST(BbBa) \cap FOLLOW(S) = \varnothing$, 所以它是 LL(1) 文法.
+
+    然后证明它不是 SLR(1) 文法. 拓广文法为:
+    \begin{equation}
+        \begin{aligned}
+            S' & \to S              \\
+            S  & \to AaAb \mid BbBa \\
+            A  & \to \varepsilon    \\
+            B  & \to \varepsilon
+        \end{aligned}
+    \end{equation}
+    其 LR(0) 的项目集规范族为:
+    \begin{equation}
+        \begin{aligned}
+            I_{0} : & S' \to \cdot S           \\
+                    & S  \to \cdot AaAb        \\
+                    & S  \to \cdot BbBa        \\
+                    & A  \to \cdot \varepsilon \\
+                    & B  \to \cdot \varepsilon \\
+            I_{1} : & S' \to S \cdot           \\
+            I_{2} : & S  \to A \cdot aAb       \\
+            I_{3} : & S  \to B \cdot bBa       \\
+            I_{4} : & A  \to \varepsilon \cdot \\
+                    & B  \to \varepsilon \cdot \\
+            I_{6} : & S  \to Aa \cdot Ab       \\
+            I_{7} : & S  \to Bb \cdot Ba       \\
+            \vdots  &
+        \end{aligned}
+    \end{equation}
+    尝试构造 SLR(1) 分析表, $I_{4}$ 中有 $A \to \varepsilon \cdot$, 则对
+    $FOLLOW(A) = \{a, b\}$ 中的 $a$ 和 $b$, 置 $action[4, a] = action[4, b] =
+        r3$; 但同时 $I_{4}$ 中也有 $B \to \varepsilon \cdot$, 则对 $FOLLOW(B) =
+        \{a, b\}$ 中的 $a$ 和 $b$, 置 $action[4, a] = action[4, b] = r4$, 这样就
+    出现了规约--规约冲突. 因此该文法不是 SLR(1) 文法.
+\end{solution}
+
+
+
+% \begin{figure}[ht]
+%     \centering
+%     \begin{tikzpicture}
+%         \node[state, initial] (q1) {$q_1$};
+%         \node[state, accepting, right of=q1] (q2) {$q_2$};
+%         \node[state, right of=q2] (q3) {$q_3$};
+%         \draw
+%         (q1) edge[loop above] node{0} (q1)
+%         (q1) edge[above] node{1} (q2)
+%         (q2) edge[loop above] node{1} (q2)
+%         (q2) edge[bend left, above] node{0} (q3)
+%         (q3) edge[bend left, below] node{0, 1} (q2);
+%     \end{tikzpicture}
+%     \caption{Example Nodes}
+%     \label{fig:nodes}
+% \end{figure}
+
+\end{document}

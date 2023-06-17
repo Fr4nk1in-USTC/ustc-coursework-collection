@@ -1,0 +1,362 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{编译原理和技术 B}    % Replace (Course Name) with the course name.
+\hwnum{1}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{}
+\solutionname{解:}
+\problemchap{2}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 2.54cm,
+    bottom = 2.54cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+\usepackage{multirow}
+
+\allowdisplaybreaks[4]
+
+\begin{document}
+%%%% Problem 2.1 (a) %%%%
+\begin{problem}
+从下列每种语言的参考手册确定它们形成输入字母表的字符集 (不包括那些只可以出现在
+字符串或注释中的字符).
+\begin{parts}[a]
+    \part\label{prob:2.1.a}
+    C
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:2.1.a}
+    从 \textit{C: A Reference Manual} 第五版第一部分第 2.1 节可得到形成 C 语言
+    输入字母表的字符集包括
+    \begin{itemize}
+        \item 52 个大小写拉丁字母;
+        \item 10 个阿拉伯数字;
+        \item 空格;
+        \item 水平制表符 HT, 垂直制表符 VT 和换页符 FF\@;
+        \item 29 个特殊字符.
+    \end{itemize}
+    所以 C 语言输入字母表的字符集为 \{ \texttt{a}, \texttt{b}, \texttt{c},
+    \texttt{d}, \texttt{e}, \texttt{f}, \texttt{g}, \texttt{h}, \texttt{i},
+    \texttt{j}, \texttt{k}, \texttt{l}, \texttt{m}, \texttt{n}, \texttt{o},
+    \texttt{p}, \texttt{q}, \texttt{r}, \texttt{s}, \texttt{t}, \texttt{u},
+    \texttt{v}, \texttt{w}, \texttt{x}, \texttt{y}, \texttt{z}, \texttt{A},
+    \texttt{B}, \texttt{C}, \texttt{D}, \texttt{E}, \texttt{F}, \texttt{G},
+    \texttt{H}, \texttt{I}, \texttt{J}, \texttt{K}, \texttt{L}, \texttt{M},
+    \texttt{N}, \texttt{O}, \texttt{P}, \texttt{Q}, \texttt{R}, \texttt{S},
+    \texttt{T}, \texttt{U}, \texttt{V}, \texttt{W}, \texttt{X}, \texttt{Y},
+    \texttt{Z}, \texttt{0}, \texttt{1}, \texttt{2}, \texttt{3}, \texttt{4},
+    \texttt{5}, \texttt{6}, \texttt{7}, \texttt{8}, \texttt{9}, \texttt{!},
+    \texttt{"}, \texttt{\#}, \texttt{\%}, \texttt{\&}, \texttt{'}, \texttt{(},
+    \texttt{)}, \texttt{*}, \texttt{+}, \texttt{,}, \texttt{-}, \texttt{.},
+    \texttt{/}, \texttt{:}, \texttt{;}, \texttt{<}, \texttt{=}, \texttt{>},
+    \texttt{?}, \texttt{[}, \texttt{\textbackslash}, \texttt{]}, \texttt{\^{}},
+    \texttt{\_}, \texttt{\{}, \texttt{|}, \texttt{\}}, \texttt{\textasciitilde},
+    空格, 水平制表符 HT, 垂直制表符 VT, 换页符 FF \}
+\end{solution}
+
+%%%% Problem 2.3 (b) %%%%
+\problemnumber{3}
+\begin{problem}
+叙述由下列正规式描述的语言.
+\begin{parts}[a]
+    \setcounter{enumi}{1}
+    \part\label{prob:2.3.b}
+    ${((\varepsilon | 0)1^{*})}^{*}$
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:2.3.b}
+    因为 $\{\varepsilon, 0, 1\}\subset L((\varepsilon|0)1^{*})$, 而显然
+    $L({((\varepsilon|0)1^{*})}^{*}) \subseteq L({(0 | 1)}^{*})$, 所以有
+    $L({((\varepsilon|0)1^{*})}^{*}) = L({(0 | 1)}^{*})$. 即 ${((\varepsilon |
+                0)1^{*})}^{*}$ 表示由 0 和 1 构成的所有串的集合, 包括空串.
+\end{solution}
+
+%%%% Problem 2.4 (b),(i) %%%%
+\begin{problem}
+为下列语言写出正规定义.
+\begin{parts}[a]
+    \setcounter{enumi}{1}
+    \part\label{prob:2.4.b}
+    按字典序排列的所有字母串.
+    \setcounter{enumi}{8}
+    \part\label{prob:2.4.i}
+    字母表 $\{a, b\}$ 上, $a$ 不会相邻出现的所有串.
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:2.4.b}
+    $answer\to A^{*}a^{*}B^{*}b^{*}\cdots Z^{*}z^{*}$
+
+    \ref{prob:2.4.i}
+    $answer\to a?{\left( b | ba\right)}^{*}$
+
+\end{solution}
+
+%%%% Problem 2.7 (c) %%%%
+\problemnumber{7}
+\begin{problem}
+用算法 2.4 为下列正规式构造不确定有限自动机, 给出它们处理输入串 $ababbab$ 的
+状态转换序列.
+\begin{parts}[a]
+    \setcounter{enumi}{2}
+    \part\label{prob:2.7.c}
+    ${((\varepsilon | a)b^{*})}^{*}$
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:2.7.c}
+    不确定有限自动机如下图~\ref{fig:NFA-2.7.c}, 状态转换序列为 $0\to 1\to 2\to
+        3\to 6\to 7\to 8\to 9\to 1\to 2\to 3\to 6\to 7\to 8\to 7\to 8\to 9\to 1
+        \to 2\to 3\to 6\to 7\to 8\to 9\to 10$.
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}
+            \node[state]                          (0)  {$0$};
+            \node[left of=0, node distance=1.5cm] (n)  {};
+            \node[state, right of=0]              (1)  {$1$};
+            \node[state, above right of=1]        (2)  {$2$};
+            \node[state, right of=2]              (3)  {$3$};
+            \node[state, below right of=1]        (4)  {$4$};
+            \node[state, right of=4]              (5)  {$5$};
+            \node[state, above right of=5]        (6)  {$6$};
+            \node[state, right of=6]              (7)  {$7$};
+            \node[state, right of=7]              (8)  {$8$};
+            \node[state, right of=8]              (9)  {$9$};
+            \node[state, accepting, right of=9]   (10) {$10$};
+
+            \draw
+            (n) edge                    node[above] {开始}          (0)
+            (0) edge                    node[above] {$\varepsilon$} (1)
+            (0) edge[bend right=40]     node[above] {$\varepsilon$} (10)
+            (1) edge                    node[above] {$\varepsilon$} (2)
+            (1) edge                    node[above] {$\varepsilon$} (4)
+            (2) edge                    node[above] {$a$}           (3)
+            (3) edge                    node[above] {$\varepsilon$} (6)
+            (4) edge                    node[above] {$\varepsilon$} (5)
+            (5) edge                    node[above] {$\varepsilon$} (6)
+            (6) edge                    node[above] {$\varepsilon$} (7)
+            (6) edge[bend right=40]     node[above] {$\varepsilon$} (9)
+            (7) edge[bend right=40]     node[above] {$b$}           (8)
+            (8) edge[bend right=40]     node[above] {$\varepsilon$} (7)
+            (8) edge                    node[above] {$\varepsilon$} (9)
+            (9) edge[bend right=80]     node[above] {$\varepsilon$} (1)
+            (9) edge                    node[above] {$\varepsilon$} (10)
+            ;
+        \end{tikzpicture}
+        \caption{识别 ${((\varepsilon | a)b^{*})}^{*}$ 的 NFA}
+        \label{fig:NFA-2.7.c}
+    \end{figure}
+
+\end{solution}
+
+%%%% Problem 2.12 (a) %%%%
+\problemnumber{12}
+\begin{problem}
+为下列正规式构造最简的 DFA\@.
+\begin{parts}[a]
+    \part\label{prob:2.12.a}
+    ${(a|b)}^{*} a {(a|b)}$
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:2.12.a}
+    首先构造 NFA 如下图~\ref{fig:NFA-2.12.a}.
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}
+            \node[state]                                (0)  {$0$};
+            \node[left of=0]                            (n)  {};
+            \node[state, right of=0]                    (1)  {$1$};
+            \node[state, above right of=1]              (2)  {$2$};
+            \node[state, right of=2]                    (3)  {$3$};
+            \node[state, below right of=1]              (4)  {$4$};
+            \node[state, right of=4]                    (5)  {$5$};
+            \node[state, above right of=5]              (6)  {$6$};
+            \node[state, right of=6]                    (7)  {$7$};
+            \node[state, right of=7]                    (8)  {$8$};
+            \node[state, above right of=8]              (9)  {$9$};
+            \node[state, right of=9]                    (10) {$10$};
+            \node[state, below right of=8]              (11) {$11$};
+            \node[state, right of=11]                   (12) {$12$};
+            \node[state, accepting, above right of=12]  (13) {$13$};
+
+            \draw
+            (n)     edge                                node[above] {开始}          (0)
+            (0)     edge                                node[above] {$\varepsilon$} (1)
+            (0)     edge[bend right=80]                 node[above] {$\varepsilon$} (7)
+            (1)     edge                                node[above] {$\varepsilon$} (2)
+            (1)     edge                                node[above] {$\varepsilon$} (4)
+            (2)     edge                                node[above] {$a$}           (3)
+            (3)     edge                                node[above] {$\varepsilon$} (6)
+            (4)     edge                                node[above] {$b$}           (5)
+            (5)     edge                                node[above] {$\varepsilon$} (6)
+            (6)     edge[bend right=90, looseness=1.5]  node[above] {$\varepsilon$} (1)
+            (6)     edge                                node[above] {$\varepsilon$} (7)
+            (7)     edge                                node[above] {$a$}           (8)
+            (8)     edge                                node[above] {$\varepsilon$} (9)
+            (8)     edge                                node[above] {$\varepsilon$} (11)
+            (9)     edge                                node[above] {$a$}           (10)
+            (10)    edge                                node[above] {$\varepsilon$} (13)
+            (11)    edge                                node[above] {$b$}           (12)
+            (12)    edge                                node[above] {$\varepsilon$} (13)
+            ;
+        \end{tikzpicture}
+        \caption{识别 ${(a|b)}^{*} a {(a|b)}$ 的 NFA}
+        \label{fig:NFA-2.12.a}
+    \end{figure}
+    然后使用算法 2.2 将其转换为 DFA\@:
+    \begin{align}
+         & \varepsilon\textrm{-}closure(0) = \left\{ 0, 1, 2, 4, 7\right\} = A    \\
+         & \varepsilon\textrm{-}closure \left( move \left( A, a\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 3, 8\right\}\right)
+        = \left\{ 1, 2, 3, 4, 6, 7, 8, 9, 11\right\} = B                          \\
+         & \varepsilon\textrm{-}closure \left( move \left( A, b\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 5\right\}\right)
+        = \left\{ 1, 2, 4, 5, 6, 7\right\} = C                                    \\
+         & \varepsilon\textrm{-}closure \left( move \left( B, a\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 3, 8, 10\right\}\right)
+        = \left\{ 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 13\right\} = D                  \\
+         & \varepsilon\textrm{-}closure \left( move \left( B, b\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 5, 12\right\}\right)
+        = \left\{ 1, 2, 4, 5, 6, 7, 12, 13\right\} = E                            \\
+         & \varepsilon\textrm{-}closure \left( move \left( C, a\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 3, 8\right\}\right) = B     \\
+         & \varepsilon\textrm{-}closure \left( move \left( C, b\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 5\right\}\right) = C        \\
+         & \varepsilon\textrm{-}closure \left( move \left( D, a\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 3, 8, 10\right\}\right) = D \\
+         & \varepsilon\textrm{-}closure \left( move \left( D, b\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 5, 12\right\}\right) = E    \\
+         & \varepsilon\textrm{-}closure \left( move \left( E, a\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 3, 8\right\}\right) = B     \\
+         & \varepsilon\textrm{-}closure \left( move \left( E, b\right)\right)
+        = \varepsilon\textrm{-}closure \left( \left\{ 5\right\}\right) = C
+    \end{align}
+    $A$ 是开始状态, $D$ 和 $E$ 是接受状态, 完整的转换表 \textit{Dtran} 如下
+    表~\ref{tab:Dtran-2.12.a} 所示, 构造出对应的 DFA 如图~\ref{fig:DFA-2.12.a}
+    所示.
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|cc}
+            \hline
+            \multicolumn{1}{c|}{\multirow{2}{*}{状态}} & \multicolumn{2}{c}{输入符号}       \\ \cline{2-3}
+                                                       & \multicolumn{1}{c|}{$a$}     & $b$ \\ \hline
+            $A$                                        & \multicolumn{1}{c|}{$B$}     & $C$ \\ \hline
+            $B$                                        & \multicolumn{1}{c|}{$D$}     & $E$ \\ \hline
+            $C$                                        & \multicolumn{1}{c|}{$B$}     & $C$ \\ \hline
+            $D$                                        & \multicolumn{1}{c|}{$D$}     & $E$ \\ \hline
+            $E$                                        & \multicolumn{1}{c|}{$B$}     & $C$ \\ \hline
+        \end{tabular}
+        \caption{DFA 的转换表 \textit{Dtran}}
+        \label{tab:Dtran-2.12.a}
+    \end{table}
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[node distance=2cm]
+            \node[state]                        (A) {$A$};
+            \node[left of=A]                    (n) {};
+            \node[state, right of=A]            (B) {$B$};
+            \node[state, below of=A]            (C) {$C$};
+            \node[state, accepting, right of=B] (D) {$D$};
+            \node[state, accepting, below of=B] (E) {$E$};
+
+            \draw
+            (n) edge                node[above] {开始}  (A)
+            (A) edge                node[above] {$a$}   (B)
+            (A) edge                node[left]  {$b$}   (C)
+            (B) edge                node[above] {$a$}   (D)
+            (B) edge[bend right=20] node[left]  {$b$}   (E)
+            (C) edge                node[above] {$a$}   (B)
+            (C) edge[loop left]     node[left]  {$b$}   (C)
+            (D) edge[loop right]    node[right] {$a$}   (D)
+            (D) edge                node[above] {$b$}   (E)
+            (E) edge[bend right=20] node[right] {$a$}   (B)
+            (E) edge                node[above] {$b$}   (C)
+            ;
+        \end{tikzpicture}
+        \caption{子集构造法得到的 DFA}
+        \label{fig:DFA-2.12.a}
+    \end{figure}
+
+    最后使用算法 2.3 化简得到的 DFA\@. 划分过程如下
+    \begin{equation}
+        \left\{ A, B, C, D, E\right\}
+        \begin{cases}
+            \left\{ A, B, C\right\} &
+            \begin{cases}
+                \left\{ A, C\right\} \\
+                \left\{ B\right\}
+            \end{cases}      \\
+            \left\{ D, E\right\}    &
+            \begin{cases}
+                \left\{ D\right\} \\
+                \left\{ E\right\}
+            \end{cases}
+        \end{cases}
+    \end{equation}
+    选择 $A$ 作为 $\left\{ A, C\right\}$ 的代表, 其他状态不变, 可以得到最简自动
+    机. 它的转换表如下表~\ref{tab:Dtran-2.12.a-sim}, 最简的 DFA 如下
+    图~\ref{fig:DFA-2.12.a-sim}.
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{c|cc}
+            \hline
+            \multicolumn{1}{c|}{\multirow{2}{*}{状态}} & \multicolumn{2}{c}{输入符号}       \\ \cline{2-3}
+                                                       & \multicolumn{1}{c|}{$a$}     & $b$ \\ \hline
+            $A$                                        & \multicolumn{1}{c|}{$B$}     & $A$ \\ \hline
+            $B$                                        & \multicolumn{1}{c|}{$D$}     & $E$ \\ \hline
+            $D$                                        & \multicolumn{1}{c|}{$D$}     & $E$ \\ \hline
+            $E$                                        & \multicolumn{1}{c|}{$B$}     & $A$ \\ \hline
+        \end{tabular}
+        \caption{DFA 的转换表 \textit{Dtran}}
+        \label{tab:Dtran-2.12.a-sim}
+    \end{table}
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[node distance=2cm]
+            \node[state]                                (A) {$A$};
+            \node[left of=A]                            (n) {};
+            \node[state, right of=A]                    (B) {$B$};
+            \node[state, accepting, above right of=B]   (D) {$D$};
+            \node[state, accepting, below right of=B]   (E) {$E$};
+
+            \draw
+            (n) edge                node[above] {开始} (A)
+            (A) edge                node[above] {$a$}  (B)
+            (A) edge[loop above]    node[above] {$b$}  (A)
+            (B) edge                node[above] {$a$}  (D)
+            (B) edge[bend right=20] node[below] {$b$}  (E)
+            (D) edge[loop right]    node[right] {$a$}  (D)
+            (D) edge                node[right] {$b$}  (E)
+            (E) edge[bend right=20] node[above] {$a$}  (B)
+            (E) edge[bend left=40]  node[above] {$b$}  (A)
+            ;
+        \end{tikzpicture}
+        \caption{最简的 DFA}
+        \label{fig:DFA-2.12.a-sim}
+    \end{figure}
+\end{solution}
+
+% \begin{figure}[ht]
+%     \centering
+%     \begin{tikzpicture}
+%     \end{tikzpicture}
+%     \caption{}
+%     \label{fig:}
+% \end{figure}
+
+\end{document}

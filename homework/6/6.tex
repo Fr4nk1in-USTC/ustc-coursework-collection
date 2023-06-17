@@ -1,0 +1,119 @@
+\documentclass[boxes]{homework}
+
+% This is a slightly-more-than-minimal document that uses the homework class.
+% See the README at http://git.io/vZWL0 for complete documentation.
+
+\name{傅申 PB20000051}        % Replace (Your Name) with your name.
+\term{2022 秋}     % Replace (Current Term) with the current term.
+\course{编译原理和技术}    % Replace (Course Name) with the course name.
+\hwnum{6}          % Replace (Number) with the number of the homework.
+\hwname{作业}
+\problemname{习题}
+\solutionname{解:}
+\problemchap{7}
+
+% Load any other packages you need here.
+\usepackage[
+    a4paper,
+    top = 2.54cm,
+    bottom = 2.54cm,
+    left = 1.91cm,
+    right = 1.91cm,
+    includeheadfoot
+]{geometry}
+\fancyfootoffset{0pt} % make fancyhdr work properly
+\usepackage{ctex}
+
+\begin{document}
+%%%% Problem 7.1 (d) %%%%
+\begin{problem}
+把算术表达式 $-(a + b) * (c + d) + (a + b + c)$ 翻译成:
+\begin{parts}
+    \setcounter{enumi}{3}
+    \part\label{prob:7.1.d} 三地址代码
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:7.1.d} 如下
+    \begin{verbatim}
+        t1 = a + b
+        t2 = - t1
+        t3 = c + d
+        t4 = t2 * t3
+        t5 = t1 + c
+        t6 = t4 + t5   
+    \end{verbatim}
+\end{solution}
+
+%%%% Problem 7.2 (c) %%%%
+\begin{problem}
+把 C 程序
+\begin{verbatim}
+    main(){
+        int i;
+        int a[10];
+        while(i<=10)
+            a[i] = 0;
+    }
+\end{verbatim}
+的可执行语句翻译成:
+\begin{parts}
+    \setcounter{enumi}{2}
+    \part\label{prob:7.2.c} 三地址代码
+\end{parts}
+\end{problem}
+\begin{solution}
+    \ref{prob:7.2.c} 如下, 假设每个 \texttt{int} 占 4 个存储单元.
+    \begin{verbatim}
+        L1: t1 = i <= 10
+            if t1 goto L2, if False t1 goto L3
+
+        L2: t2 = i * 4
+            a[t2] = 0
+            goto L1
+
+        L3: return
+    \end{verbatim}
+\end{solution}
+
+%%%% Problem 7.5 %%%%
+\problemnumber{5}
+\begin{problem}
+修改图~\ref{eq:7.5} 中计算声明名字的类型和相对地址的翻译方案, \textit{offset} 不
+是全局变量, 而是文法符号的继承属性.
+\begin{equation}
+    \begin{aligned}
+        P \to &                                                    &  & \{\mathit{offset} = 0;\}                                                                            \\
+              & D; S                                                                                                                                                        \\
+        D \to & D; D                                                                                                                                                        \\
+        D \to & \mathbf{id}: T                                     &  & \{enter(\mathbf{id}.lexme, T.type, \mathit{offset}); \mathit{offset} = \mathit{offset} + T.width;\} \\
+        T \to & \mathbf{integer}                                   &  & \{T.type = integer; T.width = 4;\}                                                                  \\
+        T \to & \mathbf{real}                                      &  & \{T.type = real; T.width = 8;\}                                                                     \\
+        T \to & \mathbf{array}\ [\mathbf{num}]\ \mathbf{of}\ T_{1} &  & \{T.type = array(\mathbf{num}.val, T_{1}.type);                                                     \\
+              &                                                    &  & \qquad T.width = \mathbf{num}.val \times T_{1}.width;\}                                             \\
+        T \to & \uparrow T_{1}                                     &  & \{T.type = pointer(T_{1}.type); T.width = 4;\}
+    \end{aligned}
+    \tag{7.5}
+    \label{eq:7.5}
+\end{equation}
+\end{problem}
+\begin{solution}
+    如下, 其中 \textit{end} 是综合属性:
+    \begin{equation}
+        \begin{aligned}
+            P \to &                                                    &  & \{D.\mathit{offset} = 0;\}                                                                    \\
+                  & D; S                                                                                                                                                  \\
+            D \to &                                                    &  & \{D_{1}.\mathit{offset} = D.\mathit{offset};\}                                                \\
+                  & D_{1};                                             &  & \{D_{2}.\mathit{offset} = D_{1}.end;\}                                                        \\
+                  & D_{2}                                                                                                                                                 \\
+            D \to & \mathbf{id}: T                                     &  & \{enter(\mathbf{id}.lexme, T.type, D.\mathit{offset}); D.end = D.\mathit{offset} + T.width;\} \\
+            T \to & \mathbf{integer}                                   &  & \{T.type = integer; T.width = 4;\}                                                            \\
+            T \to & \mathbf{real}                                      &  & \{T.type = real; T.width = 8;\}                                                               \\
+            T \to & \mathbf{array}\ [\mathbf{num}]\ \mathbf{of}\ T_{1} &  & \{T.type = array(\mathbf{num}.val, T_{1}.type);                                               \\
+                  &                                                    &  & \qquad T.width = \mathbf{num}.val \times T_{1}.width;\}                                       \\
+            T \to & \uparrow T_{1}                                     &  & \{T.type = pointer(T_{1}.type); T.width = 4;\}
+        \end{aligned}
+    \end{equation}
+\end{solution}
+
+\end{document}
