@@ -12,7 +12,7 @@ create table if not exists Paper (
     id int not null auto_increment,
     title varchar(255) not null,
     source varchar(255) not null,
-    publish_date date not null,
+    year int not null,
     type int not null check (type in (1, 2, 3, 4)),
     level int not null check (level in (1, 2, 3, 4, 5, 6)),
     primary key (id)
@@ -61,9 +61,10 @@ create table if not exists Teacher_Project (
 create table if not exists Teacher_Course (
     teacher_id varchar(5) not null,
     course_id varchar(255) not null,
+    year int not null check (year >= 0),
     term int not null check (term in (1, 2, 3)),
     credit int not null check (credit >= 0),
-    primary key (teacher_id, course_id),
+    primary key (teacher_id, course_id, year, term),
     foreign key (teacher_id) references Teacher (id),
     foreign key (course_id) references Course (id)
 );
