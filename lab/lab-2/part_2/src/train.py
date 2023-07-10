@@ -1,11 +1,36 @@
 #!/usr/bin/env python3
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
 from typing import List
 
+try:
+    from tqdm.auto import tqdm
+    use_tqdm = True
+except:
+    use_tqdm = False
 
-class char_tokenizer:
+# Hyperparameters
+batch_size = 16
+block_size = 256  # 256
+learning_rate = 1e-3
+
+max_iters = 5000  # training iterations (batchs)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+eval_interval = 50  # evaluate loss every 50 iterations
+eval_iters = 30  # number of iterations to evaluate loss
+
+# Model setup
+n_embd = 64  # embedding dimension
+n_heads = 8  # number of attention heads
+n_layers = 6  # number of transformer layers
+
+
+class CharTokenizer:
     """
     a very simple char-based tokenizer. the tokenizer turns a string into a list of integers.
     """
@@ -13,113 +38,107 @@ class char_tokenizer:
     def __init__(self, corpus: List[str]):
         self.corpus = corpus
         # TODO: calculate the vocab size and create a dictionary that maps each character to a unique integer
-        
+        self.n_vocab = len(corpus)
+        self.dist = {char: i for i, char in enumerate(corpus)}
         # End of your code
 
     def encode(self, string: str):
         # TODO: convert a string into a list of integers and return, using the dictionary you created above
-        
+        return [self.dist[char] for char in string]
         # End of your code
- 
+
     def decode(self, codes: List[int]):
         # TODO: convert a list of integers into a string and return, using the dictionary you created above
-        
+        return "".join([self.corpus[code] for code in codes])
         # End of your code
-
-class Head(nn.Module):
-    """single head of self-attention"""
-
-    def __init__(self, head_size):
-        super().__init__()
-        # TODO: create three linear layers, Key, Query, and Value, each of which maps from n_embd to head_size
-        #       and assign them to self.Key, self.Query, and self.Value, respectively
-
-
-        # End of your code
-        self.register_buffer("tril", torch.tril(torch.ones(block_size, block_size)))
-
-    def forward(self, inputs):
-        # TODO: implement the forward function of the head
-        #       the input is a tensor of shape (batch, time, n_embd)
-        #       the output should be a tensor of shape (batch, time, head_size)
-        #       you may use the tril buffer defined above to mask out the upper triangular part of the affinity matrix
-        
-
-        
-        # End of your code
-        return out
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, n_heads, head_size):
+    """multi-head self-attention"""
+
+    def __init__(self, n_embd: int, n_heads: int):
         super().__init__()
-        #TODO: implement heads and projection
+        # parameters
+        if (n_embd % n_heads != 0):
+            raise ValueError("n_embd must be divisible by n_heads")
 
+        self.n_heads = n_heads
+        self.d_k = n_embd // n_heads
 
-        # End of your code
-    def forward(self, inputs):
-        #TODO: implement the forward function of the multi-head attention
-        out = 
-        return self.projection(out)
+        self.qkv_proj = nn.Linear(n_embd, 3 * n_embd)
+        self.out_proj = nn.Linear(n_embd, n_embd)
+
+        # mask for attention
+        self.register_buffer("tril",
+                             torch.tril(torch.ones(block_size, block_size)))
+
+    def forward(self, inputs: torch.Tensor):
+        batch, time, _ = inputs.shape
+
+        qkv = self.qkv_proj(inputs)
+        qkv = qkv.reshape(batch, time, self.n_heads, -1)
+        qkv = qkv.permute(0, 2, 1, 3)
+        q, k, v = qkv.chunk(3, dim=-1)
+
+        out = q @ k.transpose(-2, -1) / math.sqrt(self.d_k)
+        out = torch.masked_fill(out,
+                                self.tril[:time, :time] == 0,
+                                float("-inf"))
+        out = F.softmax(out, dim=-1) @ v
+
+        out = out.permute(0, 2, 1, 3).reshape(batch, time, -1)
+        out = self.out_proj(out)
+
+        return out
 
 
 class FeedForward(nn.Module):
-    def __init__(self, n_embd):
+    def __init__(self, n_embd: int):
         super().__init__()
-        #TODO: implement the feed-forward network
 
-        self.net = 
+        self.net = nn.Sequential(
+            nn.Linear(n_embd, 4 * n_embd),
+            nn.ReLU(),
+            nn.Linear(4 * n_embd, n_embd),
+        )
 
-        # End of your code
-
-    def forward(self, inputs):
+    def forward(self, inputs: torch.Tensor):
         return self.net(inputs)
 
 
 class Block(nn.Module):
-    def __init__(self, n_embd, n_heads):
+    def __init__(self, n_embd: int, n_heads: int):
         super().__init__()
-        # TODO: implement the block of transformer using the MultiHeadAttention and 
-        # FeedForward modules, along with the layer normalization layers
+        self.attn = MultiHeadAttention(n_embd, n_heads)
+        self.norm1 = nn.LayerNorm(n_embd)
+        self.ff = FeedForward(n_embd)
+        self.norm2 = nn.LayerNorm(n_embd)
 
-
-
-
-        # End of your code
-    def forward(self, inputs):
-        #TODO: implement the forward function of the block, you may refer to the docs of this experiment
-
-
-        # End of your code
-        return inputs
+    def forward(self, inputs: torch.Tensor):
+        out = self.attn(inputs)
+        out = self.norm1(inputs + out)
+        out = self.ff(out)
+        out = self.norm2(out + out)
+        return out
 
 
 class Transformer(nn.Module):
-    def __init__(self):
+    def __init__(self, n_vocab: int, n_embd: int, n_heads: int, n_layers: int):
         super().__init__()
-        # TODO: create the embedding table, the stack of blocks, the layer normalization layer, 
-        # and the linear layers.
+        self.embedding = nn.Embedding(n_vocab, n_embd)
+        self.blocks = nn.ModuleList([Block(n_embd, n_heads)
+                                     for _ in range(n_layers)])
+        self.linear = nn.Linear(n_embd, n_vocab)
+        self.softmax = nn.Softmax(dim=2)
 
+    def forward(self, inputs: torch.Tensor, labels=None):
+        batch, time = inputs.shape
+        embedding = self.embedding(inputs)
+        attn = embedding
+        for block in self.blocks:
+            attn = block(attn)
+        logits = self.linear(attn)
 
-        # End of your code
-
-    def forward(self, inputs, labels=None):
-        # TODO: implement the forward function of the transformer
-
-        # inputs:(batch, context)
-        batch, time, channel = inputs.shape
-        # embedding:(batch, context, embedding)
-
-        # attens:(batch, context, embedding)
-
-        # attens:(batch, context, embedding)
-
-        # logits:(batch, context, attens)
-
-        # End of your code
-
-        # compute the loss
-        
         if labels is None:
             loss = None
         else:
@@ -127,94 +146,141 @@ class Transformer(nn.Module):
             logits = logits.view(batch * time, channel)
             labels = labels.view(batch * time)
             loss = F.cross_entropy(logits, labels)
+
         return logits, loss
 
-    def generate(self, inputs, max_new_tokens):
-        # TODO: generate new tokens from the transformer, using the inputs as the context,
-        #  and return the generated tokens with length of max_new_tokens
+    def generate(self, inputs: torch.Tensor, max_new_tokens: int):
         for _ in range(max_new_tokens):
-            # generates new tokens by iteratively sampling from the model's predicted probability distribution, 
-            # concatenating the sampled tokens to the input sequence, and returning the updated sequence.
-
-        # End of your code
+            logits, _ = self.forward(inputs[:, -block_size:])
+            probs = self.softmax(logits)
+            next_token = torch.multinomial(probs[:, -1], num_samples=1)
+            inputs = torch.cat([inputs, next_token], dim=1)
         return inputs
 
 
-def get_batch(split):
-    data = train_data if split == "train" else val_data
-    ix = torch.randint(len(data) - block_size, (batch_size,))
-    x = torch.stack([data[i : i + block_size] for i in ix])
-    y = torch.stack([data[i + 1 : i + block_size + 1] for i in ix])
-    x, y = x.to(device), y.to(device)
-    return x, y
+# Data setup
+with open("../data/input.txt", "r", encoding="utf-8") as f:
+    text = f.read()
+chars = sorted(list(set(text)))
+
+tokenizer = CharTokenizer(chars)
+encode = tokenizer.encode
+decode = tokenizer.decode
+n_vocab = tokenizer.n_vocab
+
+# separate the dataset into train and validation
+data = torch.tensor(encode(text), dtype=torch.long)
+data_len = data.shape[0]
+train_data = data[:-data_len // 10]
+val_data = data[-data_len // 10:]
+
+# Unfold into blocks
+train_blocks = train_data.unfold(0, block_size, 1)
+train_x = train_blocks[:-1]
+train_y = train_blocks[1:]
+
+val_blocks = val_data.unfold(0, block_size, 1)
+val_x = val_blocks[:-1]
+val_y = val_blocks[1:]
 
 
+def get_batch(split: str):
+    "Get batched data"
+    if split == "train":
+        x = train_x
+        y = train_y
+    elif split == "val":
+        x = val_x
+        y = val_y
+    else:
+        raise ValueError("split must be either 'train' or 'val'")
+    idx = torch.randint(x.shape[0], (batch_size,))
+    return x[idx].to(device), y[idx].to(device)
+
+
+# Training setup
 @torch.no_grad()
-def estimate_loss(model):
+def estimate_loss(model: Transformer):
     out = {}
     model.eval()
     for split in ["train", "val"]:
         losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
             x, y = get_batch(split)
-            logits, loss = model(x, y)
-            losses[k] = loss.item()
-        out[split] = losses.mean()
+            _, loss = model(x, y)
+            losses[k] = loss
+        out[split] = losses.mean().item()
     return out
 
 
-def generate(model):
-    context = torch.zeros((1, 1), device=device, dtype=torch.long)
+def generate(model: Transformer, text: str = ""):
+    if text == "":
+        context = torch.zeros((1, 1), dtype=torch.long, device=device)
+    else:
+        context = torch.tensor([encode(text)], dtype=torch.long, device=device)
     print(decode(model.generate(context, max_new_tokens=500)[0].tolist()))
 
 
-def train(model):
+def train(model: Transformer):
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    model.train()
 
-    for iter in range(max_iters):
-        
-        if iter % eval_interval == 0:
-            losses = estimate_loss(model)
-            print(
-                f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}"
-            )
+    train_losses = []
+    val_losses = []
 
-        inputs, labels = get_batch("train")
+    if use_tqdm:
+        loop = tqdm(range(max_iters))
 
-        logits, loss = model(inputs, labels)
-        optimizer.zero_grad(set_to_none=True)
-        loss.backward()
-        optimizer.step()
+        for iter in loop:
+
+            if iter % eval_interval == 0:
+                losses = estimate_loss(model)
+                train_losses.append(losses["train"])
+                val_losses.append(losses["val"])
+                loop.set_postfix(last_train_loss=f"{losses['train']: .6f}",
+                                 last_val_loss=f"{losses['val']: .6f}")
+
+            inputs, labels = get_batch("train")
+            _, loss = model(inputs, labels)
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            optimizer.step()
+    else:
+        for iter in range(max_iters):
+
+            if iter % eval_interval == 0:
+                losses = estimate_loss(model)
+                train_losses.append(losses["train"])
+                val_losses.append(losses["val"])
+                print(
+                    f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}"
+                )
+
+            inputs, labels = get_batch("train")
+
+            _, loss = model(inputs, labels)
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            optimizer.step()
+
+    return train_losses, val_losses
 
 
-# define the hyperparameters
-batch_size = 16
-block_size = 256
-max_iters = 5000 # set the number of training iterations as you like
-eval_interval = 50
-learning_rate = 1e-3
-device = "cuda" if torch.cuda.is_available() else "cpu"
-eval_iters = 200
-n_embd = 64
-n_heads = 8
-n_layers = 6
+def plot_losses(train_losses: list[float], val_losses: list[float]):
+    xs = [eval_interval * i for i in range(len(train_losses))]
+    plt.xlabel("Iteration")
+    plt.ylabel("Loss")
+    plt.title("Transformer Training Losses")
+    plt.plot(xs, train_losses, label="train")
+    plt.plot(xs, val_losses, label="val")
+    plt.legend()
+    plt.show()
+    plt.savefig("losses.png")
 
-# read the dataset
-with open("../data/input.txt", "r", encoding="utf-8") as f:
-    text = f.read()
-chars = sorted(list(set(text)))
 
-# initialize the vocabulary
-tokenizer = char_tokenizer(chars)
-encode = tokenizer.encode
-decode = tokenizer.decode
-n_vocab = tokenizer.n_vocab
+# Model
+model = Transformer(n_vocab, n_embd, n_heads, n_layers).to(device)
+train_losses, val_losses = train(model)
+plot_losses(train_losses, val_losses)
 
-# separate the dataset into train and validation
-train_data = torch.tensor(encode(text[: -len(text) // 10]), dtype=torch.long)
-val_data = torch.tensor(encode(text[-len(text) // 10 :]), dtype=torch.long)
-
-# define the model
-model = Transformer().to(device)
-train(model)
-generate(model)
+generate(model, "The meaning of life is")
