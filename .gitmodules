@@ -1,27 +1,27 @@
 [submodule "operating-system"]
 	path = operating-system
-	url = https://github.com/Fr4nk1in-USTC/ustc-os-2022.git
+	url = https://github.com/Fr4nk1inCs/ustc-os-2022.git
 [submodule "computer-organization"]
 	path = computer-organization
-	url = https://github.com/Fr4nk1in-USTC/ustc-cod-2022.git
+	url = https://github.com/Fr4nk1inCs/ustc-cod-2022.git
 [submodule "intro-to-computing-system"]
 	path = intro-to-computing-system
-	url = https://github.com/Fr4nk1in-USTC/ustc-ics-2021.git
+	url = https://github.com/Fr4nk1inCs/ustc-ics-2021.git
 [submodule "compiler"]
 	path = compiler
-	url = https://github.com/Fr4nk1in-USTC/ustc-compiler-2022.git
+	url = https://github.com/Fr4nk1inCs/ustc-compiler-2022.git
 [submodule "algorithm"]
 	path = algorithm
-	url = https://github.com/Fr4nk1in-USTC/ustc-algorithm-2022.git
+	url = https://github.com/Fr4nk1inCs/ustc-algorithm-2022.git
 [submodule "database"]
 	path = database
-	url = https://github.com/Fr4nk1in-USTC/ustc-database-2023.git
+	url = https://github.com/Fr4nk1inCs/ustc-database-2023.git
 [submodule "ai-fundamental"]
 	path = ai-fundamental
-	url = https://github.com/Fr4nk1in-USTC/ustc-ai-2023.git
+	url = https://github.com/Fr4nk1inCs/ustc-ai-2023.git
 [submodule "parallel-computing"]
 	path = parallel-computing
-	url = https://github.com/Fr4nk1in-USTC/ustc-parallel-computing-2023.git
+	url = https://github.com/Fr4nk1inCs/ustc-parallel-computing-2023.git
 [submodule "digital-logic-lab"]
 	path = digital-logic-lab
-	url = https://github.com/Fr4nk1in-USTC/ustc-digital-logic-lab-2021.git
+	url = https://github.com/Fr4nk1inCs/ustc-digital-logic-lab-2021.git
