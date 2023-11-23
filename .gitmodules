@@ -28,3 +28,6 @@
 [submodule "web-info"]
 	path = web-info
 	url = https://github.com/Fr4nk1inCs/ustc-webinfo-2023.git
+[submodule "data-privacy"]
+	path = data-privacy
+	url = https://github.com/Fr4nk1inCs/ustc-data-privacy-2023.git
