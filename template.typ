@@ -26,9 +26,9 @@
     let chinese-base-font = "FZShuSong-Z01"
     let chinese-strong-font = "FZXiaoBiaoSong-B05"
     let chinese-emph-font = "FZKai-Z03"
-    
+
     set text(font: (basic-font, chinese-base-font), lang: "zh")
-    
+
     show math.equation: set text(font: "Libertinus Math", weight: 400)
     show emph: set text(font: (basic-font, chinese-emph-font))
     show strong: set text(font: (basic-font, chinese-strong-font))

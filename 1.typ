@@ -1,19 +1,24 @@
-#import "template.typ": *
 #import "@preview/tablex:0.0.6": tablex, hlinex, vlinex, colspanx
 #import "@preview/cetz:0.1.2": canvas, draw, tree
 #import "@preview/diagraph:0.1.2": raw-render
 
-#show: homework.with(
-    course: "Data Privacy Homework",
-    number: 1,
-    name: "傅申",
-    id: "PB20000051",
-    code_with_line_number: true,
+#import "@local/typreset:0.1.0": homework
+
+#show: homework.style.with(
+  course: "Data Privacy",
+  number: "1",
+  names: "傅申",
+  ids: "PB20000051",
 )
 
+#let question = homework.simple_question
+
+#question[K-anonymity]
+
+#let e(content, count) = {content + sub(str(count))}
 
 #let hierarchies(data, spread: 1) = {
-  align(center, 
+  align(center,
     canvas({
       import draw: *
       set-style(content: (padding: .1))
@@ -22,16 +27,11 @@
   )
 }
 
-
-#question[K-anonymity]
-
-#let e(content, count) = {content + sub(str(count))}
-
 + The quasi-identifier attributes are *Zip Code*, *Age*, *Salary* and *Nationality*.
 + The *generalization hierarchies* are shown below. Note that the subscripted number is the item count.
   / Zip Code:
     #hierarchies(
-      (e("*****", 12), 
+      (e("*****", 12),
         (e("130**", 8), e("13053", 4), e("13068", 4)),
         (e("148**", 4), e("14850", 2), e("14853", 2))
       ), spread: 1.2
@@ -74,8 +74,8 @@
           c
         } else {
           (..c,
-            fill: 
-              if row < 7 { shallow(blue) } 
+            fill:
+              if row < 7 { shallow(blue) }
               else if row < 10 { shallow(red) }
               else if row < 12 { shallow(green) }
               else { shallow(yellow)}
@@ -117,16 +117,16 @@
 
 #question[L-Diversity]
 
-+ For each $q^*$-block, the sorted sensitive attribute count sequences are all (2, 1, 1), which satisfies $r_1 = 2 < 2(r_2 + r_3) = 4$. Thus, the attributes in the figure meet recursive (2, 2)-diversity. 
++ For each $q^*$-block, the sorted sensitive attribute count sequences are all (2, 1, 1), which satisfies $r_1 = 2 < 2(r_2 + r_3) = 4$. Thus, the attributes in the figure meet recursive (2, 2)-diversity.
 + Say there is a $q^*$-block $q^(**)$ merged from $q^*_1$ and $q^*_2$ in table $T$.
 
   Since $T$ satisfies entropy $ell$-diversity, the entropy of $q^*_1$ and $q^*_2$ is greater than $log(ell)$. Thus,
   $
     "entropy"(q^*_1) = - sum_(s in S) p(q^*_1, s) log(p(q^*_1, s)) >= log(ell) \
-    "entropy"(q^*_2) = - sum_(s in S) p(q^*_2, s) log(p(q^*_2, s)) >= log(ell) 
+    "entropy"(q^*_2) = - sum_(s in S) p(q^*_2, s) log(p(q^*_2, s)) >= log(ell)
   $
-  where $display(p(q^*_n, s) = (n(q^*_n, s))/(sum_(s ' in S) n(q^*_n, s')))$. 
-  
+  where $display(p(q^*_n, s) = (n(q^*_n, s))/(sum_(s ' in S) n(q^*_n, s')))$.
+
   Let $display(bold(P)(q^*_n, {s_1, dots.c, s_m}) = mat(p(q^*_n, s_1), dots.c, p(q^*_n, s_m))^"T "), display(f(bold(X)) = - sum_(x in bold(X)) x log(x) )$. Then the entropy of $q^*_n$ equals $f(bold(P)(q^*_n, S))$. Since $f(bold(X))$ is a concave function, which means
   $
     forall alpha in [0, 1], f((1 - alpha)bold(X) + alpha bold(Y)) >= (1 - alpha)f(bold(X)) + alpha f(bold(Y))
@@ -142,7 +142,7 @@
     =>  & "entropy"(q^(**)) >= min("entropy"(q^*_1), "entropy"(q^*_2)) >= log(ell)
   $
   In other words, the merged block $q^(**)$ satisfies entropy $ell$-diversity.
-  
+
   For any table $T^*$ generalized from $T$, it is always obtained from table $T$ through a finite number of $q^*$-block merges. Thus, the minimal entropy of $T^*$ would never be less than the entropy of $T$, which implies $T^*$ satisfies entropy $ell$-diversity.
 
 #question[T-Clossness]
@@ -159,7 +159,7 @@
     f_(i j) >= 0, f_(0, *) = f_(*, 0) = f_(m + 1, *) = f_(*, m + 1) = 0 \
     r_i = p_i - q_i = f_(i, i - 1) + f_(i, i + 1) - f_(i - 1, i) - f_(i + 1, i)\
     sum_(i = 1)^m sum_(j = 1)^m f_(i j) = 1
-  $ 
+  $
   To minimize $"WORK"(dot)$, it is obivious that one of $f_(i j)$ and $f_(j i)$ is zero. Thus, expanding the sum in $"WORK"$ and pairing each $(f_(i j), f_(j i))$ gives
   $
     min_bold(F) "WORK"(bold(P), bold(Q), bold(F))
@@ -170,7 +170,7 @@
     & = 1/(m - 1) sum_(i = 1)^m abs(sum_(j = 1)^(i) r_j) = 1/(m - 1) (abs(r_1) + abs(r_1 + r_2) + dots.c + abs(r_1 + dots.c + r_(m - 1)))
   $
   In other words, $D[bold(P), bold(Q)] = 1/(m - 1) (abs(r_1) + abs(r_1 + r_2) + dots.c + abs(r_1 + dots.c + r_(m - 1))) = 1/(m - 1) sum_(i = 1)^m abs(sum_(j = 1)^i r_j)$.
-  
+
 + The overall distribution of Salary is $display(bold(Q) = 1/9 mat(1, 1, 1, 1, 1, 1, 1, 1, 1))$, each element represents ${3k, 4k, 5k, 6k, 7k, 8k, 9k, 10k, 11k}$ respectively. For each QI group, calculate the EMD as below.
   - In the first QI group (Zip Code 4767\* and etc.), the distribution is $display(bold(P)_1 = 1/3 mat(0, 1, 1, 1, 0, 0, 0, 0, 0))$. So the EMD is
     $display(D[bold(P)_1, bold(Q)] = 1/8 (1/9 + 1/9 + 3/9 + 5/9 + 4/9 + 3/9 + 2/9 + 1/9) = 5/18)$.
@@ -179,16 +179,16 @@
   - In the third QI group (Zip Code 4760\* and etc.), the distribution is $display(bold(P)_1 = 1/3 mat(0, 0, 0, 0, 1, 0, 1, 1, 0))$. So the EMD is
     $display(D[bold(P)_1, bold(Q)] = 1/8 (1/9 + 2/9 + 3/9 + 4/9 + 2/9 + 3/9 + 1/9 + 1/9) = 17/72)$.
   Therefore, the value of $t$ should be greater than $display(5/18)$, i.e., $t >= display(5/18)$.
-  
+
 #question[Prior and Posterior]
 
 #let prob = $bold(upright(P))$
 
-+ 
++
   / Prior and posterior probabilities of $x = 0$ given $R_1(x) = 0$: \
     The *prior* probability of $x = 0$ is $prob[x = 0] = 0.01$. Given $R_1(x) = 0$, the *posterior* probability of $x = 0$ is
     $
-      prob[x = 0 | R_1(x) = 0] 
+      prob[x = 0 | R_1(x) = 0]
       & = (prob[R_1(x) = 0 | x = 0] prob[x = 0]) / prob[R_1(x) = 0] \
       & = (prob[R_1(x) = 0 | x = 0] prob[x = 0]) / (sum_(i = 0)^100 prob[R_1(x) = 0 | x = i] prob[x = i]) \
       & = (0.3 times 0.01) / (0.3 times 0.01 + 100 times 0.007 times 0.0099) \
@@ -205,7 +205,7 @@
   / Prior and posterior probabilities of $x = 0$ given $R_3(x) = 0$: \
     The *prior* probability of $x = 0$ is $prob[x = 0] = 0.01$. Given $R_3(x) = 0$, the *posterior* probability of $x = 0$ is
     $
-      prob[x = 0 | R_3(x) = 0] 
+      prob[x = 0 | R_3(x) = 0]
       & = (prob[R_3(x) = 0 | x = 0] prob[x = 0]) / prob[R_3(x) = 0] \
       & = (prob[R_3(x) = 0 | x = 0] prob[x = 0]) / (1/2 sum_(i in [0, 10] union [91, 100]) prob[R_2(x) = 0 | x = i]prob[x = i] + 1/202) \
       & = (1/2 times 1/21 times 0.01 + 1/202) / (1/2 times (20 times 0.0099 + 0.01) times 1/21 + 1/202) \
@@ -243,7 +243,7 @@
         Lucy -- Lily:n
         Lucy -- Jim:w
         Lily:n -- Jim:w
-        Tom -- Lily:n [style=dashed] 
+        Tom -- Lily:n [style=dashed]
       }
       ```
     )
