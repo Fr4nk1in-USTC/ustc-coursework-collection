@@ -42,3 +42,7 @@
 	path = data-privacy
 	url = https://github.com/Fr4nk1inCs/ustc-data-privacy-2023.git
     branch = main
+[submodule "quantum-computing"]
+	path = quantum-computing
+	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
+	branch = quantum-computing
