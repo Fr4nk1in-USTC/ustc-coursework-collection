@@ -1,0 +1,7 @@
+lxml
+numpy
+pandas
+requests
+rich
+wasabi
+jieba
