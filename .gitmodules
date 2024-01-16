@@ -28,8 +28,8 @@
     branch = ai-fundamental
 [submodule "parallel-computing"]
 	path = parallel-computing
-	url = https://github.com/Fr4nk1inCs/ustc-parallel-computing-2023.git
-    branch = master
+	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
+    branch = parallel-computing
 [submodule "digital-logic-lab"]
 	path = digital-logic-lab
 	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
