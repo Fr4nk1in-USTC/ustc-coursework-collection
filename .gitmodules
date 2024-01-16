@@ -46,3 +46,7 @@
 	path = quantum-computing
 	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
 	branch = quantum-computing
+[submodule "ai-practice"]
+	path = ai-practice
+	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
+	branch = ai-practice
