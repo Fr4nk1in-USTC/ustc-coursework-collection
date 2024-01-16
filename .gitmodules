@@ -4,8 +4,8 @@
     branch = master
 [submodule "computer-organization"]
 	path = computer-organization
-	url = https://github.com/Fr4nk1inCs/ustc-cod-2022.git
-    branch = master
+	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
+    branch = computer-organization
 [submodule "intro-to-computing-system"]
 	path = intro-to-computing-system
 	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
