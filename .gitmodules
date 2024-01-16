@@ -24,8 +24,8 @@
     branch = master
 [submodule "ai-fundamental"]
 	path = ai-fundamental
-	url = https://github.com/Fr4nk1inCs/ustc-ai-2023.git
-    branch = master
+	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
+    branch = ai-fundamental
 [submodule "parallel-computing"]
 	path = parallel-computing
 	url = https://github.com/Fr4nk1inCs/ustc-parallel-computing-2023.git
