@@ -32,8 +32,8 @@
     branch = master
 [submodule "digital-logic-lab"]
 	path = digital-logic-lab
-	url = https://github.com/Fr4nk1inCs/ustc-digital-logic-lab-2021.git
-    branch = master
+	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
+    branch = digital-logic-lab
 [submodule "web-info"]
 	path = web-info
 	url = https://github.com/Fr4nk1inCs/ustc-coursework-collection.git
