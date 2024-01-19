@@ -5,7 +5,7 @@ from passive import LinearPassive
 from transform import scale
 
 if __name__ == "__main__":
-    abs_path = "./cancer-passive-train.csv"
+    abs_path = "../data/cancer-passive-train.csv"
     active_ip = "127.0.0.1"
     active_port = 9999
 

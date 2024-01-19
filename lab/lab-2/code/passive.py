@@ -43,12 +43,13 @@ class LinearPassive:
         return reg_grad
 
     def _mask_grad(self, enc_grad):
-        mask = ...  # TODO
-        enc_mask_grad = ...  # TODO
+        mask = np.random.normal(0, 1.0, enc_grad.shape)
+        enc_mask = self.cryptosystem.encrypt_vector(mask)
+        enc_mask_grad = enc_grad + enc_mask
         return enc_mask_grad, mask
 
     def _unmask_grad(self, mask_grad, mask):
-        true_grad = ...  # TODO
+        true_grad = mask_grad - mask
         return true_grad
 
     def train(self, trainset):
@@ -91,7 +92,8 @@ class LinearPassive:
 
                 # Q1. Calculate wx and send it to active party
                 # -----------------------------------------------------------------
-                passive_wx = ...  # TODO
+                x = self.x_train[batch_idxes]
+                passive_wx = self.params.dot(x.T)
                 self.messenger.send(passive_wx)
                 # -----------------------------------------------------------------
 

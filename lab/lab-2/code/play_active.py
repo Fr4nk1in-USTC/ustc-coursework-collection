@@ -1,3 +1,5 @@
+import pickle
+
 from active import LinearActive
 from comm import ActiveSocket
 from dataset import Dataset
@@ -5,7 +7,7 @@ from paillier import Paillier
 from transform import scale
 
 if __name__ == "__main__":
-    abs_path = "./cancer-active-train.csv"
+    abs_path = "../data/cancer-active-train.csv"
     active_ip = "127.0.0.1"
     active_port = 9999
 
@@ -19,4 +21,9 @@ if __name__ == "__main__":
     ).get_messenger()
 
     active_party = LinearActive(cryptosystem=cryptosystem, messenger=messenger)
-    active_party.train(trainset)
+    losses, accs = active_party.train(trainset)
+
+    with open("../data/losses.pkl", "wb") as f:
+        pickle.dump(losses, f)
+    with open("../data/accs.pkl", "wb") as f:
+        pickle.dump(accs, f)

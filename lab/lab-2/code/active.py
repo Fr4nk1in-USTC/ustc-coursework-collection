@@ -61,6 +61,10 @@ class LinearActive:
         else:
             n_batches = n_samples // bs + 1
 
+        # Loss and acc during training
+        losses = []
+        accs = []
+
         # Main Training Loop Here
         tbar = trange(self.epochs)
         for epoch in tbar:
@@ -68,6 +72,8 @@ class LinearActive:
             np.random.seed(epoch)
             np.random.shuffle(all_idxes)
 
+            loss_sum = 0
+            correct = 0
             for batch in range(n_batches):
                 # Choose batch indexes
                 start = batch * bs
@@ -76,9 +82,10 @@ class LinearActive:
 
                 # Q1. Active party calculates y_hat
                 # -----------------------------------------------------------------
-                active_wx = ...  # TODO
+                x = self.x_train[batch_idxes]
+                active_wx = self.params.dot(x.T)
                 passive_wx = self.messenger.recv()
-                full_wx = ...  # TODO
+                full_wx = active_wx + passive_wx
                 y_hat = self.activation(full_wx)
                 # -----------------------------------------------------------------
 
@@ -92,11 +99,11 @@ class LinearActive:
 
                 # Q2. Active party helps passive party to calculate gradient
                 # -----------------------------------------------------------------
-                enc_residue = ...  # TODO
+                enc_residue = self.cryptosystem.encrypt_vector(residue)
                 enc_residue = np.array(enc_residue)
                 self.messenger.send(enc_residue)
                 enc_passive_grad = self.messenger.recv()
-                passive_grad = ...  # TODO
+                passive_grad = self.cryptosystem.decrypt_vector(enc_passive_grad)
                 self.messenger.send(passive_grad)
                 # -----------------------------------------------------------------
 
@@ -104,7 +111,15 @@ class LinearActive:
                 active_grad = self._gradient(residue, batch_idxes)
                 self._gradient_descent(self.params, active_grad)
 
+                loss_sum += loss * len(batch_idxes)
+                correct += acc * len(batch_idxes)
+
+            losses.append(loss_sum / n_samples)
+            accs.append(correct / n_samples)
+
         print("Finish model training.")
+
+        return losses, accs
 
     def _init_weights(self, size):
         np.random.seed(0)
@@ -129,7 +144,8 @@ class LinearActive:
     def _acc(self, y_true, y_hat):
         # Q3. Compute accuracy
         # -----------------------------------------------------------------
-        acc = ...  # TODO
+        y_pred = np.where(y_hat >= 0.5, 1, 0)
+        acc = np.sum(y_true == y_pred) / len(y_true)
         # -----------------------------------------------------------------
 
         return acc
