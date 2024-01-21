@@ -52,8 +52,8 @@
       $pi^(-1)(x)$, [*2*], [*4*], [*6*], [*1*], [*8*], [*3*], [*5*], [*7*],
     )
   )
-+ Assume *Columnar Transposition* is used to encrypt the plaintext. The
-  plaintext is written in rows of length $8$ and then the columns are permuted
++ If *Columnar Transposition* is used to encrypt the plaintext, the plaintext
+  should be written in rows of length $8$ and then the columns are permuted
   according to the permutation $pi$ from part (a). The ciphertext is then
   obtained by reading the columns in order. The grid below shows the process of
   encryption.
@@ -73,6 +73,14 @@
   )
   Thus, the plaintext is
   #align(center)[_RTOMSNIAOGENHNRAEETEATLHOECLEDMD_.]
+
+  Otherwise, if we *permutate the plaintext block by block*, the plaintext
+  should be divided into blocks of length $8$ and then permuted according to the
+  permutation $pi$ from part (a). The ciphertext is then obtained by reading the
+  blocks in order. To decrypt the ciphertext, first divide the ciphertext into
+  blocks of length $8$: _TGEEMNEL NNTDROEO AAHDOETC SHAEIRLM_, and then permute
+  each block: _ETNGEELM DNONETOR DAEATHCO ESRHLAMI_. So the plaintext is
+  #align(center)[_ETNGEELMDNONETORDAEATHCOESRHLAMI_.]
 
 #question[
   *(20') Perfect Secrecy*
@@ -314,6 +322,6 @@ $ n = p q = 11413, phi.alt(n) = (p - 1)(q - 1) = 11200 $
       = 0 times 0 = 0.
     $
     shows that $f times g$ is negligible.
-  + For example, $f(lambda) = exp(lambda)$ and $g(lambda) = lambda exp(lambda)$
-    are both negligible, but $f(lambda) \/ g(lambda) = 1 \/ lambda$ is not
-    negligible.
+  + For example, $f(lambda) = exp(-lambda)$ and
+    $g(lambda) = lambda exp(-lambda)$ are both negligible, but
+    $f(lambda) \/ g(lambda) = 1 \/ lambda$ is not negligible.
